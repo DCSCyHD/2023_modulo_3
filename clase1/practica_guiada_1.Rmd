@@ -1,0 +1,251 @@
+---
+title: "Práctica 1 - Módulo 3"
+subtitle: "Introducción al modelado de datos."
+author: 
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
+  - Carolina Pradier y Guido Weksler
+output: 
+  html_document:
+    toc: TRUE
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
+                      fig.width=8)
+```
+
+```{r librerias, results='hide'}
+library(tidyverse)
+library(viridis)
+library(ggridges)
+options(dplyr.summarise.inform = FALSE)
+```
+
+# Análisis exploratorio de una base de datos
+
+En esta clase vamos a explorar una versión reducida de los resultados del Módulo de Trabajo no Remunerado (MTNR) de la Encuesta Anual de Hogares Urbanos (EAHU) del INDEC para 2013. En esta base de datos encontramos información respecto al uso del tiempo de la población (en particular, las horas dedicadas al trabajo no remunerado).
+
+```{r}
+base_EAUH_TNR <- readRDS("./fuentes/base_EAUH_TNR.RDS") %>% 
+  rename("Sexo" = "CH04")
+```
+
+------------------------------------------------------------------------
+
+*Nota:* al tratarse de una encuesta, deberíamos recurrir al **ponderador** de cada observación para calcular medidas de resumen adecuadamente. Por tratarse de un curso introductorio de programación donde el objetivo principal es ilustrar el uso de las herramientas de R, se simplifica el ejercicio tomando cada fila como una observación.
+
+------------------------------------------------------------------------
+
+Veamos qué hay en la base:
+
+```{r}
+names(base_EAUH_TNR)
+```
+
+```{r}
+head(base_EAUH_TNR,10)
+```
+
+# Repaso de estadística
+
+Antes de empezar, repasemos algunos conceptos.
+
+## Media
+
+La **media** es un promedio no ponderado: sumamos todos los valore de la muestra y luego dividimos por la cantidad de elementos.
+
+$$ \overline{x} = \frac{1}{n} \sum_{i=1}^{n} x_{i} $$
+
+¿Cómo lo calculamos en R?
+
+```{r}
+mean(c(1,2,3,4))
+```
+
+## Varianza y desvío estándar
+
+La **varianza** es una medida de dispersión definida de la siguiente manera:
+
+$$ \frac{1}{n} \sum_{i=1}^{n} (x_{i} - \overline{x})^2 $$
+
+------------------------------------------------------------------------
+
+*Nota:* ¿por qué está elevada al cuadrado?
+
+------------------------------------------------------------------------
+
+¿Cómo lo calculamos en R?
+
+```{r}
+var(c(1,2,3,4))
+```
+
+El **desvío estándar** nos brinda una información similar a la varianza, pero al calcular su raíz cuadrada, nos brinda la información en la misma unidad que la variable original.
+
+$$ \sqrt{\frac{1}{n} \sum_{i=1}^{n} (x_{i} - \overline{x})^2} $$
+
+¿Cómo lo calculamos en R?
+
+```{r}
+sd(c(1,2,3,4))
+
+sd(c(1,2,3,4))**2
+
+```
+
+# Graficando una distribución
+
+Para comenzar a familiarizarnos con una base de datos y luego construir un modelo, es útil visualizar la distribución de sus variables y las relaciones entre ellas.
+
+¿Cómo se distribuye la variable con información sobre las horas dedicadas al trabajo doméstico no remunerado?
+
+```{r}
+
+base_EAUH_TNR %>% 
+  filter(CH06 > 17) %>% #Mayores de 18
+ggplot(aes(x=TIEMPO_TDNR)) +
+    geom_density(adjust=1.5, alpha=.4, fill = "green") +
+    theme_minimal()+
+  xlab("Horas de trabajo no remunerado") +
+  xlim(0,40)
+```
+
+¿Es igual para las personas de ambos sexos?
+
+```{r}
+base_EAUH_TNR %>% 
+  filter(CH06 > 17) %>% 
+ggplot(aes(fill=Sexo, y=TIEMPO_TDNR, x=Sexo)) + 
+    geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+    scale_fill_manual(values = c("#91CBD765","#CA225E"))+
+    theme_minimal()  +
+    xlab("") +
+    ylab("Horas de trabajo no remunerado") +
+    ylim(0,40)
+```
+
+¿Cómo se relaciona con las horas de trabajo remunerado?
+
+```{r}
+base_EAUH_TNR %>%
+  filter(CH06 > 17) %>% 
+  filter(!is.na(horas_mercado)) %>% 
+mutate(horas_mercado_agrup = factor(case_when(horas_mercado < 15~ "< 15",
+                                              horas_mercado %in% 15:34~ "15 a 34",
+                                              horas_mercado %in% 35:45~ "35 a 45",
+                                              horas_mercado > 45~ "> 45"),
+                                    levels = c( "< 15","15 a 34","35 a 45","> 45"))) %>% 
+ggplot(aes(y=TIEMPO_TDNR, x =horas_mercado_agrup , fill=Sexo)) +
+    geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+    theme_minimal()  +
+    ylim(0,40)+
+  ylab("Horas de trabajo no remunerado") +
+  xlab("Horas de trabajo remunerado") +
+  theme(legend.position = "top")+
+  scale_fill_manual(values = c("#91CBD765","#CA225E"))
+```
+
+¿Cómo se relaciona con los ingresos individuales?
+
+```{r}
+base_EAUH_TNR%>% 
+  filter(CH06 > 17) %>% 
+  ggplot(aes(x=TIEMPO_TDNR, y=ingreso_indiv, color = Sexo)) + 
+  geom_point(alpha = 0.4) + 
+  ylim(0,100000)+
+  xlim(0,40)+
+  ylab("Ingresos individuales") +
+  xlab("Horas de trabajo no remunerado") +
+  geom_hline(yintercept = mean(base_EAUH_TNR$ingreso_indiv[base_EAUH_TNR$ingreso_indiv >0]), size = 0.5)+
+  geom_vline(xintercept = mean(base_EAUH_TNR$TIEMPO_TDNR), size = 0.5)+
+  theme_minimal()+
+  scale_color_manual(values = c("#91CBD968","#CA225E"))+
+  facet_wrap(~Sexo)
+```
+
+¿Y si hay menores en el hogar?
+
+```{r}
+
+base_EAUH_TNR %>% 
+  mutate(menores_hogar_agrup = factor(case_when(menores_hogar == 0~ "0",
+                                              menores_hogar  == 1~ "1",
+                                              menores_hogar  == 2~ "2",
+                                              menores_hogar > 2~ "> 2"),
+                                    levels = c( "0","1","2","> 2"))) %>%
+  filter(CH06 > 17) %>% 
+ggplot(aes(fill=Sexo, y=TIEMPO_TDNR, x=menores_hogar_agrup)) + 
+    geom_violin(position="dodge", alpha=0.5, outlier.colour="transparent") +
+    scale_fill_manual(values = c("#91CBD765","#CA225E"))+
+    theme_minimal()  +
+    xlab("Menores en el hogar") +
+    ylab("Horas de trabajo no remunerado") +
+    ylim(0,40)+
+  theme(legend.position = "top")
+
+```
+
+# Correlación. Definición y técnicas para su visualización
+
+La correlación describe la **fuerza** y la **dirección** de la relación lineal entre dos variables. Puede tomar valores entre -1 (relación negativa perfecta) y 1 (relación positiva perfecta), pasando por 0 (si no existe una relación lineal). Su valor no tiene unidades y no es sensible a transformaciones lineales en las variables.
+
+Podemos calcular la correlación usando la siguiente fórmula:
+
+$$ r_{xy} = \frac{\sum_{i=1}^n (x_{i} - \overline{x}_{i})(y_{i} - \overline{y}_{i})}{(n - 1)s_x s_y} = \frac{\sum_{i=1}^n (x_{i} - \overline{x}_{i})(y_{i} - \overline{y}_{i})}{\sqrt{\sum_{i=1}^n (x_{i} - \overline{x}_{i})^2} \sqrt{\sum_{i=1}^n (y_{i} - \overline{y}_{i})^2}}$$
+
+![](./img/correlaciones.png)
+
+La anterior muestra ocho parcelas y sus correlaciones correspondientes. Solo cuando la relación es perfectamente lineal, la correlación es -1 o 1. Si la relación es fuerte y positiva, la correlación será cercana a +1. Si es fuerte y negativo, estará cerca de -1. Si no existe una relación lineal aparente entre las variables, entonces la correlación será cercana a cero.
+
+## Matriz de correlación
+
+La **matriz de correlación** nos permie visualizar rápidamente las principales relaciones entre las variables. Es una herramienta que puede resultar útil para seleccionar las variables explicativas en un modelo.
+
+Calculemos la matriz de correlaciones para nuestra base (sólo se calculan entre variables numéricas!):
+
+```{r}
+corr <- base_EAUH_TNR %>% 
+  # Seleccionamos las columnas numéricas
+  select_if(is.numeric) %>% 
+  # Calculamos la matriz de correlaciones
+  cor()
+
+corr
+```
+
+Para ver mejor las relaciones entre las variables, podemos recurrir a la librería *corrplot*.
+
+```{r}
+library(corrplot)
+```
+
+```{r}
+#Graficamos con nuestro propio espectro de colores
+mi_paleta <- colorRampPalette(c("navy","#91CBD765", "#CA225E"))
+
+corr %>% 
+  corrplot(col = mi_paleta(200), tl.col = "black", method = "square")
+```
+
+¿Algun relación entre variables les llama la atención?
+
+# Resumen
+
+-   Antes de modelar, siempre es útil llevar a cabo un análisis exploratorio de la base de datos para luego elegir las variables relevantes para la construcción del modelo.
+
+-   Principales medidas de resumen: media, varianza y desvío estándar.
+
+-   Correlación, ¿qué significa? ¿Cómo se calcula?
+
+# Referencias bibliográficas
+
+An Introduction to Statistical Learning with applications in R (James, Witten, Hastie y Tibshirani) -- 1st and 2nd version
+
+Tidy Modeling with R (Kuhn y Silge)
+
+Introduction to Modern Statistics (Çetinkaya-Rundel y Hardin)

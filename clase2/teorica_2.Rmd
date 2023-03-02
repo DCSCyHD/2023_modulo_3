@@ -1,0 +1,394 @@
+---
+title: "Teórica 2 - Módulo 3"
+subtitle: "Regresión lineal simple."
+author: 
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
+  - Carolina Pradier y Guido Weksler
+output: 
+  html_document:
+    toc: TRUE
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
+                      fig.width=8)
+```
+
+```{r librerias, results='hide'}
+library(tidyverse)
+
+options(dplyr.summarise.inform = FALSE)
+```
+
+
+# Relaciones lineales
+
+El gráfico siguiente muestra dos variables. Podemos modelar esa relación
+entre ambas de forma **perfecta** con una línea recta. La ecuación de
+esa recta es
+
+$$y = 5 + 64.96 X$$
+
+```{r echo=FALSE}
+set.seed(1)
+data = tibble(x = 1:13 + runif(13),
+              y = 5 + 64.96 * x)
+
+data %>%
+ggplot(aes(x,y)) +
+        geom_line(color="black") + 
+        geom_point(color="blue") +
+        theme_minimal()
+```
+
+La **pendiente** de esta recta es 64.96 y la **ordenada al origen** es 5.
+
+¿Qué quiere decir esa idea de **relación perfecta**? Básicamente que
+podemos predecir **sin error** el valor de $y$ conociendo el valor de
+$X$. Obviamente, esto es un ejemplo de juguete y estas relaciones
+perfectas no existen casi en ninguna situación de la vida real.
+
+# Introducción a la regresión lineal
+
+La regresión lineal es una técnica estadística que se puede utilizar para varias tareas. Probablemente, las dos más importantes sean:
+
++ evaluar si existe una relación lineal entre una variable numérica en el eje horizontal (X) y el promedio de la variable numérica en el eje vertical (Y).
+
++ hacer predicciones de la variable dependiente (Y) en función de los valores de la variable independiente (X).
+
+**¿Qué tipo de modelo es la regresión lineal?**
+
+- Inferencia (a veces predicción!)
+
+- Aprendizaje supervisado
+
+- Modelo paramétrico (asumimos una forma funcional) y de regresión (Y es cuantitativa)
+
+
+
+# ¿Qué preguntas responde la regresión lineal?
+
+¿Existe una relación entre las variables independiente y dependiente?
+
+¿Cuán fuerte es esa relación?
+
+¿Cuáles de las variables independientes tienen efecto en la variable dependiente?
+
+¿Con cuánta precisión podemos estimar el efecto de cada variable independiente en la variable dependiente?
+
+¿Con cuánta precisión podemos predecir la variable dependiente?
+
+¿La relación entre las variables es lineal?
+
+¿Hay interacción/sinergia entre las variables independientes?
+
+---
+
+*Nota:* en todos estos casos, estamos tomando la regresión lineal como un modelo de inferencia.
+
+---
+
+
+# Tipos de relaciones entre variables: no siempre son lineales
+
+Cuando usamos $X$ para predecir $y$, solemos llamarla variable
+predictora y a $y$ variable dependiente, output o variable resultado. 
+
+Es raro que todos los datos caigan perfectamente en una línea recta como en nuestro primer ejemplo. Generalmente aparecen como una nube de puntos, como los ejemplos que se muestran en el gráfico siguiente.
+
+![](./img/notGoodAtAllForALinearModel-1.png)
+
+En cada caso, los datos caen alrededor de una línea recta, incluso si
+ninguna de las observaciones cae exactamente sobre la línea. La primera
+gráfica muestra una relación lineal descendente relativamente fuerte,
+donde la variabilidad restante en los datos alrededor de la línea es
+menor en relación con la fuerza de la relación entre $X$ y $y$.
+
+La segunda gráfica muestra una relación hacia arriba (positiva) que,
+aunque evidente, no es tan fuerte como la primera.
+
+El último gráfico muestra una relación negativa (a la baja) muy débil en
+los datos, tan leve que apenas podemos notarlo.
+
+También hay casos en los que ajustar una línea recta a los datos,
+incluso si existe una relación clara entre las variables, no es útil. No
+funciona. Uno de estos casos se muestra en la figura siguiente. 
+
+![](./img/notGoodAtAllForALinearModel-2.png)
+
+Se vé una relación perfecta entre las variables, aunque la misma no es
+lineal. ¿Qué tipo de relación se les ocurre que podría funcionar aquí?
+Por ahora vamos a centrarnos en los modelos lineales.
+
+# Regresión lineal simple
+
+## Fórmula. Interpretación de coeficientes
+
+La regresión lineal es un método estadístico que se usa para ajustar una
+línea a los datos donde la relación entre dos variables, $X$ e $y$ puede
+ser modelada como si fuera una línea recta tolerando algún grado de
+error.
+
+   $$ y \approx \beta_{0} + \beta_{1}X + \epsilon$$ 
+    
+-   $\beta_{0}$ representa el intercepto o la ordenada al origen. ¿Cómo podemos interpretar este valor? Como el valor que asume $y$ en promedio cuando $X = 0$.
+
+-   $\beta_{1}$ es la pendiente de la recta, es decir, cuánto aumenta
+    $y$ en promedio cuando $X$ aumenta una unidad.
+
+-   $\epsilon$ representa el error.
+
+
+Al ajustar una línea podríamos preguntarnos, ¿deberíamos mover la línea un
+poco hacia arriba o hacia abajo? ¿Deberíamos inclinarla más o menos? 
+
+La primera pregunta nos remite a $\beta_{0}$. La segunda, a $\beta_{1}$.
+Dado que cada una controla un aspecto de una recta, entonces, estas
+cuestiones nos plantean la existencia de una cierta incertidumbre con
+respecto a nuestras estimaciones de los parámetros del modelo. Vamos a
+ir avanzando sobre esto.
+
+
+## ¿Por qué mínimos *cuadrados*?
+
+La recta de regresión que pasa más cerca de todos los puntos es aquella en la que la suma de los $\epsilon^{2}$ (o sea, la suma de los cuadrados de las distancias a la recta) son reducidos al mínimo posible.
+
+Podemos pensar en múltiples razones para elegir la opción de mínimos cuadrados en lugar de tratar de minimizar la suma de las magnitudes residuales sin elevar al cuadrado. Las más importantes son:
+
+-   En muchas aplicaciones, un residual dos veces más grande que otro
+    residual es más del doble de malo. Por ejemplo, estar equivocado en
+    4 suele ser más del doble de malo que estar equivocado en 2. Elevar
+    al cuadrado los residuos da cuenta de esta discrepancia.
+    
+-   Los análisis que vinculan el modelo con la inferencia sobre una
+    población son más directos cuando la línea se ajusta por mínimos
+    cuadrados.
+
+Obviamente, existen situaciones (que no vamos a cubrir por ahora) en las
+que la suma de los absolutos de los desvíos pueden ser bastante más
+útiles.
+
+---
+
+Habíamos dicho que la recta de regresión es la que "pasa más cerca por
+todos los puntos". Ahora, ¿cómo definimos esa idea general? Una primera
+cosa que tenemos que hacer es definir una medida que resuma es "más
+cerca". 
+
+Podríamos pensar en los residuos: 
+
+---
+
+**Residuos**: la diferencia entre lo observado y lo predicho
+
+El residuo de la i-ésima observación $(x_{i}, y_{i})$ es la diferencia
+entre el valor observado ($y_{i}$) y el valor que predice el modelo
+($\hat{y_{i}}$):
+
+$$\epsilon_{i} = y_{i} - \hat{y_{i}}$$
+
+
+Si calculamos el residuo para cada observación y lo sumamos podríamos tener una medida
+"promedio" del error de la recta, es decir qué tan cerca o lejos pasa
+por todos los puntos:
+
+$$\sum_{i=1}^n \epsilon_{i} = \sum_{i=1}^ny_{i} - \hat{y}_{i}$$
+
+Ahora, esta medida tiene un problema: a veces las diferencias se "cancelan" (algunas son positivas y otras negativas). 
+Es más, su media será o estará muy próxima a cero. Por
+este motivo, como en otras ocasiones en lo que interesa es medir la
+magnitud de la desviación, tenemos que recurrir a un método que impida
+que los negativos se anulen con los positivos, así que calculamos estas
+diferencias elevadas al cuadrado, según la fórmula siguiente:
+
+$$SSE = \sum_{i=1}^n \epsilon^2_{i} = \sum_{i=1}^n (y_{i} - \hat{y}_{i})^2$$
+
+Ya sabemos de dónde viene el método de los mínimos cuadrados: buscamos
+la recta de regresión que nos proporcione un valor lo menor posible de
+la **suma de los cuadrados de los residuos (SSE)**. Para calcular los
+coeficientes de la recta de regresión solo tendremos que ampliar un poco
+la ecuación anterior, sustituyendo el valor estimado de $y$ por los
+términos de la ecuación de la recta de regresión:
+
+$$\sum_{i=1}^n \epsilon^2_{i} = \sum_{i=1}^n (y_{i} - \hat{y}_{i})^2 = \sum_{i=1}^n (y_{i} - \hat{\beta}_{0} + \hat{\beta}_{1} X_{i})^2 $$
+
+y encontrar los valores de $\beta_{0}$ y $\beta_{1}$ que minimicen la
+función. A partir de aquí la cosa es más o menos estándar: solo tenemos
+que igualar a cero las
+[derivadas](https://es.wikipedia.org/wiki/Derivada) de la ecuación
+anterior (tranquilos, vamos a ahorrarnos la jerga matemática dura) para
+obtener el valor de $\beta_{1}$:
+
+$$\hat{\beta}_{1} = \frac{s_{xy}}{s^2_{x}}$$ 
+
+Donde tenemos en el numerador la covarianza de las dos variables y, en el denominador, la varianza de la variable independiente. A partir de aquí, el cálculo de $\beta_{0}$ es simple:
+
+$$\hat{\beta}_{0} = \overline{y} - \hat{\beta}_{1} \overline{X}$$
+
+# Test de hipótesis. El p-valor
+
+¿Cómo comprobar si la relación entre X e Y es estadísticamente significativa o no?
+
+Planteamos un **test de hipótesis** (es decir, una regla de decisión que toma información de la muestra para evaluar si existe una propiedad en la población): 
+
+$H_{0}$: “no hay relación entre X e Y”
+
+$H_{A}$: “hay relación entre X e Y”
+
+Esto equivale a decir que:
+
+$$ H_{0}: \beta_{1}=0$$
+
+
+
+(En ese caso $Y = \beta_{0} + \epsilon$)
+
+
+$$ H_{A}: \beta_{1} \neq 0$$
+
+La probabilidad de rechazar $H_{0}$ si $H_{0}$ es verdadera es el **p-valor** o p-value. Es decir, la probabilidad de afirmar que existe una relación entre $X$ e $Y$ aún si no la hay.
+
+Por lo tanto, siempre vamos a tomar la relación entre $X$ e $Y$ como una relación estadísticamente significativa cuando el p-valor tenga valores muy **cercanos a 0**.
+
+
+
+# Residuos y su distribución
+
+
+Como ya vimos, los **residuos** son la variación restante en los datos después de tener en
+cuenta el ajuste del modelo:
+
+$$ Datos\ observados = Modelo\ ajustado + Residuos $$ 
+
+Vamos a poder calcular para cada observación un residuo. Si
+una observación está por encima de la línea de regresión, entonces su
+residuo, la distancia vertical desde la observación hasta la línea, es
+positiva. Las observaciones debajo de la línea tienen residuos
+negativos. Uno de los objetivos de elegir el modelo lineal correcto es
+que estos residuos sean lo más pequeños posible.
+
+El modelo de regresión lineal **supone** que los residuos tienen distribución normal (con media $= 0$), tienen una varianza constante, son independientes entre sí y no están correlacionados con las variables explicativas.
+
+
+---
+
+
+Los residuos son útiles para evaluar qué tan bien se ajusta ("fitea") un
+modelo lineal a un conjunto de datos. Es común representarlos en un
+gráfico como el que sigue.
+
+Uno de los propósitos de las residual plots identificar características
+o patrones que aún aparecen en los datos después de ajustar un modelo.
+La siguiente muestra tres diagramas de dispersión con modelos lineales
+en la primera fila y diagramas residuales en la segunda fila. ¿Pueden
+identificar algún patrón que quede en los residuos?
+
+![](./img/sampleLinesAndResPlots-1.png)
+
+En el primer conjunto de datos (primera columna), los residuos no
+muestran patrones obvios. Los residuos parecen estar dispersos al azar
+alrededor de la línea discontinua que representa 0.
+
+El segundo conjunto de datos muestra un patrón bien claro en los
+residuos. Hay cierta curvatura en el gráfico de dispersión, que es más
+evidente en el gráfico residual. No deberíamos usar una línea recta para
+modelar estos datos. En su lugar, se debe usar una técnica más avanzada
+para modelar la relación curva, como cierto tipo de transformaciones de
+variables que vamos a trabajar más adelante.
+
+El último gráfico muestra muy poca tendencia al alza y los residuos
+tampoco muestran patrones evidentes. Es razonable tratar de ajustar un
+modelo lineal a los datos. Sin embargo, no está claro si hay evidencia
+de que el parámetro de pendiente sea diferente de cero. La estimación
+puntual del parámetro de pendiente $\beta_{1}$ no es cero, pero
+podríamos preguntarnos si esto podría deberse al azar. Esto nos lleva a
+la cuestión de la inferencia sobre los parámetros de un modelo lineal
+
+
+
+
+
+# Primera métrica de evaluación de un modelo: $R^{2}$
+
+---
+
+A $R^{2}$ también se le llama **coeficiente de determinación**.
+
+------------------------------------------------------------------------
+
+
+$R^{2}$ siempre estará entre 0 y 1.
+Esta métrica mide la proporción de variación en la variable de resultado $Y$, que puede ser explicado por el modelo lineal con predictor $X$.
+
+*Sumas de cuadrados para medir la variabilidad en* $y$
+
+Podemos medir la variabilidad en los valores de $y$ en función de cuán
+lejos de su media $\overline{y}$ tienden a caer.
+
+Definimos este valor como la suma total de cuadrados (SST), calculada
+usando la siguiente fórmula, donde $y_{i}$ representa a cada valor de
+$y$ (es decir, cada registro de $y$ en el dataset) y $\overline{y}$
+representa la media de todos los valores de $y$ en el dataset.
+
+$$SST = (y_{1} - \overline{y})^2 + (y_{2} - \overline{y})^2 + ... + (y_{n} - \overline{y})^2 = \sum_{i=1}^n (y_{i} - \overline{y})^2$$
+La variabilidad que resta en los valores de $y$ conociendo $X$ se puede
+medir por la suma de los errores al cuadrado, o la suma de los residuos
+al cuadrado (SSE), calculada usando la fórmula a continuación, donde
+$\hat{y_{i}}$ representa el valor predicho de $y_{i}$ (es decir el valor
+predicho en cada caso del dataset) usando la recta de regresión.
+
+$$SSE =  (y_{1} - \hat{y_{1}})^2 + (y_{2} - \hat{y_{2}})^2 + ... + (y_{n} - \hat{y_{n}})^2 \\
+= \epsilon^2_{1} + \epsilon^2_{2} + ... + \epsilon^2_{n} \\
+= \sum_{i=1}^n (y_{i} - \hat{y_{i}})^2$$
+
+El coeficiente de determinación puede ser calculado como:
+
+$$ R^{2} = \frac{SST - SSE}{SST} = 1 - \frac{SSE}{SST}$$ 
+
+
+# Predicciones a partir del modelo, ¿cómo se interpretan?
+
+La estimación puede verse como un **promedio**: la ecuación predice que
+las observaciones con un valor *j* de la variable $X$ tendrán en promedio un valor de $\hat{\beta}{0} + \hat{\beta}{1}j$ para la variable $Y$. 
+
+
+Si bien existe una asociación real entre las variables $X$ e $Y$ (correlación),
+**no podemos interpretar una conexión causal** entre las variables porque
+estos datos son observacionales.
+
+---
+
+*Las extrapolaciones pueden ser engañosas*
+
+Los modelos lineales se pueden utilizar para aproximar la relación entre
+dos variables. Sin embargo, como cualquier modelo, tienen limitaciones
+reales. La regresión lineal es simplemente una hipótesis simplificadora.
+La verdad es casi siempre mucho más compleja que una simple línea. Por
+ejemplo, no sabemos cómo se comportarán los datos fuera de nuestra
+ventana limitada.
+
+La aplicación de una estimación del modelo a valores fuera del ámbito de
+los datos originales se denomina **extrapolación**. Generalmente, un modelo
+lineal es solo una aproximación de la relación real entre dos variables.
+Si extrapolamos, estamos haciendo una apuesta poco fiable de que la
+relación lineal aproximada será válida en lugares donde no ha sido
+analizada.
+
+---
+
+> ¿Qué beneficios podemos obtener de hacer predicciones usando un modelo de inferencia?
+
+
+
+# Referencias bibliográficas
+
+An Introduction to Statistical Learning with applications in R (James, Witten, Hastie y Tibshirani) -- 1st and 2nd version
+
+Tidy Modeling with R (Kuhn y Silge)
+
+Introduction to Modern Statistics (Çetinkaya-Rundel y Hardin)

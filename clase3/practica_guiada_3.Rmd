@@ -1,0 +1,310 @@
+---
+title: "Práctica 3 - Módulo 3"
+subtitle: "Regresión lineal simple y múltiple."
+author: 
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
+  - Carolina Pradier y Guido Weksler
+output: 
+  html_document:
+    toc: TRUE
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
+                      fig.width=8)
+```
+
+```{r librerias, results='hide'}
+library(tidyverse)
+library(tidymodels)
+
+options(dplyr.summarise.inform = FALSE)
+```
+
+# Introducción
+
+Vamos a seguir trabajando con nuestra base de juguete para construir una regresión lineal múltiple.
+
+```{r}
+base_juguete <- readRDS("./fuentes/eut_juguete.RDS")
+```
+
+# Regresión lineal simple
+
+En la clase anterior habíamos llegado a una regresión lineal simple, pero notábamos que nuestro modelo tenía problemas para explicar algunos de los valores. Vamos a intentar mejorarlo agregando más información con otras variables.
+
+```{r}
+lm_spec <- linear_reg() %>%
+ # set_mode("regression") %>%
+  set_engine("lm")
+```
+
+```{r}
+lm_fit <- lm_spec %>%
+  fit(ingreso_individual ~ horas_trabajo_domestico, data = base_juguete)
+
+```
+
+# Regresión lineal múltiple
+
+Antes de empezar, chequeamos multicolinealidad con el paquete *car*.
+
+```{r}
+library(car)
+
+modelo_lineal<-lm(ingreso_individual~.,data =base_juguete)
+
+#calculo vif
+vif(modelo_lineal)
+```
+
+En todos los casos los valores son bajos, por lo que podemos incorporar todas las variables que nos parezcan relevantes. Probemos con todas:
+
+```{r}
+lm_fit2 <- lm_spec %>%
+  fit(ingreso_individual ~ ., data = base_juguete)
+#usamos el "." para decir "todas las demás variables"
+```
+
+Veamos los coeficientes y la significatividad de las relaciones.
+
+```{r}
+lm_fit2 %>% 
+  pluck("fit") %>%
+  summary()
+```
+
+La variable realiza_trabajo_domestico no es significativa para analizar el nivel de ingresos, la sacamos del modelo. Entonces, la ecuación que caracterizaría nuestro modelo es:
+
+$$ IngInd \approx \beta_{0} + \beta_{1}HorasTD + \beta_{2}HorasM + \beta_{3}Sexo + \beta_{4}Menores + \epsilon$$
+
+```{r}
+#planteamos el nuevo modelo
+lm_fit2 <- lm_spec %>%
+  fit(ingreso_individual ~ horas_trabajo_domestico + horas_trabajo_mercado + sexo + menores_hogar, data = base_juguete)
+
+#y vemos los coeficientes
+lm_fit2 %>% 
+  pluck("fit") %>%
+  summary()
+```
+
+Noten que mejora el $R^{2}$ **ajustado**.
+
+Veamos la distribución de los residuos:
+
+```{r}
+#calculamos
+augment(lm_fit2, new_data = base_juguete) %>% 
+  dplyr::select(.resid, .pred)%>%
+  #graficamos
+         ggplot(aes(x=.pred, y=.resid)) + 
+                 geom_point() + 
+                 theme_minimal() +
+                geom_hline(yintercept=0, linetype='dashed') 
+```
+
+Al observar cómo quedan los residuos, vemos que esta vez el modelo está funcionando mejor que la última vez, la distribución parece ser bastante aleatoria. Veamos si podemos seguir mejorando.
+
+# Agregamos una interacción
+
+Algo que podría ocurrir es que el efecto sobre los ingresos de trabajar de modo remunerado en el mercado sea distinto para las mujeres y los varones: probemos agregar una interacción. Al agregarla, nuestra ecuación pasaría a tomar la forma:
+
+$$ IngInd \approx \beta_{0} + \beta_{1}HorasTD + \beta_{2}HorasM + \beta_{3}Sexo + \beta_{4}Menores + \beta_{5}HorasM.Sexo + \epsilon$$
+
+```{r}
+#usamos los ":" para agregar la interacción
+
+lm_fit3 <- lm_spec %>%
+  fit(ingreso_individual ~ horas_trabajo_domestico + sexo:horas_trabajo_mercado +horas_trabajo_mercado + sexo + menores_hogar, data = base_juguete)
+```
+
+Veamos los coeficientes:
+
+```{r}
+lm_fit3 %>% 
+  pluck("fit") %>%
+  summary()
+```
+
+No sólo es significativo el coeficiente de la interacción, sino que además mejoraron tanto el $R^{2}$ como el $R^{2}$ ajustado.
+
+# Feature engineering en el workflow
+
+El herramental de tidymodels nos permite aplicar distintas transformaciones sobre nuestros datos antes de estimar los coeficientes. La lógica de tidymodels nos permite separar este paso de aquel de especificación del modelo.
+
+Una sintáxis más general para los pasos que aplicamos anteriormente es usar un *workflow.*
+
+Primero agregamos un modelo:
+
+```{r}
+lm_wflow <- 
+  workflow() %>% 
+  add_model(lm_spec)
+```
+
+```{r}
+lm_wflow
+```
+
+Luego agregamos la fórmula:
+
+```{r}
+lm_wflow <- 
+  lm_wflow %>% 
+  add_formula(ingreso_individual ~ horas_trabajo_domestico + sexo:horas_trabajo_mercado +horas_trabajo_mercado + sexo + menores_hogar)
+```
+
+```{r}
+lm_wflow
+```
+
+Y finalmente fitteamos:
+
+```{r}
+lm_fit3 <- fit(lm_wflow, base_juguete)
+```
+
+Veamos los coeficientes y la significatividad:
+
+```{r}
+lm_fit3 %>% 
+  extract_fit_parsnip() %>% 
+  tidy()
+```
+
+Para definir los predictores y las **transformaciones** que queremos aplicarles podemos usar *recipe().*
+
+Las transformaciones se aplican encadenando comandos *step_xxx()* que se aplican sobre grupos de variables definidas según su rol (*all_predictors()*, *all_outcomes(),* etc) o el tipo de variable (*all_numeric()*, *all_nominal()*).
+
+
+```{r}
+#transformo en character esta variable para aplicarle otra transformación luego
+base <- base_juguete %>% mutate(menores_hogar = paste0(menores_hogar))
+```
+
+
+```{r}
+
+#nuestra recipe
+
+#incorporamos la fórmula
+simple_recipe <- recipe(ingreso_individual ~ horas_trabajo_domestico + horas_trabajo_mercado + sexo + menores_hogar,
+         data = base)%>%
+  
+  #incorporamos transformaciones
+  
+  step_interact( ~sexo:starts_with("horas")) %>% #agrego interacciones entre sexo y todas las variables que empiecen con "horas"
+  step_dummy(sexo) %>% #vuelvo dummy las variables nominales (en este caso sexo)
+  step_other(menores_hogar, threshold = 0.2) #agrupo en niveles que representen al menos el 20% de las observaciones la variable menores_hogar, agrupando a los otros valores en la categoría "otros"
+
+```
+
+Incorporamos al workflow nuestro nuevo preprocesamiento
+
+```{r}
+  lm_wflow <-
+  lm_wflow %>% 
+  remove_formula() %>% #antes habíamos incluido otra fórmula en nuestro workflow, la sacamos para agregar la nueva
+  add_recipe(simple_recipe)
+```
+
+Luego aplicamos fit:
+
+```{r}
+lm_fit4 <- fit(lm_wflow, base)
+```
+
+Miremos la performance de este modelo:
+
+```{r}
+glance(lm_fit4)
+```
+
+Y los estimadores:
+
+```{r}
+tidy(lm_fit4) %>% select(term,p.value) %>% arrange(p.value)
+```
+
+Vemos que el coeficiente de la interacción entre horas_trabajo_doméstico y sexo es el menos significativo, podríamos pensar en sacarlo del modelo.
+
+¿Qué pasó exactamente cuando usamos step_other()?
+
+```{r}
+ lm_fit4 %>% 
+  extract_recipe(estimated = TRUE) %>% 
+  tidy(.,number = 3) #número de step
+```
+
+Se agrupó a la variable menores_hogar en 4 categorías: 0, 1, 2 y otros (entonces, ¿por qué hay 3 dummys en el modelo?)
+
+¿No nos acordamos qué pasos habíamos seguido? Si no, podemos extraerlo:
+
+```{r}
+ lm_fit4 %>% 
+  extract_recipe(estimated = TRUE) 
+```
+
+# Predicciones
+
+Veamos primero la distribución de los errores y luego la capacidad predictora del modelo
+
+```{r}
+augment(lm_fit4, new_data = base) %>% 
+  mutate(.resid = ingreso_individual - .pred) %>% 
+  #graficamos
+  dplyr::select(.resid, .pred)%>%
+         ggplot(aes(x=.pred, y=.resid)) + 
+                 geom_point() + 
+                 theme_minimal() +
+                geom_hline(yintercept=0, linetype='dashed') 
+```
+
+Comparamos el valor real con nuestra predicción:
+
+```{r}
+
+library(viridis)
+
+augment(lm_fit4, new_data = base) %>% 
+  mutate(.resid = ingreso_individual - .pred) %>% 
+  dplyr::select(ingreso_individual, .pred, .resid)%>%
+  #graficamos
+         ggplot(aes(y=.pred, x=ingreso_individual, color=.resid)) + 
+                 geom_point() + 
+                 theme_minimal()  +
+              geom_abline(intercept = 0, slope = 1, size = 1, color="grey")+
+        scale_color_viridis(option = "C")
+```
+
+¿Dónde predice peor el modelo? ¿Qué se les ocurre que podría hacerse para mejorarlo? ¿Se les ocurre alguna variable que pueda resultar útil?
+
+# Resumen
+
+Al implementar una regresión lineal múltiple:
+
+-   Chequear VIF
+
+-   ¿Qué relaciones son significativas?
+
+-   Interpretación de los coeficientes de las variables cualitativas
+
+-   Interacciones
+
+-   Feature engineering
+
+En tidymodels: usar recipes con workflow
+
+# Referencias bibliográficas
+
+An Introduction to Statistical Learning with applications in R (James, Witten, Hastie y Tibshirani) -- 1st and 2nd version
+
+Tidy Modeling with R (Kuhn y Silge)
+
+Introduction to Modern Statistics (Çetinkaya-Rundel y Hardin)

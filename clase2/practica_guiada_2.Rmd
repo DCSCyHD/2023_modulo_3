@@ -1,0 +1,291 @@
+---
+title: "Práctica 2 - Módulo 3"
+subtitle: "Regresión lineal simple."
+author: 
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
+  - Carolina Pradier y Guido Weksler
+output: 
+  html_document:
+    toc: TRUE
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
+                      fig.width=8)
+```
+
+```{r librerias, results='hide'}
+library(tidyverse)
+library(tidymodels)
+library(GGally)
+tidymodels_prefer()
+
+options(dplyr.summarise.inform = FALSE)
+```
+
+# Trabajando con tidymodels
+
+El paquete *tidymodels* nos va a permitir construir modelos usando una lógica de sintaxis similar a la de *tidyverse*. Existen funciones análogas en el paquete *stats* que resultan menos intuitivas y claras para trabajar.
+
+# Implementando una regresión lineal simple usando tidymodels
+
+## Exploramos
+
+Vamos a usar una base de **juguete** (es decir, con datos inventados), cuyas variables tiene nombres similares a los de la base de la Encuesta de Uso del Tiempo. Inventamos datos nuevos para que las relaciones sean claramente lineales (esto no suele pasar en ciencias sociales).
+
+```{r}
+base_juguete <- readRDS("./fuentes/eut_juguete.RDS")
+```
+
+```{r}
+names(base_juguete)
+```
+
+Podemos mirar una matriz descriptiva de la base usando *ggpairs()* para tener una idea de las relaciones entre las variables e ir pensando cuáles incorporamos a nuestro modelo.
+
+```{r}
+
+#modifico los nombres usando espacios para que entren mejor en las etiquetas
+names(base_juguete) <- gsub(x = names(base_juguete), pattern = "\\_", replacement = " ") 
+#graficamos
+ggpairs(base_juguete,labeller = label_wrap_gen(width=5))+
+  theme_minimal()+
+  theme(strip.text.x = element_text(size = 10),
+           strip.text.y = element_text(size = 10))
+```
+
+Como siempre, podemos mejorar la visualización para enfocarnos en lo que más nos interese (en ese caso las diferencias de acuerdo con la variable sexo):
+
+```{r}
+ggpairs(base_juguete, ggplot2::aes(color=sexo, fill=sexo, alpha = 0.8),labeller = label_wrap_gen(width=5))+
+  theme_minimal()+
+  scale_color_manual(values = c("#45818e","#CA225E"))+
+  scale_fill_manual(values = c("#45818e","#CA225E"))+
+  theme(strip.text.x = element_text(size = 10),
+           strip.text.y = element_text(size = 10))
+```
+
+```{r include=F}
+#vuelvo a dejar los nombres como estaban
+base_juguete <- base_juguete %>% janitor::clean_names()
+```
+
+## Modelamos
+
+Les propongo usar el modelo de regresión lineal para estudiar la relación entre el ingreso individual de las personas (Y) y las horas que dedican por semana al trabajo doméstico (X). Es decir:
+
+$$ IngInd \approx \beta_{0} + \beta_{1}HorasTD + \epsilon$$
+
+------------------------------------------------------------------------
+
+*Nota:* Mirando las correlaciones entre las variables, este no es el par que mejor correlaciona. ¿Por qué podría interesarnos enfocarnos en esta relación de todas formas?
+
+------------------------------------------------------------------------
+
+Veamos la relación gráficamente:
+
+```{r}
+base_juguete%>% 
+  #filter(horas_trabajo_domestico > 0) %>% 
+  ggplot(aes(x=horas_trabajo_domestico, y=ingreso_individual)) + 
+  geom_point() + 
+  geom_smooth(method='lm', color = 'red', se = FALSE) + 
+  #method='lm' indica que queremos graficar una relación lineal
+  #se = TRUE nos permite observar un intervalo de confianza en torno a los puntos
+  theme_minimal()
+```
+
+*geom_smooth()* nos ayuda a ver la relación lineal entre los puntos. Acá vemos que, si bien la relación entre ambas no es perfectamente lineal, la información sobre las horas dedicadas al trabajo doméstico ayudan a predecir sus ingresos individuales.
+
+### tidymodels
+
+Empecemos a implementar nuestro modelo.
+
+Para empezar tenemos que indicarle a R:
+
+1.  El **tipo** de modelo.
+
+2.  El **modo**: regresión o clasificación (en este caso no es necesario aclararlo porque el tipo de modelo regresión lineal siempre es una regresión).
+
+3.  El **motor** (el tipo de software que va a estar detrás del modelo).
+
+```{r}
+lm_spec <- linear_reg() %>%
+  #set_mode("regression") %>%
+  set_engine("lm")
+```
+
+Noten dos cosas importantes:
+
+-   Esta misma estructura funciona para **cualquier modelo que quieran implementar**: tidymodels es muy flexible, sólo hay que modificar los parámetros de cada función. No es necesario aprender una serie de comandos para implementar KNN, otro para regresión logística, etc.
+
+-   El momento de ingresar los datos y el momento de definir el modelo están **separados**. Podríamos trabajar con múltiples bases de datos aplicando siempre un modelo con estas especificaciones.
+
+Usando el comando *translate()*, R nos indica de forma tal que un humano pueda entenderlo las características de nuestro modelo.
+
+```{r}
+lm_spec %>% translate()
+```
+
+Una vez que especificamos cuál es nuestro modelo, vamos a fitearlo (es decir, estimar los coeficientes a partir de los datos del modelo).
+
+Hay dos sintaxis posibles:
+
+```{r}
+
+lm_fit <- lm_spec %>%
+  fit_xy(
+    x = base_juguete %>% select(horas_trabajo_domestico),
+    y = base_juguete %>% pull(ingreso_individual)
+  )
+
+#usamos select() para "x" y pull() para "y" porque en el primer caso tenemos que obtener un data frame (aunque tenga una sola columna) y en el segundo un vector.
+
+```
+
+```{r}
+
+lm_fit <- lm_spec %>%
+  fit(ingreso_individual ~ horas_trabajo_domestico, data = base_juguete)
+
+#nos queda "y" del lado izquierdo y "x" del lado derecho
+
+```
+
+Veamos los coeficientes:
+
+```{r}
+tabla_coeficientes <- tidy(lm_fit)
+
+tabla_coeficientes
+```
+
+```{r include=FALSE}
+options(scipen = 999) #notación científica
+
+intercepto <- round(tabla_coeficientes$estimate[1],1)
+beta1 <- round(tabla_coeficientes$estimate[2])
+```
+
+De acuerdo con nuestra estimación:
+
+$\hat{IngInd} =$ `r intercepto` $+$ `r beta1` $HorasTD$
+
+```{r include=FALSE}
+options(scipen = 0) #notación científica
+```
+
+Noten que la información viene en forma de *data.frame*, por lo que no tenemos que aplicar ninguna transformación adicional para graficar.
+
+Para tener más información sobre nuestro modelo, aplicamos:
+
+```{r}
+lm_fit %>% 
+  pluck("fit") %>%
+  summary()
+```
+
+¿Qué información se puede leer? ¿Las relaciones son estadísticamente significativas? ¿El modelo es "bueno"?
+
+------------------------------------------------------------------------
+
+**Ejercicio**
+
+Plantee un modelo donde la variable explicativa sea la variable horas_trabajo_mercado, compare con el modelo anterior.
+
+```{r}
+
+```
+
+```{r}
+#respuesta
+lm_spec %>%
+  fit(ingreso_individual ~ horas_trabajo_mercado, data = base_juguete) %>% 
+  pluck("fit") %>%
+  summary()
+```
+
+------------------------------------------------------------------------
+
+## Predecimos
+
+Para que el modelo nos arroje sus predicciones, usamos el comando *predict()*, donde tenemos que especificar el modelo y los datos sobre los cuales predecir.
+
+Podemos ver tanto la predicción puntual para cada observación (por default), como un intervalo de canfianza.
+
+```{r}
+predict(lm_fit, #modelo
+        new_data = base_juguete #datos
+        #, type = "pred_int"
+        )
+```
+
+------------------------------------------------------------------------
+
+*Nota:* por ahora no estamos usando sets de train y test, por lo que predecimos sobre los mismos datos sobre los que entrenamos el modelo. Cuando empecemos a usar train y test, vamos a ingresar el set de test en el argumento *new_data*.
+
+------------------------------------------------------------------------
+
+También podemos usar la función *augment()* para anexar nuestras predicciones y sus residuos a la base.
+
+```{r}
+
+augment(lm_fit, new_data = base_juguete) %>% 
+  select(ingreso_individual, .pred, .resid)
+
+```
+
+Grafiquemos los residuos para ver si hay algún problema con el modelo.
+
+```{r}
+augment(lm_fit, new_data = base_juguete) %>% 
+  dplyr::select(.resid, .pred)%>%
+         ggplot(aes(x=.pred, y=.resid)) + 
+                 geom_point() + 
+                 theme_minimal() +
+                geom_hline(yintercept=0, linetype='dashed') 
+```
+
+```{r}
+max(augment(lm_fit, new_data = base_juguete)$.pred)
+
+max(augment(lm_fit, new_data = base_juguete)$ingreso_individual)
+```
+
+¿Dónde funciona mal el modelo? Para los casos con ingresos altos y muy pocas horas de trabajo no remunerado.
+
+Quizás falta agregar alguna variable al modelo
+
+```{r}
+base_juguete%>% 
+  #filter(horas_trabajo_domestico > 0) %>% 
+  ggplot(aes(x=horas_trabajo_domestico, y=ingreso_individual, color = sexo)) + 
+  geom_point() + 
+  geom_smooth(method='lm', color = 'gray', se = FALSE) +
+  theme_minimal()
+```
+
+Vemos que la relación entre ambas variables es muy distinta para mujeres y varones. En la próxima clase vamos a probar incorporar más variables a nuestra regresión para mejorar nuestros resultados.
+
+# Resumen
+
+Para implementar una regresión lineal simple en tidymodels necesitamos:
+
+1.  Especificar el modelo
+
+2.  fit()
+
+3.  predict()
+
+# Referencias bibliográficas
+
+An Introduction to Statistical Learning with applications in R (James, Witten, Hastie y Tibshirani) -- 1st and 2nd version
+
+Tidy Modeling with R (Kuhn y Silge)
+
+Introduction to Modern Statistics (Çetinkaya-Rundel y Hardin)

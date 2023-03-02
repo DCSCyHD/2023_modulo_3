@@ -1,0 +1,230 @@
+---
+title: "Teórica 3 - Módulo 3"
+subtitle: "Regresión lineal simple y múltiple."
+author: 
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
+  - Carolina Pradier y Guido Weksler
+output: 
+  html_document:
+    toc: TRUE
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
+                      fig.width=8)
+```
+
+```{r librerias, results='hide'}
+library(tidyverse)
+library(latex2exp)
+
+options(dplyr.summarise.inform = FALSE)
+```
+
+
+# Introducción a la regresión múltiple
+
+Hoy vamos a extender el modelo de regresión lineal simple para incorporar más de un predictor. De este modo, vamos a explicar $Y$ a partir de un **conjunto de variables** $X_{1}, X_{2}, ..., X_{n}$.
+
+# ¿Por qué no una regresión simple por cada variable? 
+
+Con una sucesión de regresiones simples en lugar de una múltiple, no es claro cómo podríamos predecir valores que *incorporen el efecto de las demás variables*.
+
+En cada coeficiente individual estaríamos ignorando el efecto de las demás variables. Si las variables tienen alguna correlación, podemos encontrar efectos que no son tales cuando controlamos por otra variable. Es decir, una relación significativa en una regresión simple puede desaparecer cuando controlamos por otras variables en una regresión múltiple
+
+# Fórmula e interpretación de los coeficientes
+
+La fórmula de la regresión múltiple es igual a la de la simple, sólo que extendida por cada variable que incluimos.
+
+
+$$ y \approx \beta_{0} + \beta_{1}X_{1} + \beta_{2}X_{2} + \beta_{3}X_{3} + ... + \beta_{n}X_{n} + \epsilon$$ 
+
+---
+
+**¿Cómo se lee un coeficiente de regresión múltiple?**
+
+$\beta_{p}$ en una regresión lineal múltiple es la cantidad de unidades que aumenta en promedio nuestra predicción de la variable $Y$ cuando aumenta una unidad la variable $X_{p}$, **manteniendo todas las demás variables ($X_{1}$,$X_{2}$,...) estables**.
+
+
+
+# Variables independientes cualitativas
+
+Una variable binaria indica si una observación presenta un determinado atributo o no (por ejemplo, la variable sexo indica si una persona es mujer o no). Para incorporarlas a la regresión, transformamos las variables binarias $X_{cuali}$ a dos valores numéricos: **1** si la observación presenta el atributo y **0** si la observación no lo presenta -el caso base- (por ejemplo: 1 si la persona es varón y 0 si la persona es mujer).
+
+Veamos con un ejemplo la información que aporta al modelo una variable de este tipo. Supongamos una regresión caracterizada por la siguiente ecuación:
+
+$$ Y \approx \beta_{0} + \beta_{1}X_{1} + \beta_{2}X_{2} + \epsilon$$
+
+Donde $X_{1}$ es cuantitativa (por ejemplo, horas dedicadas al trabajo remunerado) y $X_{2}$ es cualitativa (por ejemplo, sexo).
+
+Veamos que pasa cuando la variable $X_{2}$ toma cada uno de sus valores:
+
+- Si $X_{2}$ = 1:
+
+$$ Y = \beta_{0} + \beta_{1}X_{1} + \beta_{2}$$
+$$ Y = (\beta_{0} + \beta_{2}) + \beta_{1}X_{1}$$
+
+- Si $X_{2}$ = 0:
+
+$$ Y = \beta_{0} + \beta_{1}X_{1}$$
+Entonces, ¿qué efecto tiene sobre el modelo la incorporación de una variable cualitativa? *Un desplazamiento de la ordenada al origen*. Representemos esto gráficamente:
+
+```{r echo = FALSE}
+set.seed(1)
+data1 = tibble(x1 = c(1:10 + runif(13),0),
+              y = 3 + 4 * x1,
+              x2 = c(rep(0,14)))
+data2 = tibble(x1 = c(1:10 + runif(13),0),
+              y = 8 + 4 * x1,
+              x2 = c(rep(1,14)))
+
+bind_rows(data1,data2) %>%
+  mutate(x2 = as.factor(x2)) %>% 
+ggplot(aes(x1,y,color=x2, group = x2)) +
+        geom_line() + 
+        geom_point() +
+        theme_minimal()+
+  geom_segment(x = 6, y = 27, xend = 6, yend = 32,
+               color = "black", size = 1)+ 
+  geom_segment(x = 0,y = 3,xend = 0,yend = 0,
+               color = "black", size = 1)+ 
+  annotate(geom="text", x=6.2, y=29.5, label=TeX("$\\beta_{2}$"),
+              color="black")+
+  annotate(geom="text", x=0.2, y=1, label=TeX("$\\beta_{0}$"),
+              color="black")
+
+```
+
+Al incorporar una variable cualitativa, el coeficiente $\beta_{0}$ va a interpretarse como la ordenada al origen para aquellos casos donde la variable cualitativa tenga valor 0 (en nuestro ejemplo, las mujeres) y el coeficiente $\beta_{2}$ se va a interpretar como el desplazamiento de la ordenada al origen para los casos donde la variable cualitativa tenga valor 1 (en nuestro ejemplo, los varones).
+
+---
+
+*Nota 1:* se usa el sexo biológico con dos categorías para ejemplificar debido a que es aquella variable que generalmente se presenta en las estadísticas para aproximar la información relativa al género.
+
+---
+
+*Nota 2:* note que $\beta_{2}$ también podría tomar valores negativos, ¿qué se observaría en el gráfico en ese caso?
+
+---
+
+**¿Qué hacemos si la variable cualitativa tiene más de dos categorías?**
+
+Para una variable cualitativa con *n* categorías, creamos *n - 1* variable auxiliares que toman valores 0 y 1. 
+
+Pensemos por ejemplo en la variable condición de actividad: puede tomar los valores ocupado, desocupado e inactivo. 
+Entonces, vamos a crear dos variable auxiliares:
+
+- $X_{1}$ va a identificar a las personas ocupadas. Si $X_{1} = 1$, la persona es ocupada, si $X_{1} = 0$, no lo es. La ordenada al origen para las personas ocupadas es $\beta_{0} + \beta_{1}$.
+
+- $X_{2}$ va a identificar a las personas desocupadas. Si $X_{2} = 1$, la persona es desocupada, si $X_{2} = 0$, no lo es. La ordenada al origen para las personas desocupadas es $\beta_{0} + \beta_{2}$.
+
+La categoría restante (inactivo) funciona como *base* o *referencia*: su ordenada al origen va a ser aquella que corresponda a $\beta_{0}$, ya que a las observaciones de este grupo les corresponde $X_{1} = 0$ y $X_{2} = 0$.
+
+
+# Términos de interacción
+
+A los fines de representar las relaciones entre las variables independientes, podemos agregar términos de interacción, representados por el producto entre las dos variables independientes.
+
+Esta información aparece de la siguiente manera en la ecuación de la regresión:
+
+$$ Y \approx \beta_{0} + \beta_{1}X_{1} + \beta_{2}X_{2} + \beta_{3}X_{1}X_{2} + \epsilon$$
+Este tipo de términos son relevantes cuando el efecto de una de las variables independientes sobre la variable dependiente se relaciona al valor de otra de ellas. 
+
+Por ejemplo, podríamos encontrar una relación entre los ingresos individuales y las horas de trabajo remunerado. Sin embargo, podría pasar que sumar horas de trabajo remunerado tuviese un efecto distinto para las mujeres y los varones. Incorporar la variable sexo al modelo nos permitiría ver un efecto fijo: a igual cantidad de horas, las personas de x sexo ganan $x más. Si embargo, podría suceder que la relación entre ambas variables fuese más compleja, y la diferencia se volviera más/menos pronunciada a medida que aumentan/disminuyen las horas trabajadas. En ese caso, la relación entre horas e ingresos sería distinta para cada una de las poblaciones.
+
+Analicemos en mayor detalle el caso particular de una interacción entre una variable cuantitativa y una variable cualitativa como el que acabamos de comentar: supongamos que $X_{1}$ es cuantitativa y $X_{2}$ es cualitativa.
+
+Veamos que pasa cuando la variable $X_{2}$ toma cada uno de sus valores:
+
+- Si $X_{2}$ = 1:
+
+$$ Y = \beta_{0} + \beta_{1}X_{1} + \beta_{2} + \beta_{3}X_{1} $$
+$$ Y = (\beta_{0} + \beta_{2}) + (\beta_{1} + \beta_{3})X_{1}$$
+
+- Si $X_{2}$ = 0:
+
+$$ Y = \beta_{0} + \beta_{1}X_{1}$$
+Entonces, ¿qué efecto tiene sobre el modelo la incorporación del término de interacción? *Una modificación de la pendiente*. Representemos esto gráficamente:
+
+```{r echo = FALSE}
+set.seed(1)
+data1 = tibble(x1 = c(1:10 + runif(13),0),
+              y = 3 + 4 * x1,
+              x2 = c(rep(0,14)))
+data2 = tibble(x1 = c(1:10 + runif(13),0),
+              y = 8 + 6 * x1,
+              x2 = c(rep(1,14)))
+
+bind_rows(data1,data2) %>%
+  mutate(x2 = as.factor(x2)) %>% 
+ggplot(aes(x1,y,color=x2, group = x2)) +
+        geom_line() + 
+        geom_point() +
+        theme_minimal()+
+  annotate(geom="text", x=6.2, y=32, label=TeX("Pendiente: $\\beta_{1}$"),
+              color="black")+
+  annotate(geom="text", x=6.1, y=52, label=TeX("Pendiente: $\\beta_{1} + \\beta_{3}$"),
+              color="black")
+
+```
+
+De este modo, al incorporar este término de interacción, el coeficiente $\beta_{1}$ va a interpretarse como la pendiente de la recta para aquellos casos donde la variable cualitativa tenga valor 0 y el coeficiente $\beta_{3}$ se va a interpretar como la modificación de la pendiente para los casos donde la variable cualitativa tenga valor 1 (en nuestro ejemplo, los varones). 
+Es decir, la interacción estaría informando que el efecto sobre $Y$ de la variable $X_{1}$ es distinto para cada una de las poblaciones.
+
+# Test de hipótesis 2. Significatividad global e individual
+
+Ahora que tenemos múltiples predictores, además de testear si cada uno tiene una relación estadísticamente significativa con $Y$, vamos a chequear si el modelo es globalmente significativo.
+
+Este **test de hipótesis** va a tener las siguientes hipótesis:
+
+$H_{0}$: todos los $\beta_{n}=0$
+
+$H_{A}$: algún $\beta_{j} \neq 0$
+
+El resultado del test va a aparecer en el output de R junto al estadístico del test (F), y como siempre vamos a buscar un **p-valor** bajo.
+
+# Multicolinealidad
+
+Un problema que puede surgir en los modelos de regresión con múltiples predictores es que los *predictores se encuentren correlacionados entre sí*. Este problema se llama **multicolinealidad**. 
+
+---
+
+¿Por qué es un problema?
+
+Si los predictores se encuentran relacionados entre sí, no podemos aislar el efecto de cada uno de ellos sobre la variable independiente, por lo que nuestros coeficientes se vuelven más imprecisos.
+
+---
+
+Una forma de identificar problemas de multicolinealidad es evaluar el **VIF** (variance inflation factor). Este indicador evalúa en qué medida se incrementa la variabilidad de cada coeficiente estimado como consecuencia de la multicolinealidad. El menor valor posible del VIF es 1, y se considera problemático si es mayor a 10.
+
+Si encontramos que algunas variables se encuentran correlacionadas entre sí, tenemos dos opciones: dejar una y eliminar las demás (ya que contienen información redundante), o combinarlas en una única variable que sintetice su información.
+
+# Complejizamos métrica de evaluación del modelo: $R^{2}$ ajustado
+
+Un problema del $R^{2}$ es que aumenta al incluir variables en el modelo (independientemente de la información que aporten para explicar $Y$). 
+
+De este modo, si tomamos este indicador para elegir cuál es el mejor modelo, podemos terminar con una situación de *overfitting* (intentando reducir el sesgo, podemos hacer crecer demasiado la varianza).
+
+Podemos recurrir al $R^{2}$ **ajustado** para penalizar la inclusión de variables explicativas.
+
+Para calcular el $R^{2}$ ajustado:
+
+$$R^{2} \hspace{0.1cm} ajustado = 1 - \frac{SSE}{SST} \times \frac{NroObservaciones - 1}{NroObservaciones - NroVariablesIndep - 1}$$
+
+De este modo, el $R^{2}$ ajustado sólo crece si agregar variables se compensa con una reducción de la variabilidad no explicada.
+
+
+# Referencias bibliográficas
+
+An Introduction to Statistical Learning with applications in R (James, Witten, Hastie y Tibshirani) -- 1st and 2nd version
+
+Tidy Modeling with R (Kuhn y Silge)
+
+Introduction to Modern Statistics (Çetinkaya-Rundel y Hardin)
+
+
