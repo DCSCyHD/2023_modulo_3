@@ -23,6 +23,8 @@ knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
 library(tidyverse)
 library(tidymodels)
 library(GGally)
+library(gtsummary)
+library(gt)
 tidymodels_prefer()
 
 options(dplyr.summarise.inform = FALSE)
@@ -160,9 +162,10 @@ lm_fit <- lm_spec %>%
 Veamos los coeficientes:
 
 ```{r}
-tabla_coeficientes <- tidy(lm_fit)
+tabla_coeficientes <- tidy(lm_fit) 
 
-tabla_coeficientes
+tabla_coeficientes%>% 
+  gt() #para visualizar de forma más prolija
 ```
 
 ```{r include=FALSE}
