@@ -204,7 +204,7 @@ La anterior muestra ocho parcelas y sus correlaciones correspondientes. Solo cua
 
 ## Matriz de correlación
 
-La **matriz de correlación** nos permie visualizar rápidamente las principales relaciones entre las variables. Es una herramienta que puede resultar útil para seleccionar las variables explicativas en un modelo.
+La **matriz de correlación** nos permite visualizar rápidamente las principales relaciones entre las variables. Es una herramienta que puede resultar útil para seleccionar las variables explicativas en un modelo.
 
 Calculemos la matriz de correlaciones para nuestra base (sólo se calculan entre variables numéricas!):
 

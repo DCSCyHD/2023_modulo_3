@@ -200,7 +200,7 @@ simple_recipe <- recipe(ingreso_individual ~ horas_trabajo_domestico + horas_tra
   #incorporamos transformaciones
   
   step_interact( ~sexo:starts_with("horas")) %>% #agrego interacciones entre sexo y todas las variables que empiecen con "horas"
-  step_dummy(sexo) %>% #vuelvo dummy las variables nominales (en este caso sexo)
+  step_dummy(sexo) %>% #vuelvo dummy la variable sexo
   step_other(menores_hogar, threshold = 0.2) #agrupo en niveles que representen al menos el 20% de las observaciones la variable menores_hogar, agrupando a los otros valores en la categoría "otros"
 
 ```

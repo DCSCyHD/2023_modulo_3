@@ -1746,7 +1746,7 @@ simple_recipe &lt;- recipe(ingreso_individual ~ horas_trabajo_domestico + horas_
   #incorporamos transformaciones
   
   step_interact( ~sexo:starts_with(&quot;horas&quot;)) %&gt;% #agrego interacciones entre sexo y todas las variables que empiecen con &quot;horas&quot;
-  step_dummy(sexo) %&gt;% #vuelvo dummy las variables nominales (en este caso sexo)
+  step_dummy(sexo) %&gt;% #vuelvo dummy la variable sexo
   step_other(menores_hogar, threshold = 0.2) #agrupo en niveles que representen al menos el 20% de las observaciones la variable menores_hogar, agrupando a los otros valores en la categoría &quot;otros&quot;</code></pre>
 <p>Incorporamos al workflow nuestro nuevo preprocesamiento</p>
 <pre class="r"><code>  lm_wflow &lt;-
@@ -1787,9 +1787,9 @@ pensar en sacarlo del modelo.</p>
 <pre><code>## # A tibble: 3 × 3
 ##   terms         retained id         
 ##   &lt;chr&gt;         &lt;chr&gt;    &lt;chr&gt;      
-## 1 menores_hogar 0        other_84cUi
-## 2 menores_hogar 1        other_84cUi
-## 3 menores_hogar 2        other_84cUi</code></pre>
+## 1 menores_hogar 0        other_ibgmF
+## 2 menores_hogar 1        other_ibgmF
+## 3 menores_hogar 2        other_ibgmF</code></pre>
 <p>Se agrupó a la variable menores_hogar en 4 categorías: 0, 1, 2 y
 otros (entonces, ¿por qué hay 3 dummys en el modelo?)</p>
 <p>¿No nos acordamos qué pasos habíamos seguido? Si no, podemos

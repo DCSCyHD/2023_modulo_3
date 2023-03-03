@@ -100,7 +100,7 @@ base_juguete%>%
   theme_minimal()
 ```
 
-*geom_smooth()* nos ayuda a ver la relación lineal entre los puntos. Acá vemos que, si bien la relación entre ambas no es perfectamente lineal, la información sobre las horas dedicadas al trabajo doméstico ayudan a predecir sus ingresos individuales.
+*geom_smooth()* nos ayuda a ver la relación lineal entre los puntos. Acá vemos que, si bien la relación entre ambas no es perfectamente lineal, la información sobre las horas dedicadas al trabajo doméstico ayuda a predecir sus ingresos individuales.
 
 ### tidymodels
 
