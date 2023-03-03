@@ -1,0 +1,144 @@
+---
+title: "Práctica 6 - Módulo 3"
+subtitle: "CrossValidation."
+author: 
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
+  - Carolina Pradier y Guido Weksler
+output: 
+  html_document:
+    toc: TRUE
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
+                      fig.width=8)
+```
+
+```{r librerias, results='hide'}
+library(tidyverse)
+library(tidymodels)
+
+options(dplyr.summarise.inform = FALSE)
+```
+
+
+# Introducción   
+En este material aplicaremos la técnica de cross-validation para testear distintos modelos vistos a lo largo del módulo. Utilizaremos las herramientas específicas de tidymodels para aprender a comparar modelos.
+
+# Cross-Validation   
+La función ```vfold_cv()``` nos crea un objeto que contiene las particiones en cuestión.   
+ Aplicando CV con 10 folds para un solo modelo. Usaremos **K = 10**, lo que implica que pparticionaremos en 10 el dataset, para que cada parte actue como testing de las otras 9 en cada una de las iteraciones  
+
+```{r}
+base_juguete <- readRDS("../fuentes/eut_juguete.RDS")
+base_folds <- vfold_cv(
+              data  = base_juguete,
+              v       = 10)
+head(base_folds)
+```
+Comencemos con un caso sencillo, un modelo de regresión lineal con dos predictores.    
+```{r}
+mi_modelo <- linear_reg() %>% 
+  set_engine("lm")
+
+mi_formula_gral <- recipe(
+  formula = horas_trabajo_domestico ~ horas_trabajo_mercado+ingreso_individual,
+  data =  base_juguete
+               ) 
+
+validacion_fit <- fit_resamples(
+  object       = mi_modelo,# Definición de mi (mis) modelos
+  preprocessor = mi_formula_gral, #formula a aplicar
+  resamples    = base_folds, # De donde saco las particiones 
+  metrics      = metric_set(rmse, mae), #Metricas (Root mean squear error y Mean abs error)
+  control      = control_resamples(save_pred = TRUE) # parametro para guardar predicciones
+                  )
+
+
+```
+¿Que contiene **validacion fit**? Para cada Fold (que se corresponde con una interación distinta) contiene las métricas y las predicciones
+```{r}
+head(validacion_fit)
+```
+
+
+Con la función collect_metrics, puedo hacer un resumen de todas las métricas obtenidas en cada uno de mis folds. Es decir, promedio el MAE (mean absolute error) obtenido con cada fold y también promedio el RMSE (root mean squeared error) obtenido con cada fold. 
+```{r}
+validacion_fit %>% 
+  collect_metrics()
+```
+
+Si quiero las métricas por separado, sin promediar. Así veo, por ejemplo que el **Fold 1** performó mejor que el **Fold 2**, etc.
+```{r}
+metricas_por_fold <- validacion_fit %>%
+  collect_metrics(summarize = FALSE)  
+
+head(metricas_por_fold)
+```
+
+Miremos como se distribuyen las dos métric errores de cada una de las validaciones cruzadas
+```{r}
+# Valores de validación (mae y rmse) obtenidos en cada partición y repetición.
+
+ggplot(
+        data = metricas_por_fold,
+        aes(x = .metric, y = .estimate, fill = .metric, shape = .metric)) +
+      geom_boxplot(outlier.shape = NA, alpha = 0.1) +
+      geom_jitter(aes(color = id),size = 2,width = 0.05) +
+      theme_bw() +
+      theme()
+
+```
+
+# Comparando modelos    
+Ahora bien, todo esto fue aplicado **sólamente** un sólo modelo (regresión líneal múltiple de grado 1). La "gracia" de el lenguaje tidymodels es poder comparar múltiples modelos al mismo tiempo, para elegir así el que mejor performe.   
+
+Vamos a crear ahora una receta básica de regresión líneal múltiple, para luego agregarle o quitarle cosas a esa receta y comparar como performa el modelo.      
+```{r}
+
+class(base_juguete$menores_hogar) <- "numeric"
+
+
+receta_basica <- recipe(
+  horas_trabajo_domestico ~ horas_trabajo_mercado+ingreso_individual+sexo+menores_hogar,
+  data = base_juguete)
+
+receta_2 <- receta_basica  %>%
+    step_poly(all_numeric_predictors(), degree = 2) # Agrego la variable de menores_hogar para aplicarla al 2
+receta_3 <- receta_basica  %>%
+    step_rm(c(menores_hogar,ingreso_individual)) # Saco 2 variables a ver que onda
+
+recetario <- 
+  list(basica = receta_basica,
+       poly = receta_2,
+       bivariado = receta_3)
+
+lm_models <- workflow_set(preproc = recetario, # que recetas voy a aplicar
+                          models = list(lm = linear_reg()), #con que modelos (siempre el mismo o distintos)
+                          cross = FALSE) #¿quiero hacer todas las combinaciones de recetas-modelos?
+lm_models
+```
+
+
+
+Hasta acá tengo el listado de todos mis workflows (combinación de recetas y modelos), pero no realicé ningún tipo de entrenamiento. La función ``workflow_map` me permite acceder a este tibble y aplicar un mismo procedimiento a cada una de sus
+Entreno
+```{r}
+
+lm_models_fiteados <- lm_models %>% 
+  workflow_map(fn = "fit_resamples", 
+               seed = 1101,  #Semilla para reproducibilidad
+               verbose = TRUE, #Que me muestre a medida que avanza
+               resamples = base_folds) # de donde tomo los flods)
+```
+
+Recolecto métricas promedio de los 10 folds, de los 3 modelos al mismo tiempo. Puedo comparar muy fácilmente qué modelo performa mejor en términos de la métrica elegida.
+```{r}
+collect_metrics(lm_models_fiteados) %>% 
+  filter(.metric == "rmse")
+```

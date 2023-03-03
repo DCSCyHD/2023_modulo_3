@@ -1,0 +1,161 @@
+---
+title: "Teórica 4 - Módulo 3"
+subtitle: "Regresión logística."
+author: 
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
+  - Carolina Pradier y Guido Weksler
+output: 
+  html_document:
+    toc: TRUE
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,comment = FALSE,
+                      fig.width=8)
+```
+
+```{r librerias, include=FALSE, results='hide'}
+library(tidyverse)
+library(tidymodels)
+library(gtsummary)
+library(gt)
+
+options(dplyr.summarise.inform = FALSE)
+options(scipen = 999)
+```
+
+
+# Introducción     
+Pensemos los siguientes problemas.    
+
+ - ¿ Qué variables incrementan la probabilidad de ser desocupado?, ¿Es posible a partir de ciertas características personales predecir si una persona está desocupada? 
+ - ¿Cómo estimar la incidencia de ciertas caractericas personales de un cliente sobre la probabiidad de que sea moroso?, ¿Como podemos estimar la probabilidad de morosidad de un cliente?  
+ - *¿ Qué caracteristicas determinan la realización de trabajo domestico no remunerado?, ¿Es posible predecir que individuos realizan tareas domésticas?*
+
+# La limitación de la regresión lineal   
+Supongamos (polémicamente) que queremos modelar la probabilidad de que una persona realice Trabajo Doméstico No Remunerado (TDNR) en función de una única variable: el tiempo que dedica al trabajo en el mercado remunerado.    
+
+```{r echo=FALSE}
+set.seed(999)
+ejemplo<- data.frame(
+  realiza_trabajo_domestico = c(rep("No",100),rep("Si",100)),
+  horas_trabajo_mercado = c(sample(30:70,size = 100,replace = T),
+                            sample(0:50,size = 100,replace = T)
+                            ),
+  ingreso_familiar    = round(c(
+    abs(rnorm(n = 90))*30000+5000,
+    abs(rnorm(n = 10))*10000,
+    abs(rnorm(n = 10))*30000+5000,
+    abs(rnorm(n = 90))*10000),
+    digits = 1),
+  menores_hogar         = c(sample(c("Si","No"),prob = c(0.2,0.8),replace = T,size = 100),
+                            sample(c("Si","No"),prob = c(0.8,0.2),replace = T,size = 100))
+  ) 
+
+ejemplo$ingreso_familiar[ejemplo$horas_trabajo_mercado %in% 35:45 & ejemplo$realiza_trabajo_domestico == "No"] <- sample(
+  x = 1:70000,prob = c(rep(0.000006666667,30000),
+                       rep(0.00002,40000)), 
+  size = sum(ejemplo$horas_trabajo_mercado %in% 35:45 & ejemplo$realiza_trabajo_domestico == "No"),
+  replace = T)
+
+#saveRDS(object = ejemplo,file = "../fuentes/eut_juguete_clase4.RDS")
+```
+
+Tenemos la siguente base de ejemplo: Tiene 200 casos, y 4 variables:  
+
+  - realiza_trabajo_domestico (Si o No)  
+  - horas_trabajo_mercado (numerica) :horas trabajadas en el mercado remunerado   
+  - ingreso_familiar (numérica) : ingreso total del grupo familiar
+  - menores_hogar(numerica): cantidad de menores en el hogar
+  
+  
+Con las herramientas vistas hasta aquí, podríamos definir con el número 1 a los individuos que realizan TDNR, y con el número 0 a quiens no realizan. Si aplicaramos la técnica de la regresión lineal tendríamos un panorama como el siguiente:     
+
+```{r echo=FALSE}
+sample_n(ejemplo,10) %>% 
+  gt() # Para mostrar las tablas de forma más prolija
+```
+
+```{r echo=FALSE}
+para_graficos_ejemplo<- 
+  ejemplo %>%   
+  mutate(realiza_trabajo_domestico = ifelse(realiza_trabajo_domestico == "Si",1,0)) 
+  
+ggplot(para_graficos_ejemplo,aes(x = horas_trabajo_mercado, y = realiza_trabajo_domestico,alpha = 0.5)) +
+  geom_point()+
+  geom_smooth(method = "lm",se = F)+
+  guides(alpha = "none")+
+  labs(y = "realiza trabajo domestico (0 = NO, 1 = SI)")
+
+```
+
+>¿Qué problemas le ven a esto?
+
+- Para una clasificación dicotómica ("Si" o "No"), la regresión lineal nos da probabilidades fuera del rango 0-1    
+- Si tuvieramos más de 2 categorías para clasificar/predecir (Ej: "Desempleado","Inactivo","Ocupado") la regresión lineal necesariamente requeriría la conversión de la variable objetivo en ordinal. Ello trae dos suposiciones problematicas:  
+  - Que hay un orden entre las categorías
+  - Que las categorías son equidistantes    
+
+<br>  
+
+*¿Y si nos salimos del mundo de la línealidad?*
+
+# Regresión logistica (Intuición)  
+
+```{r echo=FALSE}
+ggplot(para_graficos_ejemplo,aes(x = horas_trabajo_mercado, y = realiza_trabajo_domestico,alpha = 0.5)) +
+  geom_point()+
+  geom_smooth(method = "glm",
+              method.args = list(family = "binomial"),
+              se = FALSE) +
+  guides(alpha = "none")+
+    labs(y = "realiza trabajo domestico (0 = NO, 1 = SI)")
+
+```
+>Debate: ¿Qué tipo de modelo es la regresión Logística?     
+
+- *Supervisado* vs *no supervisado*
+- *Regresión* vs *clasificación*. 
+
+# Regresión logistica (fórmulas) 
+ - Es una función que toma una variable continua del rango de los números reales y devuelve un output entre 0 y 1
+![](img/logistica.png)
+- Dada la propiedad deseable de esta función de arrojar valores entre 0 y 1 (que podemos utilizar como probabildiades de pertenencer a una clase), lo que haremos es "pasarle" como *argumento* de la función (x) nuestro viejo modelo de regresión lineal. De esta forma, obtendremos esta función nos servirá como "link" para, partiendo de la ecuación del modelo lineal, obtener como **output** la probabilidad de pertenecer a la clase 1 ("Realiza trabajo doméstico" en nuestro ejemplo)       
+- La regresión logística forma parte de los denominados *Modelos lineales generalizados* o GLM (por sus siglas en inglés). Estos modelos vinculan el output de las regresiones lineales (de distribución normal) con la distribución de una variable objetivo no normal (en este caso, binomial)
+
+![](img/despeje_odds_ratio.png)
+
+# Regresión logistica (interpretacion)
+
+- Interpretación del **odds ratio**: "Cuanto más grande es la probabilidad de la clase 1, respecto a la probabilidad de la clase 0". Ejemplo: Si para un  $\mathcal{x}_j = 15$, obtengo que $odds ratio = 2$ quiere decir que la probabilidad asignada para la clase 1 es 2 veces mayor que la probabilidad asignada para la clase 0. Siguiendo nuestro ejemplo: Para una persona que trabaja 15hs en el mercado remunerado, nuestro modelo otorgaría el doble de probabilidad a la clase "Realiza trabajo doméstico" que a la clase "No Realiza". (66,6% y 33,3% respectivamente)    
+- Interpretación de los $\mathcal{B}_j$: Si aumento la variable $\mathcal{x}_j$ en una unidad, el cociente $\frac{odds ratio_(x+1)}{odds ratio_(x)}$ será igual a $exp(\mathcal{B}_j)$       
+
+
+Veamos como quedan los coeficientes al entrenar nuestro modelo univariado. Alternativamente se presenta la salida en términos del odds ratio 
+
+```{r echo=FALSE}
+
+base_para_modelar <- ejemplo %>% 
+  mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico))
+
+mod_fiteado<- logistic_reg()  %>% 
+  fit(realiza_trabajo_domestico ~ horas_trabajo_mercado,
+      data = base_para_modelar) 
+
+mod_fiteado %>%
+  tidy() %>% 
+  gt()
+
+mod_fiteado %>%
+  tbl_regression(intercept = TRUE, exponentiate = T) %>%
+  as_gt() %>%
+  tab_header(title = 'Regresion logistica univariada')
+```
+
+
+

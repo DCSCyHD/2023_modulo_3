@@ -1,0 +1,369 @@
+---
+title: "Práctica guíada 4 - Módulo 3"
+subtitle: "Regresión logística."
+author: 
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
+  - Carolina Pradier y Guido Weksler
+output: 
+  html_document:
+    toc: TRUE
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	fig.width = 8,
+	message = FALSE,
+	warning = FALSE)
+```
+
+```{r librerias, results='hide'}
+library(tidyverse)
+library(tidymodels)
+library(gtsummary)
+library(modelsummary)
+library(gt)
+
+#options(dplyr.summarise.inform = FALSE)
+options(scipen = 999)
+```
+
+
+# Introducción     
+
+Operemos con [Tidymodels](https://www.tidymodels.org/) para hacer un modelo de clasificación con el método de la regresión logística. Usaremos nuestra base de juguete de 200 datos ficticios, con la variable objetivo **realiza_trabajo_domestico**. Por ahora, tomaremos únicamente como variables explicativas las horas trabajadas en el mercado y el ingreso total familiar.    
+
+Visualicemos previamente estos datos. 
+
+```{r}
+base_juguete <- readRDS(file = "fuentes/eut_juguete_clase4.RDS")
+
+
+ggplot(base_juguete,aes(x = horas_trabajo_mercado,
+                         y = ingreso_familiar,
+                         shape = realiza_trabajo_domestico))+
+  geom_point(size = 3)
+```
+
+Ahora veamos los pasos necesarios para correr el modelo. Luego, discutamos la interpretación de los coeficientes.    
+
+
+## Seteo el tipo de modelo         
+
+En formato tidy, comienzo especificando el tipo de modelo. En este caso,  **logistic_reg()**. De ser necesario puedo especificar con **set_mode()** el modo del modelo (qué tipo de predicción tiene el outcome, numérica o categórica) Luego,  especifico cual es el sistema que utilizaré para estimar el modelo con la función  **set_engine()** (en muchos casos responde al paquete que voy a usar para correr el modelo). 
+```{r}
+log_model <- logistic_reg() %>% #Defino el tipo de modelo
+  set_mode("classification") %>%  #el modo (regresión o clasificación)
+  set_engine("glm") #el motor sera de "Generalized linear models"
+log_model
+```
+## Fiteo (entreno) el modelo      
+Tomo la especificación anterior y excplicito que variables usaré y de que dataset.  
+
+----
+
+*Aclaración:* La variable objetivo **realiza_trabajo_domestico** debo convertirla en factor para correr una regresión logistica (es decir, que sea una variable con categorías).
+
+---
+
+```{r}
+base_para_modelar <- base_juguete %>% 
+  mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico))
+
+#Lo entreo con los datos 
+log_fiteado <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_trabajo_mercado+ingreso_familiar,
+      data = base_para_modelar)
+
+```
+
+### Veamos resultados de los parámetros estimados        
+Si bien podemos correr directo el objeto **log_fiteado** para ver los resultados, la función  `tidy()`  nos transforma  los coeficientes estimados (y también su desvío estandar, z-statistic y p.valor) a un formato data_frame. Para visualizarlo de forma más prolija usamos aquí también la función `gt()` del paquete homónimo.
+```{r}
+tidy(log_fiteado) %>% 
+  gt()
+```
+El paquete `modelsummary` y su función homónima nos arroja también datos sobre la bondad de ajuste del modelo. Tenemos medidas como el Akaike information criterion (AIC) y el Bayesian Information Criterion (BIC). Una herramienta interesante es que podemos pasar una lista de modelos y comparar entre ellos. Solo para estos fines, entrenemos otro modelo que también incluye la variable de menores en el hogar.
+```{r}
+
+log_fiteado2 <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_trabajo_mercado+ingreso_familiar+menores_hogar,
+      data = base_para_modelar)
+
+
+modelsummary::modelsummary(
+  list("logistica 2 predictores " = log_fiteado,
+       "logistica 3 predictores" = log_fiteado2)
+  )
+```
+
+
+----
+
+*Aclaración:* Dado que nos interesan más otro tipo de métricas, no veremos en detalle la estimación de medidas de bondad de ajuste como AIC y BIC. A los fines prácticos basta con tener noción de que:
+
+- Su utilidad es para **comparar modelos** (la interpretación del AIC o BIC de 1 modelo en si mismo es irrelevante)        
+- Las formulas de AIC y BIC tienen la siguiente "pinta": $xIC= complejidad-ajuste$.     
+Un termino positivo que actua como penalización a la complejidad del modelo (asociado a la cantidad de parametros o variables que utiliza). Un termino restando asociado a la capacidad de ajuste del modelo (vinculada a la **máxima verosimilitud**, es decir, cuan cerca le paso a los valores reales con mi predicción de probabilidad)    
+- Al comparar dos modelos, son mejores **los que tienen menor valor de AIC o BIC**.      
+- En el ejemplo anterior, a pesar de haber agregado complejidad en el 2do modelo (1 variable más), ganamos mucho en ajuste, por eso el AIC y BIC son más bajos.    
+
+---
+
+## Predicción   
+### Aplicado sobre datos nuevos        
+Si queremos sólo obtener la predicción que nuestro modelo hará sobre un nuevo par de datos, la función `predict()` requiere como imput un data.frame que contenga columnas nombradas igual que los predictores de nuestro modelo y devuelve, en el mismo orden, las predicciones para la variable Y.    
+
+```{r}
+data_nueva<- data.frame(horas_trabajo_mercado = c(40,13),
+                        ingreso_familiar = c(60000,10000))
+
+predict(object = log_fiteado,new_data = data_nueva)
+```
+Una función que puede resultar todavía más úlil que `predict()` es `augment()`. Al pasarle un modelo entrenado y un dataset para realizar predicciones, esta última  añade a dicho dataset el valor de la clase predicha y también las probabilidades estimadas que respaldan dicha predicción 
+```{r}
+augment(x = log_fiteado,new_data = data_nueva)
+
+```
+
+### Aplicado sobre el total de la base
+Tomemos la función `augment()` para agregar a nuestro dataset  **base_para_modelar** las probabilidades asignadas por nuestro modelo a cada uno de los calsos, y por ende, la clase predicha 
+```{r}
+base_con_pred<- augment(x = log_fiteado, base_para_modelar)
+
+base_con_pred %>% 
+  sample_n(200) 
+```
+## Metricas de evaluación
+### Matriz de confusión
+Sobre la base de los valores reales y los valores predichos podríamos tomar la matriz de confusión como un tabulado bivariado entre ambas columas
+
+```{r}
+matriz_confusion <- conf_mat(base_con_pred,
+                             truth = realiza_trabajo_domestico,
+                             estimate = .pred_class)
+
+matriz_confusion
+```
+>¿Quien se anima a leer estos resultados?
+
+### Métricas derivadas de la matriz
+Accuracy, Sensitividad/Recall, Specificity y Precision
+
+
+```{r}
+accu <- (matriz_confusion$table[2,2]+matriz_confusion$table[1,1])/sum(matriz_confusion$table)
+error_rate <- 1-accu
+Sensitivity <- matriz_confusion$table[2,2]/sum(matriz_confusion$table[,2])
+Specificity <- matriz_confusion$table[1,1]/sum(matriz_confusion$table[,1])
+precision <- matriz_confusion$table[2,2]/sum(matriz_confusion$table[2,])
+```
+ - El modelo predice correctamente un `r scales::percent(accu,accuracy = 0.01) ` de los casos.     
+ - De los casos positivos (que efectivamente realizan trabajo doméstico), el modelo predice bien un `r scales::percent(Sensitivity,accuracy = 0.01) `.     
+ - De los casos negativos (que no realizan trabajo doméstico), el modelo predice bien un `r scales::percent(Specificity,accuracy = 0.01) `.    
+ - De los casos que son clasificados como positivos, sólo un `r scales::percent(precision,accuracy = 0.01)` . lo son.
+
+
+Veamos esto de forma gráfica para tratar de entender como está operando nuestro modelo:       
+En este gráfico utilizamos el parametro **shape** para distinguir el valor real de la variable objetivo ("No" o "Si") y el **color** para mostrar las probabildiades de pertenecer a la clase "Si" estimadas por nuestro modelo.
+```{r}
+ggplot(base_con_pred,aes(x = horas_trabajo_mercado,
+                         y = ingreso_familiar,
+                         shape = realiza_trabajo_domestico,
+                         color = .pred_Si))+
+  geom_point(size = 3)+
+  scale_color_viridis_c()
+```
+<br>   
+
+En este otro utilizamos  el **color** no para mostrar las probabildiades, sino para ver la clase predicha por nuestro modelo (lo que tenia probabilidad mayor a 0,5 queda como "Si", los menores a 0,5 como "No"). Ver como la "decision boundary" parece ser líneal.
+
+```{r}
+ggplot(base_con_pred,aes(x = horas_trabajo_mercado,
+                         y = ingreso_familiar,
+                         shape = realiza_trabajo_domestico,
+                         color = .pred_class))+
+  geom_point(size = 3)+
+  scale_color_viridis_d()
+```
+
+> El ejercicio anterior tiene un problema. Utilizamos para evaluar la performance del modelo los mismos datos que utilizamos para entrenarlo. Eso es potencialmente peligroso por posible **OVERFITTING**.         
+
+## Train-test split    
+
+Hagamos un modelo nuevo con un split de la base original en test y train.    
+
+ 
+### Split train-test    
+```{r}
+base_spliteada <-  initial_split(base_para_modelar,prop = 0.8)
+base_train <-  training(base_spliteada)
+base_test <-  testing(base_spliteada)
+
+```
+
+### Fiteo     
+
+```{r}
+#log_model <- logistic_reg() %>% # Ya lo corri arriba este paso 
+#  set_engine("glm")
+
+modelo_sobre_train <- log_model  %>% 
+  fit(realiza_trabajo_domestico ~ horas_trabajo_mercado+ingreso_familiar,
+      data = base_train)
+
+tidy(modelo_sobre_train)
+```
+
+
+### Aplico predicciones a la base de testeo    
+
+```{r}
+base_test_con_pred <- augment(x = modelo_sobre_train, base_test)
+base_test_con_pred
+```
+### Matriz de confusión
+Sobre la base de los valores reales y los valores predichos podríamos tomar la matriz de confusión como un tabulado bivariado entre ambas columas
+
+```{r}
+matriz_confusion_test<- conf_mat(data = base_test_con_pred,
+                                 truth =realiza_trabajo_domestico,
+                                 estimate =.pred_class)
+
+matriz_confusion_test
+```
+
+## Espacio de práctica (en clase)   
+Supongan que les solicitan armar un modelo con una sola variable predictora de las disponibles. Entrenen *con un mismo training set* 2 modelos con un solo predictor y evaluen como pronostica la realización de TDNR en el *test set*. Pueden calcular solo el **accuracy**.
+```{r, include=FALSE}
+
+```
+
+```{r, include=FALSE}
+
+```
+
+
+## Ejercicio con datos reales             
+- Levantemos la base de datos reales llamada **base_EAUH_TNR** (tiene un pre-procesamiento de seleccion y recategorización de algunas variables).     
+- Creamos allí la variable dicotómica "realiza_trabajo_doméstico" que tome los valores "Si" y "No" a partir de la variable original de **TIEMPO_TDNR**. *Recordatorio*: Necesitamos crearla como un factor para modelar   
+- Separamos el dataset en train y test.       
+- Utilizamos el set de training para construir 2 modelos de regresión logistica con 3 variables predictoras cada uno.     
+- Comparamos la **performance** de ambos modelos para predecir en el dataset de testing.    
+
+```{r}
+set.seed(18-12-2022)
+
+base_real<- readRDS(file = "fuentes/base_EAUH_TNR.RDS") %>% 
+  mutate(realiza_trabajo_domestico = factor(ifelse(TIEMPO_TDNR == 0,yes = "No",no = "Si")))
+
+
+base_spliteada<- initial_split(base_real)
+base_train<- training(base_spliteada)
+base_test<- testing(base_spliteada)
+
+log_model <- logistic_reg() %>% 
+  set_mode("classification") %>%  
+  set_engine("glm")
+
+modelo_1 <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_mercado+menores_hogar+NIVEL_ED,
+      data = base_train)  
+
+modelo_2 <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_mercado+ingreso_indiv+CH04,
+      data = base_train)  
+
+modelo_1 %>% 
+  tidy()
+
+modelo_2 %>% 
+  tidy()
+
+```
+
+Armemos una sola base que tenga las predicciones que hacen los dos modelos. Comienzo por aumentar la base original con las predicciones del modelo 1, las renombro como **"pred_m1"**. Luego con `bind_cols()` voy a añadire a eso las predicciones que hace el modelo 2 y las renombro como **"pred_m2"**.
+```{r}
+base_2modelos<- augment(modelo_1,base_test) %>%
+  rename(pred_m1=.pred_class) %>%  
+  bind_cols(predict(modelo_2, base_test)) %>%
+  rename(pred_m2=.pred_class) 
+
+base_2modelos %>% conf_mat(realiza_trabajo_domestico,pred_m1)
+base_2modelos %>% conf_mat(realiza_trabajo_domestico,pred_m2)
+```
+
+> ¿Que les llama la atención al ver la matriz de confusión?
+
+<br>
+
+## Ejercicio simple de balanceo de clases     
+En vez de tomar toda la base de datos para dividir en train y test, voy a hacer una muestra de 15000 casos positivos y 15000 negativos.
+```{r}
+table(base_real$realiza_trabajo_domestico)
+
+base_balanceada <- base_real %>% 
+  group_by(realiza_trabajo_domestico) %>% 
+  sample_n(size = 15000) %>% 
+  ungroup()
+```
+
+```{r}
+table(base_balanceada$realiza_trabajo_domestico)
+```
+Fiteo el modelo...
+```{r}
+
+base_b_spliteada<- initial_split(base_balanceada)
+base_b_train<- training(base_b_spliteada)
+base_b_test<- testing(base_b_spliteada)
+
+log_model <- logistic_reg() %>% #Defino el tipo de modelo
+  set_mode("classification") %>%  #el modo (regresión o clasificación)
+  set_engine("glm")
+
+modelo_1b <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_mercado+menores_hogar+NIVEL_ED,
+      data = base_b_train)  
+
+modelo_2b <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_mercado+ingreso_indiv+CH04,
+      data = base_b_train)  
+
+modelo_1b %>% 
+  tidy()
+
+modelo_2b %>% 
+  tidy()
+```
+
+Calculo metricas...
+
+```{r}
+base_2modelosb<- base_b_test %>% 
+  select(realiza_trabajo_domestico) %>% 
+  bind_cols(predict(modelo_1b, base_b_test)) %>%
+  rename(pred_m1=.pred_class) %>%  
+  bind_cols(predict(modelo_2b, base_b_test)) %>%
+              rename(pred_m2=.pred_class) 
+
+base_2modelosb %>% conf_mat(realiza_trabajo_domestico,pred_m1)
+base_2modelosb %>% conf_mat(realiza_trabajo_domestico,pred_m2)
+```
+
+> ¿Qué metricas se logarn mejorar balanceando las clases?
+> ¿Perdimos mucho en accuracy respecto al escenario anterior?
+
+```{r}
+
+base_2modelosb %>% accuracy(realiza_trabajo_domestico,pred_m1)
+base_2modelosb %>% accuracy(realiza_trabajo_domestico,pred_m2)
+
+```
+
+
