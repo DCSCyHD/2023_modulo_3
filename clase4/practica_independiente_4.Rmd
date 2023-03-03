@@ -23,7 +23,7 @@ knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
 - Levantar la base real llamada **base_EAUH_TNR**.     
 - Crear una variable dicotómica "realiza_trabajo_doméstico" que tome los valores "Si" y "No" a partir de la variable original de **TIEMPO_TDNR**. *Ojo*: Necesitan crearla como un factor     
 - Eliminen la variable **TIEMPO_TDNR**. 
-- Exploren la base y elijan entre 3 o 5 variables que crean son las que mas influyen en la realizaci[on de trabajo domestico   
+- Exploren la base y elijan entre 3 o 5 variables que crean son las que mas influyen en la realización de trabajo doméstico   
 - Utilizar el set de training para construir 2 modelos de regresión logistica. Uno con las variables que elijieron y otro con todas las variables de la base.    
 - Mostraer los coeficientes estimados para cada modelo. Interpretar el signo y su significatividad estadística. 
 - Comparar la **performance** de ambos modelos para predecir en el dataset de testing.  
