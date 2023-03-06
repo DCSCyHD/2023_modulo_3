@@ -270,7 +270,7 @@ options(dplyr.summarise.inform = FALSE)</code></pre>
 </li>
 <li>ingreso_familiar</li>
 </ul>
-<pre class="r"><code>base_juguete&lt;- readRDS(file = &quot;../fuentes/eut_juguete_clase4.RDS&quot;) %&gt;% 
+<pre class="r"><code>base_juguete&lt;- readRDS(file = &quot;fuentes/eut_juguete_clase4.RDS&quot;) %&gt;% 
   mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico)) 
 
 ggplot(base_juguete,aes(x = horas_trabajo_mercado,
@@ -301,7 +301,6 @@ knn_fiteado5&lt;-  fit(
 knn_fiteado5</code></pre>
 <pre><code>## parsnip model object
 ## 
-## Fit time:  31ms 
 ## 
 ## Call:
 ## kknn::train.kknn(formula = realiza_trabajo_domestico ~ horas_trabajo_mercado +     ingreso_familiar, data = data, ks = min_rows(5, data, 5),     kernel = ~&quot;rectangular&quot;)
@@ -319,16 +318,16 @@ base_completa_predi %&gt;%
 <pre><code>## # A tibble: 50 x 4
 ##    realiza_trabajo_domestico .pred_class .pred_No .pred_Si
 ##    &lt;fct&gt;                     &lt;fct&gt;          &lt;dbl&gt;    &lt;dbl&gt;
-##  1 Si                        Si               0.2      0.8
-##  2 Si                        Si               0        1  
-##  3 Si                        Si               0        1  
-##  4 No                        No               1        0  
+##  1 Si                        Si               0        1  
+##  2 No                        No               1        0  
+##  3 No                        No               0.8      0.2
+##  4 Si                        Si               0.2      0.8
 ##  5 No                        No               1        0  
 ##  6 No                        No               1        0  
 ##  7 No                        No               1        0  
-##  8 No                        No               0.6      0.4
+##  8 Si                        Si               0        1  
 ##  9 Si                        Si               0        1  
-## 10 Si                        Si               0.2      0.8
+## 10 Si                        Si               0        1  
 ## # ... with 40 more rows</code></pre>
 <p><br></p>
 <p>Veamos ahora gráficamente todos los casos. Las predicciones correctas son aquellas en que los Triangulos están en amarillo (realiza TDNR y predigo que lo realiza) y las que los circulos están en violeta (No realiza TDNR y predigo que no lo hace).</p>
@@ -381,22 +380,42 @@ ggplot(base_test_knn,aes(x = horas_trabajo_mercado,
 ## 1 accuracy binary           0.8</code></pre>
 </div>
 </div>
-<div id="práctica-en-clase" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> Práctica (en clase)</h1>
+<div id="lda" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> LDA</h1>
+<p>Para correr un modelo de LDA necesitamos un paquete adicional llamado <strong>discrim</strong>. Además de LDA, existen otros modelos “discriminant” no lineales que no veremos en el curso. La función <a href="https://parsnip.tidymodels.org/reference/discrim_linear.html"><code>discrim_linear()</code></a> es la que determina que utilizaremos la variante lineal. A su vez, dentro de los lineales hay diferentes engines (motores) que se pueden elegir y varían en ciertos parametros adicionales que permiten incluir en el modelo.</p>
+<p>Usaremos el engine default (MASS).</p>
+<pre class="r"><code>library(discrim)
+lda_model &lt;- discrim_linear() 
+
+
+lda_fiteado&lt;-  fit(object = lda_model,
+                   formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado + ingreso_familiar,
+                   data = base_train)
+
+base_test_lda &lt;- augment(x = lda_fiteado, base_test)
+
+conf_mat(data = base_test_lda,truth = realiza_trabajo_domestico,estimate = .pred_class )</code></pre>
+<pre><code>##           Truth
+## Prediction No Si
+##         No 18 12
+##         Si  5 15</code></pre>
+<pre class="r"><code>accuracy(data = base_test_lda,truth = realiza_trabajo_domestico,estimate = .pred_class )</code></pre>
+<pre><code>## # A tibble: 1 x 3
+##   .metric  .estimator .estimate
+##   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;
+## 1 accuracy binary          0.66</code></pre>
+</div>
+<div id="práctica-en-clase" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Práctica (en clase)</h1>
 <ul>
-<li>Tomando solo las variables del modelo recién visto para K = 5, estimen 2 modelos más:
+<li>Estimen 2 modelos con las variables de la base de juguete:
 <ul>
 <li>Un KNN con K = 3</li>
-<li>Una regresión logística (como la de la clase pasada) comparen las métricas en el</li>
+<li>Una regresión logística (como la de la clase pasada)<br />
+</li>
 </ul></li>
-<li>Comparen el accuracy (tanto en training como en testing) de los 3 modelos</li>
+<li>Comparen el accuracy (tanto en training como en testing) de estos 2 modelos con el de LDA recién visto</li>
 </ul>
-</div>
-<div id="knn-con-3-clases" class="section level1" number="4">
-<h1><span class="header-section-number">4</span> KNN con 3 clases</h1>
-</div>
-<div id="lda" class="section level1" number="5">
-<h1><span class="header-section-number">5</span> LDA</h1>
 </div>
 
 

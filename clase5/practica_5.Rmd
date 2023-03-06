@@ -184,8 +184,8 @@ accuracy(data = base_test_lda,truth = realiza_trabajo_domestico,estimate = .pred
 ```
 
 # Práctica (en clase)     
- - Tomando solo las variables del modelo recién visto para K = 5, estimen 2 modelos más:
+ - Estimen 2 modelos con las variables de la base de juguete:
     - Un KNN con K = 3
     - Una regresión logística (como la de la clase pasada)  
- - Comparen el accuracy (tanto en training como en testing) de los 3 modelos
+ - Comparen el accuracy (tanto en training como en testing) de estos 2 modelos con el de LDA recién visto
 
