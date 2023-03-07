@@ -134,7 +134,7 @@ línea a los datos donde la relación entre dos variables, $X$ e $y$ puede
 ser modelada como si fuera una línea recta tolerando algún grado de
 error.
 
-   $$ y \approx \beta_{0} + \beta_{1}X + \epsilon$$ 
+   $$ y = \beta_{0} + \beta_{1}X + \epsilon$$ 
     
 -   $\beta_{0}$ representa el intercepto o la ordenada al origen. ¿Cómo podemos interpretar este valor? Como el valor que asume $y$ en promedio cuando $X = 0$.
 

@@ -81,7 +81,7 @@ base_juguete <- base_juguete %>% janitor::clean_names()
 
 Les propongo usar el modelo de regresión lineal para estudiar la relación entre el ingreso individual de las personas (Y) y las horas que dedican por semana al trabajo doméstico (X). Es decir:
 
-$$ IngInd \approx \beta_{0} + \beta_{1}HorasTD + \epsilon$$
+$$ IngInd = \beta_{0} + \beta_{1}HorasTD + \epsilon$$
 
 ------------------------------------------------------------------------
 
