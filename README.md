@@ -22,8 +22,8 @@ En el archivo 0_packages pueden encontrar el código para descargar los paquetes
   +	Trade-off precisión-interpretabilidad
   +	Trade-off sesgo-varianza
   +	Evaluación. Nociones de train/test, validation, matriz de confusión
-  + 	Flujo de trabajo: explorar, transformar, modelizar, evaluar
-  + 	Introducción a Tidymodels
+  + Flujo de trabajo: explorar, transformar, modelizar, evaluar
+  + Introducción a Tidymodels
 
 <br>
 
@@ -41,7 +41,7 @@ __Clase 2 - Explorando y transformando variables. Intro a regresión lineal simp
   +	Predicciones 
   +	Supuestos del modelo. Residuos y su distribución
   +	Métricas de evaluación de un modelo: R2 
-  + 	Tidymodels 1
+  + Tidymodels 1
 
   
 <br>
@@ -52,12 +52,12 @@ __Clase 3 - Regresión lineal simple y múltiple:__
 
 + Temas de clase:
   +	Regresión múltiple: ¿por qué no una simple por cada variable?
-  +     Fórmula, coeficientes e interpretación
-  +     Variables independientes cualitativas y términos de interacción
+  + Fórmula, coeficientes e interpretación
+  + Variables independientes cualitativas y términos de interacción
   +	Tests de hipótesis 2: significatividad global
   +	Multicolinealidad. El trade-off sesgo-varianza
   +	Complejizamos la métrica de evaluación del modelo: R2 ajustado
-  + 	Tidymodels 2 
+  + Tidymodels 2 
 
 
 <br>
