@@ -42,7 +42,7 @@ En cada coeficiente individual estaríamos ignorando el efecto de las demás var
 La fórmula de la regresión múltiple es igual a la de la simple, sólo que extendida por cada variable que incluimos.
 
 
-$$ y \approx \beta_{0} + \beta_{1}X_{1} + \beta_{2}X_{2} + \beta_{3}X_{3} + ... + \beta_{n}X_{n} + \epsilon$$ 
+$$ y = \beta_{0} + \beta_{1}X_{1} + \beta_{2}X_{2} + \beta_{3}X_{3} + ... + \beta_{n}X_{n} + \epsilon$$ 
 
 ---
 
@@ -58,7 +58,7 @@ Una variable binaria indica si una observación presenta un determinado atributo
 
 Veamos con un ejemplo la información que aporta al modelo una variable de este tipo. Supongamos una regresión caracterizada por la siguiente ecuación:
 
-$$ Y \approx \beta_{0} + \beta_{1}X_{1} + \beta_{2}X_{2} + \epsilon$$
+$$ Y = \beta_{0} + \beta_{1}X_{1} + \beta_{2}X_{2} + \epsilon$$
 
 Donde $X_{1}$ es cuantitativa (por ejemplo, horas dedicadas al trabajo remunerado) y $X_{2}$ es cualitativa (por ejemplo, sexo).
 
@@ -66,12 +66,12 @@ Veamos que pasa cuando la variable $X_{2}$ toma cada uno de sus valores:
 
 - Si $X_{2}$ = 1:
 
-$$ Y = \beta_{0} + \beta_{1}X_{1} + \beta_{2}$$
-$$ Y = (\beta_{0} + \beta_{2}) + \beta_{1}X_{1}$$
+$$ Y \approx \beta_{0} + \beta_{1}X_{1} + \beta_{2}$$
+$$ Y \approx (\beta_{0} + \beta_{2}) + \beta_{1}X_{1}$$
 
 - Si $X_{2}$ = 0:
 
-$$ Y = \beta_{0} + \beta_{1}X_{1}$$
+$$ Y \approx \beta_{0} + \beta_{1}X_{1}$$
 Entonces, ¿qué efecto tiene sobre el modelo la incorporación de una variable cualitativa? *Un desplazamiento de la ordenada al origen*. Representemos esto gráficamente:
 
 ```{r echo = FALSE}
@@ -132,7 +132,7 @@ A los fines de representar las relaciones entre las variables independientes, po
 
 Esta información aparece de la siguiente manera en la ecuación de la regresión:
 
-$$ Y \approx \beta_{0} + \beta_{1}X_{1} + \beta_{2}X_{2} + \beta_{3}X_{1}X_{2} + \epsilon$$
+$$ Y = \beta_{0} + \beta_{1}X_{1} + \beta_{2}X_{2} + \beta_{3}X_{1}X_{2} + \epsilon$$
 Este tipo de términos son relevantes cuando el efecto de una de las variables independientes sobre la variable dependiente se relaciona al valor de otra de ellas. 
 
 Por ejemplo, podríamos encontrar una relación entre los ingresos individuales y las horas de trabajo remunerado. Sin embargo, podría pasar que sumar horas de trabajo remunerado tuviese un efecto distinto para las mujeres y los varones. Incorporar la variable sexo al modelo nos permitiría ver un efecto fijo: a igual cantidad de horas, las personas de x sexo ganan $x más. Si embargo, podría suceder que la relación entre ambas variables fuese más compleja, y la diferencia se volviera más/menos pronunciada a medida que aumentan/disminuyen las horas trabajadas. En ese caso, la relación entre horas e ingresos sería distinta para cada una de las poblaciones.
@@ -143,12 +143,12 @@ Veamos que pasa cuando la variable $X_{2}$ toma cada uno de sus valores:
 
 - Si $X_{2}$ = 1:
 
-$$ Y = \beta_{0} + \beta_{1}X_{1} + \beta_{2} + \beta_{3}X_{1} $$
-$$ Y = (\beta_{0} + \beta_{2}) + (\beta_{1} + \beta_{3})X_{1}$$
+$$ Y \approx \beta_{0} + \beta_{1}X_{1} + \beta_{2} + \beta_{3}X_{1} $$
+$$ Y \approx (\beta_{0} + \beta_{2}) + (\beta_{1} + \beta_{3})X_{1}$$
 
 - Si $X_{2}$ = 0:
 
-$$ Y = \beta_{0} + \beta_{1}X_{1}$$
+$$ Y \approx \beta_{0} + \beta_{1}X_{1}$$
 Entonces, ¿qué efecto tiene sobre el modelo la incorporación del término de interacción? *Una modificación de la pendiente*. Representemos esto gráficamente:
 
 ```{r echo = FALSE}

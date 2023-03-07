@@ -1579,8 +1579,8 @@ todas:</p>
 <p>La variable realiza_trabajo_domestico no es significativa para
 analizar el nivel de ingresos, la sacamos del modelo. Entonces, la
 ecuación que caracterizaría nuestro modelo es:</p>
-<p><span class="math display">\[ IngInd \approx \beta_{0} +
-\beta_{1}HorasTD + \beta_{2}HorasM + \beta_{3}Sexo + \beta_{4}Menores +
+<p><span class="math display">\[ IngInd = \beta_{0} + \beta_{1}HorasTD +
+\beta_{2}HorasM + \beta_{3}Sexo + \beta_{4}Menores +
 \epsilon\]</span></p>
 <pre class="r"><code>#planteamos el nuevo modelo
 lm_fit2 &lt;- lm_spec %&gt;%
@@ -1635,8 +1635,8 @@ interacción</h1>
 trabajar de modo remunerado en el mercado sea distinto para las mujeres
 y los varones: probemos agregar una interacción. Al agregarla, nuestra
 ecuación pasaría a tomar la forma:</p>
-<p><span class="math display">\[ IngInd \approx \beta_{0} +
-\beta_{1}HorasTD + \beta_{2}HorasM + \beta_{3}Sexo + \beta_{4}Menores +
+<p><span class="math display">\[ IngInd = \beta_{0} + \beta_{1}HorasTD +
+\beta_{2}HorasM + \beta_{3}Sexo + \beta_{4}Menores +
 \beta_{5}HorasM.Sexo + \epsilon\]</span></p>
 <pre class="r"><code>#usamos los &quot;:&quot; para agregar la interacción
 
@@ -1787,9 +1787,9 @@ pensar en sacarlo del modelo.</p>
 <pre><code>## # A tibble: 3 × 3
 ##   terms         retained id         
 ##   &lt;chr&gt;         &lt;chr&gt;    &lt;chr&gt;      
-## 1 menores_hogar 0        other_ibgmF
-## 2 menores_hogar 1        other_ibgmF
-## 3 menores_hogar 2        other_ibgmF</code></pre>
+## 1 menores_hogar 0        other_vI3z0
+## 2 menores_hogar 1        other_vI3z0
+## 3 menores_hogar 2        other_vI3z0</code></pre>
 <p>Se agrupó a la variable menores_hogar en 4 categorías: 0, 1, 2 y
 otros (entonces, ¿por qué hay 3 dummys en el modelo?)</p>
 <p>¿No nos acordamos qué pasos habíamos seguido? Si no, podemos

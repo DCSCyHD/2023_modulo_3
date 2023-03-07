@@ -81,7 +81,7 @@ lm_fit2 %>%
 
 La variable realiza_trabajo_domestico no es significativa para analizar el nivel de ingresos, la sacamos del modelo. Entonces, la ecuación que caracterizaría nuestro modelo es:
 
-$$ IngInd \approx \beta_{0} + \beta_{1}HorasTD + \beta_{2}HorasM + \beta_{3}Sexo + \beta_{4}Menores + \epsilon$$
+$$ IngInd = \beta_{0} + \beta_{1}HorasTD + \beta_{2}HorasM + \beta_{3}Sexo + \beta_{4}Menores + \epsilon$$
 
 ```{r}
 #planteamos el nuevo modelo
@@ -115,7 +115,7 @@ Al observar cómo quedan los residuos, vemos que esta vez el modelo está funcio
 
 Algo que podría ocurrir es que el efecto sobre los ingresos de trabajar de modo remunerado en el mercado sea distinto para las mujeres y los varones: probemos agregar una interacción. Al agregarla, nuestra ecuación pasaría a tomar la forma:
 
-$$ IngInd \approx \beta_{0} + \beta_{1}HorasTD + \beta_{2}HorasM + \beta_{3}Sexo + \beta_{4}Menores + \beta_{5}HorasM.Sexo + \epsilon$$
+$$ IngInd = \beta_{0} + \beta_{1}HorasTD + \beta_{2}HorasM + \beta_{3}Sexo + \beta_{4}Menores + \beta_{5}HorasM.Sexo + \epsilon$$
 
 ```{r}
 #usamos los ":" para agregar la interacción
