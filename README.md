@@ -1,7 +1,7 @@
 > Docentes: Carolina Pradier y Guido Weksler.
 
 # Materiales de cursada
-Los materiales para la cursada se encuentran estructurados por clases. En esta página encontrarán en cada módulo un botón de descarga de los contenidos. 
+Los materiales para la cursada se encuentran estructurados por clases. En esta página encontrarán para cada clase un botón de descarga de los contenidos. 
 
 # Programa
 
