@@ -11,6 +11,8 @@ __Clase 1 - Introducción: tipos de modelos, trade-offs:__
 
 [![](img/Download.png)](clase1.rar)
 
+En el archivo 0_packages pueden encontrar el código para descargar los paquetes que vamos usar en el módulo.
+
 + Temas de clase: 
   +	¿Por qué construir modelos?
   +	Predicción vs inferencia
