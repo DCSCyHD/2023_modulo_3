@@ -61,3 +61,34 @@ __Clase 3 - Regresión lineal simple y múltiple:__
 
 
 <br>
+
+__Clase 4 - Clasificación 1: Regresión logística:__
+
++ Temas de clase:
+  +	Modelos de clasificación: para qué sirven y cuáles existen
+  + Los limites de la regresión lineal.
+  + ¿Qué tipo de modelo es la regresión Logística?
+  +	Coeficientes y lectura de outputs
+  +	Train-Test split
+  +	Medidas de evaluación del modelo
+
+<br>
+
+__Clase 5 - Clasificación 2: Intro a KNN y LDA:__
+
++ Temas de clase:
+  + Limites de la regresión logística.
+  + Clasificador de Bayes. 
+  +	K-Nearest Neighbors supervisado 
+  +	LDA 
+
+<br>
+
+__Clase 6 - Cross-Validation y repaso general:__
+
++ Temas de clase:
+  +	Limitantes del enfoque Train-Test
+  + Cross-Validation.
+  + Repaso de clases 1 a 5
+
+<br>
