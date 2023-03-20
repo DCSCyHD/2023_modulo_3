@@ -1,0 +1,120 @@
+---
+title: "Practica independiente 5 - Módulo 3"
+subtitle: "Regresión logística."
+author: 
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
+  - Carolina Pradier y Guido Weksler
+output: 
+  html_document:
+    toc: TRUE
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=FALSE,}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
+                      fig.width=8)
+```
+**Importante** Esta práctica presenta un nivel de dificultad un poco alto. Está pensada para quienes quieran darse manija con las técnicas relativamente avanzadas vistas en la última clase. No es necesario que la hagan quienes no quieran/puedan y no deben preocuparse ahora si lo intentan y no sale.      
+
+# Base
+- De forma similar a lo visto en clase, en el siguiente código tomamos la base real **base_EAUH_TNR**, creamos la variable binaria "realiza_trabajo_domestico", y tomamos una muestra de 7000 casos positivos y 7000 negativos.
+
+
+```{r}
+set.seed(8989)
+library(tidymodels)
+library(tidyverse)
+library(gt)
+library(kknn) #Necesito esta libraría para hacer KKNN con variables categóricas
+base_real<- readRDS(file = "fuentes/base_EAUH_TNR.RDS")
+
+
+base_muestra<- base_real  %>% 
+  mutate(
+    realiza_trabajo_domestico = factor(
+      case_when(TIEMPO_TDNR > 0 ~ "Si",
+                TIEMPO_TDNR == 0 ~ "No"),
+      levels = c("Si","No"))) %>%    
+  group_by(realiza_trabajo_domestico) %>% 
+  sample_n(size = 7000,replace = F) %>% 
+  select(realiza_trabajo_domestico,horas_mercado,CH04,menores_hogar) %>% 
+  ungroup()
+
+```
+
+# Evaluando un KNN con k-fold cross-validation     
+
+Dada `base_muestra`:          
+- Creen 10 folds para aplicar cross-validation     
+- Establezcan como receta que van a querer predecir la realización de trabajo domestico a partir de `CH04 (sexo)` y `menores_hogar`    
+- Evaluen la capacidad de predicción un KNN (k=7) con la métrica de accuracy
+```{r eval=FALSE, include=FALSE}
+base_folds <- vfold_cv(
+              data  = base_muestra,
+              v       = 10)
+
+mi_modelo <- nearest_neighbor(neighbors = 7) %>% 
+  set_mode("classification")
+
+mi_formula_gral <- recipe(
+  formula = realiza_trabajo_domestico ~ horas_mercado+CH04+menores_hogar,
+  data =  base_muestra
+               ) 
+
+validacion_fit <- fit_resamples(
+  object       = mi_modelo,# Definición de mi (mis) modelos
+  preprocessor = mi_formula_gral, #formula a aplicar
+  resamples    = base_folds, # De donde saco las particiones 
+  metrics      = metric_set(accuracy), #Metricas (Root mean squear error y Mean abs error)
+  control      = control_resamples(save_pred = TRUE) # parametro para guardar predicciones
+                  )
+```
+
+```{r eval=FALSE, include=FALSE}
+validacion_fit %>% 
+  collect_metrics()
+```
+
+# Tuneando un KNN     
+A partir de este código, intenten encontrar el mejor valor para el parametro K. Tengan en cuenta tanto el accuracy, specificity y sensitivity     
+```{r}
+mi_formula_gral <- recipe(
+  formula = realiza_trabajo_domestico ~ horas_mercado+CH04+menores_hogar,
+  data =  base_muestra) 
+
+knn_a_tunear <- nearest_neighbor(neighbors = tune()) %>% 
+  set_mode("classification") 
+```
+
+```{r eval=FALSE, include=FALSE}
+#Creamos una grilla con los valores que queremos evaluar
+mi_grilla <- tibble(neighbors = 1:10)
+
+#Creamos el workflow y agregamos la receta y el modelo
+workflow_tuneo <- workflow() %>%
+  add_recipe(mi_formula_gral) %>% 
+  add_model(knn_a_tunear)
+
+#Con la función tune_grid() probamos los distintos parametros
+
+tune_res <- tune_grid(
+  object = workflow_tuneo,
+  resamples = base_folds, 
+  grid = mi_grilla,
+  metrics = metric_set(accuracy,sensitivity,specificity) #
+)
+```
+
+```{r eval=FALSE, include=FALSE}
+collect_metrics(tune_res)
+```
+
+
+```{r eval=FALSE, include=FALSE}
+autoplot(tune_res)
+```
+

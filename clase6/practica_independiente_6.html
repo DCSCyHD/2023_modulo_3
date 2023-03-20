@@ -13,7 +13,7 @@
 <meta name="author" content="Carolina Pradier y Guido Weksler" />
 
 
-<title>Practica independiente 4 - Módulo 3</title>
+<title>Practica independiente 5 - Módulo 3</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1503,7 +1503,7 @@ border-radius: 0px;
 
 
 
-<h1 class="title toc-ignore">Practica independiente 4 - Módulo 3</h1>
+<h1 class="title toc-ignore">Practica independiente 5 - Módulo 3</h1>
 <h3 class="subtitle">Regresión logística.</h3>
 <h4 class="author">Diplomatura en Ciencias Sociales Computacionales y
 Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023</h4>
@@ -1512,30 +1512,60 @@ Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023</h4>
 </div>
 
 
-<div id="práctica-independiente" class="section level1" number="1">
-<h1><span class="header-section-number">1</span> Práctica
-independiente</h1>
+<p><strong>Importante</strong> Esta práctica presenta un nivel de
+dificultad un poco alto. Está pensada para quienes quieran darse manija
+con las técnicas relativamente avanzadas vistas en la última clase. No
+es necesario que la hagan quienes no quieran/puedan y no deben
+preocuparse ahora si lo intentan y no sale.</p>
+<div id="base" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Base</h1>
 <ul>
-<li>Levantar la base real llamada <strong>base_EAUH_TNR</strong>.<br />
-</li>
-<li>Crear una variable dicotómica “realiza_trabajo_doméstico” que tome
-los valores “Si” y “No” a partir de la variable original de
-<strong>TIEMPO_TDNR</strong>. <em>Ojo</em>: Necesitan crearla como un
-factor<br />
-</li>
-<li>Eliminen la variable <strong>TIEMPO_TDNR</strong>.</li>
-<li>Exploren la base y elijan entre 3 o 5 variables que crean son las
-que mas influyen en la realización de trabajo doméstico<br />
-</li>
-<li>Utilizar el set de training para construir 2 modelos de regresión
-logistica. Uno con las variables que elijieron y otro con todas las
-variables de la base.<br />
-</li>
-<li>Mostraer los coeficientes estimados para cada modelo. Interpretar el
-signo y su significatividad estadística.</li>
-<li>Comparar la <strong>performance</strong> de ambos modelos para
-predecir en el dataset de testing.</li>
+<li>De forma similar a lo visto en clase, en el siguiente código tomamos
+la base real <strong>base_EAUH_TNR</strong>, creamos la variable binaria
+“realiza_trabajo_domestico”, y tomamos una muestra de 7000 casos
+positivos y 7000 negativos.</li>
 </ul>
+<pre class="r"><code>set.seed(8989)
+library(tidymodels)
+library(tidyverse)
+library(gt)
+library(kknn) #Necesito esta libraría para hacer KKNN con variables categóricas
+base_real&lt;- readRDS(file = &quot;fuentes/base_EAUH_TNR.RDS&quot;)
+
+
+base_muestra&lt;- base_real  %&gt;% 
+  mutate(
+    realiza_trabajo_domestico = factor(
+      case_when(TIEMPO_TDNR &gt; 0 ~ &quot;Si&quot;,
+                TIEMPO_TDNR == 0 ~ &quot;No&quot;),
+      levels = c(&quot;Si&quot;,&quot;No&quot;))) %&gt;%    
+  group_by(realiza_trabajo_domestico) %&gt;% 
+  sample_n(size = 7000,replace = F) %&gt;% 
+  select(realiza_trabajo_domestico,horas_mercado,CH04,menores_hogar) %&gt;% 
+  ungroup()</code></pre>
+</div>
+<div id="evaluando-un-knn-con-k-fold-cross-validation" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Evaluando un KNN con
+k-fold cross-validation</h1>
+<p>Dada <code>base_muestra</code>:<br />
+- Creen 10 folds para aplicar cross-validation<br />
+- Establezcan como receta que van a querer predecir la realización de
+trabajo domestico a partir de <code>CH04 (sexo)</code> y
+<code>menores_hogar</code><br />
+- Evaluen la capacidad de predicción un KNN (k=7) con la métrica de
+accuracy</p>
+</div>
+<div id="tuneando-un-knn" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Tuneando un KNN</h1>
+<p>A partir de este código, intenten encontrar el mejor valor para el
+parametro K. Tengan en cuenta tanto el accuracy, specificity y
+sensitivity</p>
+<pre class="r"><code>mi_formula_gral &lt;- recipe(
+  formula = realiza_trabajo_domestico ~ horas_mercado+CH04+menores_hogar,
+  data =  base_muestra) 
+
+knn_a_tunear &lt;- nearest_neighbor(neighbors = tune()) %&gt;% 
+  set_mode(&quot;classification&quot;) </code></pre>
 </div>
 
 
