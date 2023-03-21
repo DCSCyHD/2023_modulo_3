@@ -1,5 +1,5 @@
 ---
-title: "Teórica 4 - Módulo 3"
+title: "Practica independiente 5 - Módulo 3"
 subtitle: "Regresión logística."
 author: 
   - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
@@ -19,15 +19,92 @@ knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
                       fig.width=8)
 ```
 
-# Práctica independiente   
-- Levantar la base real llamada **base_EAUH_TNR**.     
-- Crear una variable dicotómica "realiza_trabajo_doméstico" que tome los valores "Si" y "No" a partir de la variable original de **TIEMPO_TDNR**. *Ojo*: Necesitan crearla como un factor     
-- Eliminen la variable **TIEMPO_TDNR**. 
-- Exploren la base y elijan entre 3 o 5 variables que crean son las que mas influyen en la realizaci[on de trabajo domestico   
-- Utilizar el set de training para construir 2 modelos de regresión logistica. Uno con las variables que elijieron y otro con todas las variables de la base.    
-- Mostraer los coeficientes estimados para cada modelo. Interpretar el signo y su significatividad estadística. 
-- Comparar la **performance** de ambos modelos para predecir en el dataset de testing.  
+# Practica Independiente    
+- De forma similar a lo visto en clase, en el siguiente código tomamos la base real **base_EAUH_TNR**, creamos la variable binaria "realiza_trabajo_domestico", y tomamos una muestra de 7000 casos positivos y 7000 negativos para armar luego dos modelos (un KNN y una regresión logistica) con sólo dos variables explicativas (horas mercado y menores_hogar).          
+
+
+```{r}
+set.seed(8989)
+library(tidymodels)
+library(tidyverse)
+library(gt)
+base_real<- readRDS(file = "fuentes/base_EAUH_TNR.RDS")
+
+
+base_muestra<- base_real  %>% 
+  mutate(
+    realiza_trabajo_domestico = factor(
+      case_when(TIEMPO_TDNR > 0 ~ "Si",
+                TIEMPO_TDNR == 0 ~ "No"),
+      levels = c("Si","No"))) %>%    
+  group_by(realiza_trabajo_domestico) %>% 
+  sample_n(size = 7000,replace = F) %>% 
+  select(realiza_trabajo_domestico,horas_mercado,menores_hogar) %>% 
+  ungroup()
+
+base_spliteada  <- initial_split(base_muestra)
+train_data <- training(base_spliteada)
+test_data <- testing(base_spliteada) 
+
+#Especifico modelo logistico y fiteo
+lreg <- logistic_reg() %>% 
+  fit(realiza_trabajo_domestico ~ ., data = train_data)
+
+#Especifico modelo KNN y fiteo
+knn <- nearest_neighbor(neighbors = 5) %>% 
+  set_mode("classification") %>% 
+  fit(realiza_trabajo_domestico ~ ., data = train_data)
+
+#Creo lista de modelos fiteados
+modelos <- list("logistica" = lreg,
+                "KNN" = knn)
+#Aumento el dataset de test con las predicciones de ambos modelos
+
+base_test_preds <- imap_dfr(modelos,
+                  augment, 
+                  new_data = test_data, .id = "model")
+
+#El dataset de testeo queda con esta pinta
+sample_n(base_test_preds,10) %>% 
+  gt()
+
+```
+- Acá se muestra la matriz de confusión para cada uno de los modelos estimados
+```{r echo=FALSE}
+#Si agrupo por modelo puedo crear la matriz de confusión al mismo tiempo para cada uno de ellos, pero queda almacenada como una lista
+matrices_conf <- base_test_preds %>% 
+  group_by(model) %>% 
+  conf_mat(truth = realiza_trabajo_domestico,.pred_class)
+
+names(matrices_conf$conf_mat) <- c("KNN","logistica")
+
+matrices_conf$conf_mat
+```
+
+- ¿Hay algún modelo que sea definitivamente mejor que el otro? Calculen métricas para evaluarlo
 
 ```{r include=FALSE}
-base_real<- readRDS(file = "fuentes/base_EAUH_TNR.RDS") 
+multi_metric <- metric_set(accuracy, sensitivity, specificity)
+
+base_test_preds %>% 
+  group_by(model) %>% 
+  multi_metric(truth = realiza_trabajo_domestico,estimate = .pred_class)
 ```
+
+- Suponga que el modelo en cuestión se utiliza para definir una política en la cual el Estado le otorga una transferencia de dinero a las personas que se estima que realizan trabajo doméstico no remunerado. Su jefe le aclara expresamente que **es preferible equivocarse y que la transferencia se otorge a personas que NO realizan trabajo doméstico respecto a equivocarse y que no se otorgue a quien SI realiza**.   
+  - ¿Con cual de los modelos se quedaría?, ¿qué metrica resulta más importante para definir ello?
+  - Una vez tomada la decisión sobre cual modelo elegir (KNN o logistica), le muestra la matriz de confusión a su jefe y este le plantea lo siguiente: **"El nivel de personas que realiza TDNR, pero no recibirían la transferencia dado este modelo  sigue siendo muy alto"**. ¿Que puede hacer con este mismo modelo para satisfacer la inquietud de su jefe? **Pista**: Miren la variable `.pred_class`, del data frame. **base_test_preds** Luego miren `.pred_Si` y `.pred_No`  ¿Cómo se está definiendo `.pred_class`?
+  
+```{r echo=TRUE}
+#
+```
+  - Creen una nueva variable llamada "transferir" y tome los valores "Si" o "No". Traten de establecer una **regla de decisión** que satisfaga un poco mas la inquietud de su jefe. Luego recalculen la matriz de confusión y algunas de las metricas asociadas
+
+```{r include=FALSE}
+base_test_preds %>% 
+  filter(model == "KNN") %>% 
+  mutate(transfeir = case_when(.pred_Si >= 0.25 ~  "Si",
+                               .pred_Si < 0.25 ~  "No")) %>% 
+  conf_mat(truth = realiza_trabajo_domestico,transfeir)
+```
+

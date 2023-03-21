@@ -67,13 +67,14 @@ Tomo la especificación anterior y excplicito que variables usaré y de que data
 
 ----
 
-*Aclaración:* La variable objetivo **realiza_trabajo_domestico** debo convertirla en factor para correr una regresión logistica (es decir, que sea una variable con categorías).
+*Importante:* La variable objetivo `realiza_trabajo_domestico` **debo convertirla en factor** para correr una regresión logistica (es decir, que sea una variable con categorías). Por otra parte, si van a utilizar funciones que calculan métricas derivadas de la matriz de confusión es mucho muy importante que las **categorías estén ordenadas con el valor positivo como primer nivel y el negativo como el segundo nivel**
 
 ---
 
 ```{r}
 base_para_modelar <- base_juguete %>% 
-  mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico))
+  mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,levels = c("Si","No")
+                                            ))
 
 #Lo entreo con los datos 
 log_fiteado <- log_model %>% 
@@ -196,11 +197,12 @@ ggplot(base_con_pred,aes(x = horas_trabajo_mercado,
 
 ## Train-test split    
 
-Hagamos un modelo nuevo con un split de la base original en test y train.    
+Hagamos un modelo nuevo con un split de la base original en test y train. Aclaración: Si queremos resultados replicables debemos **setear una semilla** con `set.seed()`, para guardar el mecanismo de pseudo-aleatorización que realiza la computadora.   
 
  
 ### Split train-test    
 ```{r}
+set.seed(18/12/2022)
 base_spliteada <-  initial_split(base_para_modelar,prop = 0.8)
 base_train <-  training(base_spliteada)
 base_test <-  testing(base_spliteada)

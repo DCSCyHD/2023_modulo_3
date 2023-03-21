@@ -35,7 +35,7 @@ La función ```vfold_cv()``` nos crea un objeto que contiene las particiones en 
  Aplicando CV con 10 folds para un solo modelo. Usaremos **K = 10**, lo que implica que pparticionaremos en 10 el dataset, para que cada parte actue como testing de las otras 9 en cada una de las iteraciones  
 
 ```{r}
-base_juguete <- readRDS("../fuentes/eut_juguete.RDS")
+base_juguete <- readRDS("fuentes/eut_juguete.RDS")
 base_folds <- vfold_cv(
               data  = base_juguete,
               v       = 10)
@@ -134,7 +134,7 @@ lm_models_fiteados <- lm_models %>%
   workflow_map(fn = "fit_resamples", 
                seed = 1101,  #Semilla para reproducibilidad
                verbose = TRUE, #Que me muestre a medida que avanza
-               resamples = base_folds) # de donde tomo los flods)
+               resamples = base_folds) # de donde tomo los folds)
 ```
 
 Recolecto métricas promedio de los 10 folds, de los 3 modelos al mismo tiempo. Puedo comparar muy fácilmente qué modelo performa mejor en términos de la métrica elegida.
@@ -142,3 +142,51 @@ Recolecto métricas promedio de los 10 folds, de los 3 modelos al mismo tiempo. 
 collect_metrics(lm_models_fiteados) %>% 
   filter(.metric == "rmse")
 ```
+
+# Tuneando hiperparametros (super introductorio)     
+Hagamos otro ejercicio de predicción un poco distinto. Queremos predecir el **ingreso individual** a partir de las horas de trabajo, el sexo y la cantidad de menores en el hogar.    
+
+¿Cómo hacemos para saber hasta que grado de polinomio nos conviene avanzar?. El *tuneo* ("espanglish" de tune: afinación) de los hiperparámetros consiste en evaluar, dentro de un rango especificado, cual es el mejor valor posible para setear el mismo en términos de como performa el modelo. 
+```{r}
+# Partimos de esta receta basica
+receta_basica <- recipe(
+  ingreso_individual ~ horas_trabajo_mercado+sexo+menores_hogar,
+  data = base_juguete)
+
+# Agregamos un step de polinomio, pero en vez de fijar el grado, ponemos el parametro tune()
+receta_para_tunear <- receta_basica %>%
+  step_poly(all_numeric_predictors(), degree = tune()) #ACA LA CLAVE
+
+#Creamos una grilla con los valores que queremos evaluar
+mi_grilla <- tibble(degree = 1:6)
+
+#Creamos el workflow y agregamos la receta y el modelo
+workflow_tuneo <- workflow() %>%
+  add_recipe(receta_para_tunear) %>% 
+  add_model(linear_reg())
+
+#Con la función tune_grid() probamos los distintos parametros
+
+tune_res <- tune_grid(
+  object = workflow_tuneo,# Que modelo voy a tunear
+  resamples = base_folds, # De donde saco los folds de datos 
+  grid = mi_grilla # Donde esta la grilla de hiperparametros a evaluar
+)
+
+```
+La función autopolot me grafica para cada grado, la raíz del error cuadratico medio (rmse) y el R cuadrado (RSQ) que en promedio arrojan los modelos estimados con cada uno de los 10 folds.
+```{r}
+autoplot(tune_res)
+```
+Si quiero cierta metrica en particular, y más detalle sobre la misma...
+```{r}
+collect_metrics(tune_res) %>% 
+  filter(.metric == "rmse")
+```
+Si estuviera trabajando con muchiiiisimos valores posibles a evaluar, la función ``show_best()`` me permite especificar cual es mi métrica de interés y me devuelve los *n* mejores valores de hiperparámetros en ese sentido.
+```{r}
+show_best(tune_res, 
+          metric = "rmse",
+          n = 2)
+```
+

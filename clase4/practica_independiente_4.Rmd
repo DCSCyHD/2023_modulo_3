@@ -1,5 +1,5 @@
 ---
-title: "Teórica 4 - Módulo 3"
+title: "Practica independiente 4 - Módulo 3"
 subtitle: "Regresión logística."
 author: 
   - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
