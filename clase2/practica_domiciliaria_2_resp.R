@@ -1,6 +1,7 @@
 library(tidyverse)
 library(tidymodels)
 library(GGally)
+library(viridis)
 tidymodels_prefer()
 
 #En esta práctica vamos a implementar una regresión lineal simple sobre la siguiente base de datos
