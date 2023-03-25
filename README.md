@@ -64,6 +64,8 @@ __Clase 3 - Regresión lineal simple y múltiple:__
 
 __Clase 4 - Clasificación 1: Regresión logística:__
 
+ [![](img/Download.png)](clase4.rar)
+ 
 + Temas de clase:
   +	Modelos de clasificación: para qué sirven y cuáles existen
   + Los limites de la regresión lineal.
