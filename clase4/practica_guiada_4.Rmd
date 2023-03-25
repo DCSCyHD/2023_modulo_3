@@ -259,12 +259,14 @@ Supongan que les solicitan armar un modelo con una sola variable predictora de l
 - Comparamos la **performance** de ambos modelos para predecir en el dataset de testing.    
 
 ```{r}
-set.seed(18-12-2022)
-
 base_real<- readRDS(file = "fuentes/base_EAUH_TNR.RDS") %>% 
-  mutate(realiza_trabajo_domestico = factor(ifelse(TIEMPO_TDNR == 0,yes = "No",no = "Si")))
+  mutate(realiza_trabajo_domestico = factor(
+    ifelse(TIEMPO_TDNR != 0,
+           yes = "Si",
+           no = "No"),
+    levels = c("Si","No")))
 
-
+set.seed(18/12/2022)
 base_spliteada<- initial_split(base_real)
 base_train<- training(base_spliteada)
 base_test<- testing(base_spliteada)
