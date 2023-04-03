@@ -73,7 +73,8 @@ Tomo la especificación anterior y excplicito que variables usaré y de que data
 
 ```{r}
 base_para_modelar <- base_juguete %>% 
-  mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,levels = c("Si","No")
+  mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,
+                                            levels = c("Si","No")
                                             ))
 
 #Lo entreo con los datos 
@@ -135,17 +136,17 @@ augment(x = log_fiteado,new_data = data_nueva)
 ### Aplicado sobre el total de la base
 Tomemos la función `augment()` para agregar a nuestro dataset  **base_para_modelar** las probabilidades asignadas por nuestro modelo a cada uno de los calsos, y por ende, la clase predicha 
 ```{r}
-base_con_pred<- augment(x = log_fiteado, base_para_modelar)
+base_con_pred<- augment(x = log_fiteado, base_para_modelar) %>% 
+  mutate(prediccion_gw = ifelse(.pred_No > 0.8,yes = "No",no = "Si"))
 
-base_con_pred %>% 
-  sample_n(200) 
+base_con_pred
 ```
 ## Metricas de evaluación
 ### Matriz de confusión
 Sobre la base de los valores reales y los valores predichos podríamos tomar la matriz de confusión como un tabulado bivariado entre ambas columas
 
 ```{r}
-matriz_confusion <- conf_mat(base_con_pred,
+matriz_confusion <- conf_mat(data = base_con_pred,
                              truth = realiza_trabajo_domestico,
                              estimate = .pred_class)
 
@@ -156,18 +157,37 @@ matriz_confusion
 ### Métricas derivadas de la matriz
 Accuracy, Sensitividad/Recall, Specificity y Precision
 
+```{r}
+accu <- accuracy(data = base_con_pred,
+            truth = realiza_trabajo_domestico,
+            estimate =  .pred_class)
+
+accu
+```
+
+ - El modelo predice correctamente un `r scales::percent(accu,accuracy = 0.01) ` de los casos.
 
 ```{r}
-accu <- (matriz_confusion$table[2,2]+matriz_confusion$table[1,1])/sum(matriz_confusion$table)
-error_rate <- 1-accu
-Sensitivity <- matriz_confusion$table[2,2]/sum(matriz_confusion$table[,2])
-Specificity <- matriz_confusion$table[1,1]/sum(matriz_confusion$table[,1])
-precision <- matriz_confusion$table[2,2]/sum(matriz_confusion$table[2,])
+sens <- sensitivity(base_con_pred,truth = realiza_trabajo_domestico,estimate =  .pred_class)
+
+
+spec <- specificity(base_con_pred,truth = realiza_trabajo_domestico,estimate =  .pred_class)
+
+prec <- precision(base_con_pred,truth = realiza_trabajo_domestico,estimate =  .pred_class)
+
+bind_rows(accu,sens,spec,prec)
+
+#######OMITIR ESTAS FORMULAS: ESTABAN ARMADAS CON LA MATRIZ AL REVÉS#####
+#accu <- (matriz_confusion$table[2,2]+matriz_confusion$table[1,1])/sum(matriz_confusion$table)
+#error_rate <- 1-accu
+#Sensitivity <- matriz_confusion$table[2,2]/sum(matriz_confusion$table[,2])
+#Specificity <- matriz_confusion$table[1,1]/sum(matriz_confusion$table[,1])
+#precision <- matriz_confusion$table[2,2]/sum(matriz_confusion$table[2,])
 ```
- - El modelo predice correctamente un `r scales::percent(accu,accuracy = 0.01) ` de los casos.     
- - De los casos positivos (que efectivamente realizan trabajo doméstico), el modelo predice bien un `r scales::percent(Sensitivity,accuracy = 0.01) `.     
- - De los casos negativos (que no realizan trabajo doméstico), el modelo predice bien un `r scales::percent(Specificity,accuracy = 0.01) `.    
- - De los casos que son clasificados como positivos, sólo un `r scales::percent(precision,accuracy = 0.01)` . lo son.
+    
+ - De los casos positivos (que efectivamente realizan trabajo doméstico), el modelo predice bien un `r scales::percent(sens,accuracy = 0.01) `.     
+ - De los casos negativos (que no realizan trabajo doméstico), el modelo predice bien un `r scales::percent(spec,accuracy = 0.01) `.    
+ - De los casos que son clasificados como positivos, sólo un `r scales::percent(prec,accuracy = 0.01)` . lo son.
 
 
 Veamos esto de forma gráfica para tratar de entender como está operando nuestro modelo:       
@@ -190,7 +210,8 @@ ggplot(base_con_pred,aes(x = horas_trabajo_mercado,
                          shape = realiza_trabajo_domestico,
                          color = .pred_class))+
   geom_point(size = 3)+
-  scale_color_viridis_d()
+  scale_color_viridis_d()+
+  theme_minimal()
 ```
 
 > El ejercicio anterior tiene un problema. Utilizamos para evaluar la performance del modelo los mismos datos que utilizamos para entrenarlo. Eso es potencialmente peligroso por posible **OVERFITTING**.         
