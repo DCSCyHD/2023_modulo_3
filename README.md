@@ -78,6 +78,8 @@ __Clase 4 - Clasificación 1: Regresión logística:__
 
 __Clase 5 - Clasificación 2: Intro a KNN y LDA:__
 
+ [![](img/Download.png)](clase5.rar)
+
 + Temas de clase:
   + Limites de la regresión logística.
   + Clasificador de Bayes. 
