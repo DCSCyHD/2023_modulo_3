@@ -19,6 +19,7 @@ base_con_clasificadores$V12_M[base_con_clasificadores$V12_M == -9] <- 0
 
 base_transf <- base_con_clasificadores %>% 
   filter(CH06 !=-1) %>% 
+  filter(CH06 >17) %>% 
   mutate(
     grupos.calif = factor(case_when(
       CALIFICACION %in% c("Profesionales","Técnicos") ~ "Alta",
@@ -27,8 +28,9 @@ base_transf <- base_con_clasificadores %>%
       levels = c("Baja","Media","Alta")),
     precario = factor(case_when(
       PP07H == 1 ~ "No",
-      PP07H == 2 ~ "Si"),
-      levels = c("No","Si")),
+      PP07H == 2 ~ "Si",
+      PP07H == 0 | is.na(PP07H) ~ "No asalariado"),
+      levels = c("No","Si","No asalariado")),
     tamanio.establecim = factor(case_when(
       PP04C %in% 1:6  |(PP04C %in% 99 & PP04C99 == 1)~ "Pequeño",
       PP04C %in% 7:8  ~ "Mediano",
@@ -44,18 +46,19 @@ lm_spec <- linear_reg() %>%
   # set_mode("regression") %>%
   set_engine("lm")
 
-receta <- recipe(x = base_transf,ingreso_laboral ~  precario + grupos.calif + tamanio.establecim + CH04 + CH06 + NIVEL_ED + caes_eph_label+horas_totales) %>% 
+receta <- recipe(x = base_transf,ingreso_laboral ~  precario + grupos.calif + tamanio.establecim + CH04 + CH06 + NIVEL_ED + caes_eph_label+horas_totales + PP03G) %>% 
   step_num2factor(CH04, levels = c("Varon","Mujer")) %>% 
+  step_num2factor(PP03G, levels = c("mas_horas","ok_horas")) %>% 
   step_mutate(NIVEL_ED = ifelse(NIVEL_ED == 7,yes = 1,no = NIVEL_ED)) %>% 
   step_rename(EDAD = CH06) %>% 
   step_num2factor(NIVEL_ED,levels = c("Primaria incompleta","Primaria completa","Secundaria incompleta",
                                       "Secundaria completa","Terciario/univ incompleta","Terciario/univ completa")) %>% 
-  step_interact( ~ CH04:grupos.calif) %>% 
+  step_interact( ~ CH04:grupos.calif) %>%
   step_other(caes_eph_label,threshold = 0.05) 
 
 
-# receta_cocinada <- receta %>% 
-#   prep() %>% 
+# receta_cocinada <- receta %>%
+#   prep() %>%
 #   bake(new_data = NULL)
 # 
 # contrasts(receta_cocinada$caes_eph_label)
