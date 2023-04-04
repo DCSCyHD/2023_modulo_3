@@ -26,11 +26,22 @@ lm_fit %>%
 #Interpretar, probar otros modelos por ej:
 
 lm_fit_v2 <- lm_spec %>%
-  fit(weight ~ height + age, data = df)
+  fit(weight ~ height + age + height:age + male, data = df)
 
 lm_fit_v2 %>% 
   pluck("fit") %>%
   summary()
+
+
+###otra forma
+
+workflow() %>% 
+  add_model(lm_spec) %>% 
+  add_recipe(recipe(weight ~ height + age, data = df)%>%
+               step_interact(~height:age)) %>% 
+  fit(.,df) %>% 
+  extract_fit_parsnip() %>% 
+  tidy()
 
 ##### Ejercicio 2 #####
 
