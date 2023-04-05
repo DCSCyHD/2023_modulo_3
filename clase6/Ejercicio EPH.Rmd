@@ -29,25 +29,26 @@ library(ggeffects)
 options(dplyr.summarise.inform = FALSE)
 ```
 
+# Introducción
 
-# Introducción       
 Este material tiene dos propositos simultaneos. Por un lado, está destinado a discutir un poco sobre el espíritu de utilizar regresiones para la inferencia en el marco de una pregunta de investigación científica. En este caso, la pregunta está vinculada a los determinantes de la precariedad laboral. Por otro lado, está destinado a ver la implementación de un ejercicio de regresión logística utilizando varias de las herramientas de **recipes** para preprocesar la información original. Utilizaremos como fuente de información la Encuesta Permanente de Hogares.
 
-## Breve digresión 
-¿Cual es mi objetivo como investigador en ciencias sociales?, ¿acaso se trata de utilizar el herramental de econometría para descubrir nuevas relaciones significativas entre variables?. En otros términos, ¿"tirar una regresión como 80.000 variables y encontrar p-valores menores a 5% sería realmente un aporte al **conocimiento** de un fenómeno? Un lindo texto que pone en discusión el método científico [Denari (1991)](https://cicpint.org/es/denari-l-1991a-economia-y-epistemologia-y-los-desaciertos-del-conocimiento-cientifico-realidad-economica-103-81-95/).    
+## Breve digresión
 
-Desde nuestro punto de vista, un proceso de conocimiento más potente debe tomar un camino distinto. No podemos pretender explicar un fenómeno simplemente a partir de un modelo que aplique un conjunto de variables que en el mejor de los mundos tengra un `R2` de 60%. Al contrario, creemos que es mucho más potente preguntarse, en primer lugar, por qué existe un fenómeno en el marco de las leyes de la sociedad actual, hasta que nuestro desarrollo nos acerque hacia las variables que podrían enontrarse vinculadas al mismo.  ¿Quiere decir esto que la econometría no sirve? Claro que no. Nos permite superar ciertas limitaciones que tiene la estadística descriptiva para, como su nombre lo indica, brindar una **descripción del fenómeno** a partir de su delimitación cualitativa y su cuantificación mediante algún indicador.
+¿Cual es mi objetivo como investigador en ciencias sociales?, ¿acaso se trata de utilizar el herramental de econometría para descubrir nuevas relaciones significativas entre variables?. En otros términos, ¿"tirar una regresión como 80.000 variables y encontrar p-valores menores a 5% sería realmente un aporte al **conocimiento** de un fenómeno? Un lindo texto que pone en discusión el método científico [Denari (1991)](https://cicpint.org/es/denari-l-1991a-economia-y-epistemologia-y-los-desaciertos-del-conocimiento-cientifico-realidad-economica-103-81-95/).
 
-## Determinantes de la precariedad laboral    
-Existen inifnidad de discusiones sobre las razones de existencia de los empleos precarios o del sector informal. A los fines de realizar un ejercicio empírico, vamos a partir de las variables que - perdón el autobombo- en este trabajo **[Graña et al (2022)](https://www.unse.edu.ar/trabajoysociedad/38%20GRANA%20ET%20ALT%20La%20calidad%20del%20empleo%20en%20la%20Argentina.pdf)** consideramos centrales para entender la precariedad: el rezago productivo y la diferencia en el valor de la fuerza de trabajo.     
+Desde nuestro punto de vista, un proceso de conocimiento más potente debe tomar un camino distinto. No podemos pretender explicar un fenómeno simplemente a partir de un modelo que aplique un conjunto de variables que en el mejor de los mundos tengra un `R2` de 60%. Al contrario, creemos que es mucho más potente preguntarse, en primer lugar, por qué existe un fenómeno en el marco de las leyes de la sociedad actual, hasta que nuestro desarrollo nos acerque hacia las variables que podrían enontrarse vinculadas al mismo. ¿Quiere decir esto que la econometría no sirve? Claro que no. Nos permite superar ciertas limitaciones que tiene la estadística descriptiva para, como su nombre lo indica, brindar una **descripción del fenómeno** a partir de su delimitación cualitativa y su cuantificación mediante algún indicador.
 
-De manera muy sintética, se propone allí que la precariedad laboral aparece como una forma en que las empresas de menor tamaño/escala de operación compensan los mayores costos que enfrentan dada su baja producividad (lo cual se operacionaliza con la **variable de cantidad de personas que trabajan en ese establecimiento**)
-Por otra parte, el segmento de la fuerza laboral sobre la cual recae en mayor medida este "castigo" es aquel segmento que realiza tareas de menores calificaciones, al existir allí mayores masas de reserva de fuerza de trabajo que presionan sobre las condiciones de la fuerza de trabajo en activo (lo cual se operacionaliza con la **variable de calificacion del puesto**). Luego se avanza con estadística descpritiva a partir de estas variables.
+## Determinantes de la precariedad laboral
 
-Si bien la literatura sobre la precariedad laboral toma en cuenta múltiples expresiones de las condiciones de trabajo para clasificar a una relación laboral como precaria o a un individuo como perteneciente al sector informal, a los fines de simplificar el ejercicio vamos a restringirnos al universo de **asalariados** y a asociar la precariead con la variable **PP07H** vinculada a si en su trabajo le **realizan descuento jubilatorio**. Ajustaremos una  regresión logistica con esta variable como dependiente.   
+Existen inifnidad de discusiones sobre las razones de existencia de los empleos precarios o del sector informal. A los fines de realizar un ejercicio empírico, vamos a partir de las variables que - perdón el autobombo- en este trabajo [**Graña et al (2022)**](https://www.unse.edu.ar/trabajoysociedad/38%20GRANA%20ET%20ALT%20La%20calidad%20del%20empleo%20en%20la%20Argentina.pdf) consideramos centrales para entender la precariedad: el rezago productivo y la diferencia en el valor de la fuerza de trabajo.
 
- 
-## Paquete EPH 
+De manera muy sintética, se propone allí que la precariedad laboral aparece como una forma en que las empresas de menor tamaño/escala de operación compensan los mayores costos que enfrentan dada su baja producividad (lo cual se operacionaliza con la **variable de cantidad de personas que trabajan en ese establecimiento**) Por otra parte, el segmento de la fuerza laboral sobre la cual recae en mayor medida este "castigo" es aquel segmento que realiza tareas de menores calificaciones, al existir allí mayores masas de reserva de fuerza de trabajo que presionan sobre las condiciones de la fuerza de trabajo en activo (lo cual se operacionaliza con la **variable de calificacion del puesto**). Luego se avanza con estadística descpritiva a partir de estas variables.
+
+Si bien la literatura sobre la precariedad laboral toma en cuenta múltiples expresiones de las condiciones de trabajo para clasificar a una relación laboral como precaria o a un individuo como perteneciente al sector informal, a los fines de simplificar el ejercicio vamos a restringirnos al universo de **asalariados** y a asociar la precariead con la variable **PP07H** vinculada a si en su trabajo le **realizan descuento jubilatorio**. Ajustaremos una regresión logistica con esta variable como dependiente.
+
+## Paquete EPH
+
 ```{r}
 eph <- eph::get_microdata(year = 2022,trimester = 3) 
 
@@ -57,7 +58,8 @@ base_con_clasificadores <-   eph %>%
   eph::organize_cno() 
 ```
 
-## Creo grupos de interés  
+## Creo grupos de interés
+
 ```{r}
 base_asalariados <- base_con_clasificadores %>% 
 #  eph::organize_labels()%>%
@@ -79,9 +81,11 @@ base_asalariados <- base_con_clasificadores %>%
     )
 
 ```
-## Estadística descriptiva  
+
+## Estadística descriptiva
 
 ¿Qué podemos decir con estadística descriptiva sobre la relación de estas variable con la precariedad?
+
 ```{r}
 base_asalariados %>% 
   filter(!is.na(tamanio.establecim),!is.na(grupos.calif)) %>% 
@@ -91,11 +95,13 @@ base_asalariados %>%
             protegidos = sum(PONDERA[precario == "No"]),
             tasa_precariedad = precarios/casos) 
 ```
-En princpio se observan diferencias que parecen abultadas. En los establecimientos de tamaño pequeño (para un mismo nivel de calificaciones) la precariedad es más alta que en los otros dos tamaños. Y, a igual categoría de tamaño de establecimiento, en las calficaciones bajas la precariedad siempre es mayor que en las medias y altas. A pesar de que uno haya desplegado a partir de su "marco teórico" que estas variables son centrales y que los datos dan en orden de lo que allí se plantea, ¿Qué críticas pueden hacerse a esta forma de aproximar el fenómeno? **La ausencia de variables de control**. ¿Cómo puedo garantizar que detrás del dato de alta precariedad en establecimientos pequeños no se "esconde" el hecho de que el grupo de establecimientos pequeños está conformado específicamente por algunas ramas donde suele haber mucho trabajo precario?, 
-En otros términos, quisiera mostrar que lo que mi "teoría" propone rige, aún **controlando por otras variables que puedan estar correlacionadas con la precariedad**.
 
-## Modelando con recipes   
+En princpio se observan diferencias que parecen abultadas. En los establecimientos de tamaño pequeño (para un mismo nivel de calificaciones) la precariedad es más alta que en los otros dos tamaños. Y, a igual categoría de tamaño de establecimiento, en las calficaciones bajas la precariedad siempre es mayor que en las medias y altas. A pesar de que uno haya desplegado a partir de su "marco teórico" que estas variables son centrales y que los datos dan en orden de lo que allí se plantea, ¿Qué críticas pueden hacerse a esta forma de aproximar el fenómeno? **La ausencia de variables de control**. ¿Cómo puedo garantizar que detrás del dato de alta precariedad en establecimientos pequeños no se "esconde" el hecho de que el grupo de establecimientos pequeños está conformado específicamente por algunas ramas donde suele haber mucho trabajo precario?, En otros términos, quisiera mostrar que lo que mi "teoría" propone rige, aún **controlando por otras variables que puedan estar correlacionadas con la precariedad**.
+
+## Modelando con recipes
+
 A la hora de modelar, agreguemos algunas de las variables típicas que se incluyen como controles en este tipo de ejercicios. Sexo (CH04), Edad (CH06), nivel educativo, rama. Antes de comenzar veamos un poco las variables categóricas que tenemos
+
 ```{r}
 table(base_asalariados %>% select(NIVEL_ED) %>% eph::organize_labels())
 table(base_asalariados$caes_eph_label)
@@ -122,8 +128,10 @@ fited_model <- wf %>%
 tidy(fited_model) %>% 
   gt()
 ```
-El resultado anterior, me da la posibilidad de afirmar estádisticamente una cosa distinta al promedio que tomamos antes: "Aún controlando por otras variables que tipicamente señala la literatura, existe una relación en la cual a mayor tamaño de establecimiento y mayor calificación del puesto de trabajo es menos probable la presencia de precariedad laboral"    
-Si quisiera mostrar solo las variables de interes en un cuadro puedo filtrar algunos términos del objeto tidy. 
+
+El resultado anterior, me da la posibilidad de afirmar estádisticamente una cosa distinta al promedio que tomamos antes: "Aún controlando por otras variables que tipicamente señala la literatura, existe una relación en la cual a mayor tamaño de establecimiento y mayor calificación del puesto de trabajo es menos probable la presencia de precariedad laboral"\
+Si quisiera mostrar solo las variables de interes en un cuadro puedo filtrar algunos términos del objeto tidy.
+
 ```{r}
 tidy(fited_model) %>% 
   filter(str_detect(term,"(grupos|establecim|Interc)"))
@@ -131,12 +139,14 @@ tidy(fited_model) %>%
 ```
 
 La función `glance()` me da indicadores de la capacidad de ajuste del modelo (log-likelihood y sus derivados). Si estuviera comparando con otro modelo (loglikelihood más cercanos a 0 son mejores, AIC y BIC más bajos son mejores)
+
 ```{r}
 glance(fited_model)
 ```
 
-Si quiero ver como se construyeron las variables **dummy** a partir de mis varibles cualitativas, puedo "preparar y cocinar" la receta con las funciones `prep()` y `bake()` respectivamente. Ello me va a dar como resultado el dataframe con las variables transformadas en mis **steps**.   
+Si quiero ver como se construyeron las variables **dummy** a partir de mis varibles cualitativas, puedo "preparar y cocinar" la receta con las funciones `prep()` y `bake()` respectivamente. Ello me va a dar como resultado el dataframe con las variables transformadas en mis **steps**.\
 Luego puedo aplicar la función `contrasts()` sobre alguna variable. Me va a mostrar las columnas suplmentarias creadas. **En caso de no saberlo, puedo chequear que categoría está actuando como base**
+
 ```{r}
 receta_cocinada <- receta %>%  # 
   prep() %>% 
@@ -146,13 +156,14 @@ contrasts(receta_cocinada$NIVEL_ED) #Categoría base es primaria incompleta
 contrasts(receta_cocinada$caes_eph_label) #Categoría base es primaria incompleta
 
 ```
-## Efectos marginales
-Ahora bien, en el contexto de la inferencia, vimos que en las regresiones logísticas es fácil interpretar el signo de los coeficientes y su significatividad, pero no así el grado en que inciden en la variable a predecir. Una técnica muy usual para sacar conclusiones respecto a las magnitudes
-es el calculo de lo **efectos marginales**. Esto es, evaluar como incide un movimiento marginal de un predictor `X` en la probabilidad de obtener la clase a predicir `P(Y=1)`. Dado que el movimiento marginal de X en distintos puntos de su distribución genera efectos distintos sobre Y, hay dos opciones principales      
 
- - Evaluar el movimiento marginal de X alrededor de su media         
- - Tomar un promedio de los movimientos marginales observados al rededor de todo el rango de X    
- 
+## Efectos marginales
+
+Ahora bien, en el contexto de la inferencia, vimos que en las regresiones logísticas es fácil interpretar el signo de los coeficientes y su significatividad, pero no así el grado en que inciden en la variable a predecir. Una técnica muy usual para sacar conclusiones respecto a las magnitudes es el calculo de lo **efectos marginales**. Esto es, evaluar como incide un movimiento marginal de un predictor `X` en la probabilidad de obtener la clase a predicir `P(Y=1)`. Dado que el movimiento marginal de X en distintos puntos de su distribución genera efectos distintos sobre Y, hay dos opciones principales
+
+-   Evaluar el movimiento marginal de X alrededor de su media\
+-   Tomar un promedio de los movimientos marginales observados al rededor de todo el rango de X
+
 <br>
 
 **Importante: En ambas opciones siempre se mantiene constante el resto de las variables predictoras**
@@ -160,6 +171,7 @@ es el calculo de lo **efectos marginales**. Esto es, evaluar como incide un movi
 El paquete [mfx](https://strengejacke.github.io/ggeffects/) permite calcular los efectos marginales para modelos logísticos. Lo que no podemos, por ahora, por diseño de este paquete es integrarlo a la receta generada anteriormente. Sin embargo, podemos utilizar nuestro datafra **receta_cocinada** que ya tiene las transformaciones que le realizamos a la base original.
 
 ### En la media
+
 ```{r}
 library(mfx)
 efectos_marg_en_media <- logitmfx(formula = precario ~ grupos.calif + tamanio.establecim + CH04 + EDAD + NIVEL_ED + caes_eph_label,data = receta_cocinada,atmean = TRUE)
@@ -167,28 +179,183 @@ efectos_marg_en_media <- logitmfx(formula = precario ~ grupos.calif + tamanio.es
 tidy(efectos_marg_en_media) %>% 
   gt()
 ```
-**¿Cómo se lee esto?**         
-De manera genérica:   
 
-*"Seteando todas las variables continuas en su media y las variables categoricas en su categoría base*:        
+**¿Cómo se lee esto?**\
+De manera genérica:
 
- - Si la variable en cuestión es contínua: un aumento marginal en X genera un cambio de `estimate` en la probabilidad de ser precario"               
- - Si la variable en cuestión es categórica: Un caso perteneciente a determinada categoría genera un cambio de `estimate` en la probabilidad estimada de ser precario respecto a la categoría que funciona como base"          
+*"Seteando todas las variables continuas en su media y las variables categoricas en su categoría base*:
 
-<br>    
-Dos ejemplos concretos:   
+-   Si la variable en cuestión es contínua: un aumento marginal en X genera un cambio de `estimate` en la probabilidad de ser precario"\
+-   Si la variable en cuestión es categórica: Un caso perteneciente a determinada categoría genera un cambio de `estimate` en la probabilidad estimada de ser precario respecto a la categoría que funciona como base"
 
- - *Seteando todas las variables continuas en su media y las variables categoricas en su categoría base*, se estima que al moverse en una unidad de **EDAD** (respecto a su media), la probabilidad de ser precario cae en 0.008460442      
- - *Seteando todas las variables continuas en su media y las variables categoricas en su categoría base*, se estima que trabajar en la rama **Servicio Doméstico** aumenta la probabilidad de ser precario un  0.339373261 respecto a trabajar en la Industria Manufacturera (categoría base)
+<br>\
+Dos ejemplos concretos:
 
-<br>    
+-   *Seteando todas las variables continuas en su media y las variables categoricas en su categoría base*, se estima que al moverse en una unidad de **EDAD** (respecto a su media), la probabilidad de ser precario cae en 0.008460442\
+-   *Seteando todas las variables continuas en su media y las variables categoricas en su categoría base*, se estima que trabajar en la rama **Servicio Doméstico** aumenta la probabilidad de ser precario un 0.339373261 respecto a trabajar en la Industria Manufacturera (categoría base)
 
-### En promedio    
-Si seteamos el parámetro `atmean = FALSE`, lo que vamos a estar haciendo es calcular un promedio de los efectos marginales a lo largo de distintos momentos de la distribución de las variables (de allí que el procesamiento tarda un poco más). 
+<br>
+
+### En promedio
+
+Si seteamos el parámetro `atmean = FALSE`, lo que vamos a estar haciendo es calcular un promedio de los efectos marginales a lo largo de distintos momentos de la distribución de las variables (de allí que el procesamiento tarda un poco más).
+
 ```{r}
 efectos_marg_promedio <- logitmfx(formula = precario ~ grupos.calif + tamanio.establecim + CH04 + EDAD + NIVEL_ED + caes_eph_label,data = receta_cocinada,atmean = FALSE)
 
 tidy(efectos_marg_promedio) %>% 
   gt()
+```
+
+# Determinantes del salario (regresión lineal)
+
+Vamos a recurrir a la eph para estudiar los determinantes del salario usando una regresión lineal.
+
+```{r}
+lm_spec <- linear_reg() %>%
+  # set_mode("regression") %>%
+  set_engine("lm")
+```
+
+
+Levantamos la base y recodificamos algunas variables:
+
+```{r}
+eph <- eph::get_microdata(year = 2022,trimester = 3) 
+```
+
+
+```{r}
+base_con_clasificadores <-   eph %>% 
+  filter(CH06 !=-1) %>% #Con info de edad
+  filter(CH06 >17) %>% #Mayores de edad
+  filter(ESTADO == 1) %>% #Ocupados 
+  filter(CAT_OCUP %in%c(3)) %>% # Asalariados 
+  eph::organize_caes() %>% 
+  eph::organize_cno()
+
+#Casos sin info
+base_con_clasificadores$P21[base_con_clasificadores$P21 == -9] <- 0
+base_con_clasificadores$TOT_P12[base_con_clasificadores$TOT_P12 == -9] <- 0
+base_con_clasificadores$PP3E_TOT[base_con_clasificadores$PP3E_TOT == 999] <- 0
+base_con_clasificadores$PP3F_TOT[base_con_clasificadores$PP3F_TOT == 999] <- 0
+
+asalariados <- base_con_clasificadores %>% 
+  filter(P21>0,PP3E_TOT>0) %>% # Asalariados con ingreso y con horas
+  mutate(
+    grupos.calif = factor(case_when(
+      CALIFICACION %in% c("Profesionales","Técnicos") ~ "Alta",
+      CALIFICACION ==   "Operativos" ~ "Media",
+      CALIFICACION ==   "No calificados" ~ "Baja"),
+      levels = c("Baja","Media","Alta")),
+    precario = factor(case_when(
+      PP07H == 1 ~ "No",
+      PP07H == 2 ~ "Si",
+      PP07H == 0 | is.na(PP07H) ~ "No asalariado"),
+      levels = c("No","Si","No asalariado")),
+    tamanio.establecim = factor(case_when(
+      PP04C %in% 1:6  |(PP04C %in% 99 & PP04C99 == 1)~ "Pequeño",
+      PP04C %in% 7:8  ~ "Mediano",
+      PP04C %in% 9:12 |(PP04C %in% 99 & PP04C99 == 3)~ "Grande"),
+      levels = c("Pequeño","Mediano","Grande")),
+    REGION = factor(REGION,labels = c("GBA","NOA","NEA","Cuyo","Pampeana","Patagonia")))
+
+```
+
+Vamos a aplicar una transformación logarítmica al salario porque la distribución está muy sesgada hacia un lado, y la queremos hacer más simétrica para que el modelo funcione.
+
+```{r}
+asalariados %>% 
+  ggplot(.,aes(x=P21))+
+  geom_density()
+```
+```{r}
+asalariados %>% 
+  ggplot(.,aes(x=log(P21)))+
+  geom_density()
+```
+
+
+Creamos nuestra receta:
+
+```{r}
+receta_mincer <- recipe(x = asalariados,P21 ~  precario + grupos.calif + tamanio.establecim + CH04 + CH06 + NIVEL_ED + caes_eph_label+ PP3E_TOT + REGION) %>% 
+  step_log(P21,skip = TRUE) %>% #el parámetro skip nos permite después poder usar la función augment
+  step_num2factor(CH04, levels = c("Varon","Mujer")) %>% 
+  step_rename(EDAD = CH06,horas_ocup_ppal = PP3E_TOT) %>% 
+  step_poly(EDAD,degree = 2) %>% 
+#  step_num2factor(REGION, levels = c("GBA","NOA","NEA","Cuyo","Pampeana","Patagonia")) %>% 
+#  step_num2factor(PP03G, levels = c("mas_horas","ok_horas")) %>% 
+  step_mutate(NIVEL_ED = ifelse(NIVEL_ED == 7,yes = 1,no = NIVEL_ED)) %>% 
+  step_num2factor(NIVEL_ED,levels = c("Primaria incompleta","Primaria completa","Secundaria incompleta",
+                                      "Secundaria completa","Terciario/univ incompleta","Terciario/univ completa")) %>% 
+  step_interact( ~ CH04:grupos.calif) %>%
+  step_other(caes_eph_label,threshold = 0.05) 
+```
+
+¿Qué hay una vez que corremos la receta? Usamos contrasts para entender los dummys
+
+```{r}
+receta_cocinada <- receta_mincer %>%
+  prep() %>%
+  bake(new_data = NULL)
+
+#contrasts(receta_cocinada$caes_eph_label)
+#contrasts(receta_cocinada$NIVEL_ED)
+```
+
+
+Creamos el workflow:
+
+```{r}
+wf <- workflow() %>%
+  add_model(lm_spec) %>% 
+  add_recipe(receta_mincer) 
+```
+
+Ajustamos el modelo:
+
+```{r}
+fitted_linear_model <- wf %>% 
+  fit(.,data = asalariados)
+```
+
+Observamos los coeficientes (y su significatividad)
+
+```{r}
+options(scipen = 1)
+tidy(fitted_linear_model) %>% arrange(p.value) %>% 
+  gt()
+```
+
+Evaluamos el modelo:
+
+```{r}
+glance(fitted_linear_model)
+
+```
+
+```{r}
+#otra forma de ver todo junto
+fitted_linear_model %>%  
+  pull_workflow_fit() %>% 
+  pluck("fit") %>% 
+  summary()
+```
+
+
+
+Y finalmente graficamos los residuos:
+
+```{r}
+augment(fitted_linear_model, new_data = asalariados) %>% 
+  mutate(.resid = log(P21) - .pred) %>% 
+  #graficamos
+  dplyr::select(.resid, .pred)%>%
+         ggplot(aes(x=.pred, y=.resid)) + 
+                 geom_point() + 
+                 theme_minimal() +
+                geom_hline(yintercept=0, linetype='dashed') 
+
 ```
 
