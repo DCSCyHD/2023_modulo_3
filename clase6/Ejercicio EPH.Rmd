@@ -275,7 +275,6 @@ asalariados %>%
   geom_density()
 ```
 
-
 Creamos nuestra receta:
 
 ```{r}
@@ -327,6 +326,8 @@ options(scipen = 1)
 tidy(fitted_linear_model) %>% arrange(p.value) %>% 
   gt()
 ```
+
+Dado que aplicamos una transformación logarítmica a la variable dependiente, la interpretación de los coeficientes se ve modificada. Ahora un incremento en una unidad de X implica una variación de $100 \times (e^{\beta} - 1)$ **%** en Y
 
 Evaluamos el modelo:
 
