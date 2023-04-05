@@ -73,9 +73,7 @@ Tomo la especificación anterior y excplicito que variables usaré y de que data
 
 ```{r}
 base_para_modelar <- base_juguete %>% 
-  mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,
-                                            levels = c("Si","No")
-                                            ))
+  mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico))
 
 #Lo entreo con los datos 
 log_fiteado <- log_model %>% 
@@ -247,7 +245,7 @@ tidy(modelo_sobre_train)
 ### Aplico predicciones a la base de testeo    
 
 ```{r}
-base_test_con_pred <- augment(x = modelo_sobre_train, base_test)
+base_test_con_pred <- augment(x = modelo_sobre_train,new_data = base_test)
 base_test_con_pred
 ```
 ### Matriz de confusión
@@ -285,7 +283,7 @@ base_real<- readRDS(file = "fuentes/base_EAUH_TNR.RDS") %>%
     ifelse(TIEMPO_TDNR != 0,
            yes = "Si",
            no = "No"),
-    levels = c("Si","No")))
+    levels = c("No","Si")))
 
 set.seed(18/12/2022)
 base_spliteada<- initial_split(base_real)
@@ -310,7 +308,18 @@ modelo_1 %>%
 modelo_2 %>% 
   tidy()
 
+modelsummary::modelsummary(
+  list("modelo 1 " = modelo_1,
+       "modelo 2" = modelo_2)
+  )
+
 ```
+
+```{r}
+ve <- data.frame(contrasts(base_train$NIVEL_ED))
+contrasts(base_train$NIVEL_ED)
+```
+
 
 Armemos una sola base que tenga las predicciones que hacen los dos modelos. Comienzo por aumentar la base original con las predicciones del modelo 1, las renombro como **"pred_m1"**. Luego con `bind_cols()` voy a añadire a eso las predicciones que hace el modelo 2 y las renombro como **"pred_m2"**.
 ```{r}
@@ -319,8 +328,8 @@ base_2modelos<- augment(modelo_1,base_test) %>%
   bind_cols(predict(modelo_2, base_test)) %>%
   rename(pred_m2=.pred_class) 
 
-base_2modelos %>% conf_mat(realiza_trabajo_domestico,pred_m1)
-base_2modelos %>% conf_mat(realiza_trabajo_domestico,pred_m2)
+base_2modelos %>% conf_mat(truth = realiza_trabajo_domestico,estimate = pred_m1)
+base_2modelos %>% conf_mat(truth = realiza_trabajo_domestico,estimate = pred_m2)
 ```
 
 > ¿Que les llama la atención al ver la matriz de confusión?
@@ -388,6 +397,9 @@ base_2modelosb %>% conf_mat(realiza_trabajo_domestico,pred_m2)
 
 base_2modelosb %>% accuracy(realiza_trabajo_domestico,pred_m1)
 base_2modelosb %>% accuracy(realiza_trabajo_domestico,pred_m2)
+
+
+base_2modelosb %>% sensitivity(truth = realiza_trabajo_domestico,estimate = pred_m2)
 
 ```
 
