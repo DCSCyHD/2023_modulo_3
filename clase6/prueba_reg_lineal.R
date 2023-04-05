@@ -91,10 +91,11 @@ asalariados <- base_transf %>%
 
 receta_mincer <- recipe(x = asalariados,log_salario ~  precario + grupos.calif + tamanio.establecim + CH04 + CH06 + NIVEL_ED + caes_eph_label+ PP3E_TOT + REGION) %>% 
   step_num2factor(CH04, levels = c("Varon","Mujer")) %>% 
+  step_rename(EDAD = CH06,horas_ocup_ppal = PP3E_TOT) %>% 
+  step_poly(EDAD,degree = 2) %>% 
 #  step_num2factor(REGION, levels = c("GBA","NOA","NEA","Cuyo","Pampeana","Patagonia")) %>% 
 #  step_num2factor(PP03G, levels = c("mas_horas","ok_horas")) %>% 
   step_mutate(NIVEL_ED = ifelse(NIVEL_ED == 7,yes = 1,no = NIVEL_ED)) %>% 
-  step_rename(EDAD = CH06,horas_ocup_ppal = PP3E_TOT) %>% 
   step_num2factor(NIVEL_ED,levels = c("Primaria incompleta","Primaria completa","Secundaria incompleta",
                                       "Secundaria completa","Terciario/univ incompleta","Terciario/univ completa")) %>% 
   step_interact( ~ CH04:grupos.calif) %>%
@@ -109,6 +110,7 @@ wf <- workflow() %>%
 fitted_model_2 <- wf %>% 
   fit(.,data = asalariados)
 
+options(scipen = 999)
 ver_model2 <- tidy(fitted_model_2) %>% arrange(p.value)
 
 glance(fitted_model_2)
@@ -125,10 +127,10 @@ asalariados_v3 <- base_transf %>%
 
 receta_mincer_v3 <- recipe(x = asalariados_v3,log_salario_horario ~  precario + grupos.calif + tamanio.establecim + CH04 + CH06 + NIVEL_ED + caes_eph_label + REGION) %>% 
   step_num2factor(CH04, levels = c("Varon","Mujer")) %>% 
-  #  step_num2factor(REGION, levels = c("GBA","NOA","NEA","Cuyo","Pampeana","Patagonia")) %>% 
-  #  step_num2factor(PP03G, levels = c("mas_horas","ok_horas")) %>% 
-  step_mutate(NIVEL_ED = ifelse(NIVEL_ED == 7,yes = 1,no = NIVEL_ED)) %>% 
   step_rename(EDAD = CH06) %>% 
+  step_mutate(NIVEL_ED = ifelse(NIVEL_ED == 7,yes = 1,no = NIVEL_ED)) %>% 
+  step_poly(EDAD,degree = 2) %>% 
+  
   step_num2factor(NIVEL_ED,levels = c("Primaria incompleta","Primaria completa","Secundaria incompleta",
                                       "Secundaria completa","Terciario/univ incompleta","Terciario/univ completa")) %>% 
   step_interact( ~ CH04:grupos.calif) %>%

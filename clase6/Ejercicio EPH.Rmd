@@ -130,6 +130,11 @@ tidy(fited_model) %>%
 
 ```
 
+La función `glance()` me da indicadores de la capacidad de ajuste del modelo (log-likelihood y sus derivados). Si estuviera comparando con otro modelo (loglikelihood más cercanos a 0 son mejores, AIC y BIC más bajos son mejores)
+```{r}
+glance(fited_model)
+```
+
 Si quiero ver como se construyeron las variables **dummy** a partir de mis varibles cualitativas, puedo "preparar y cocinar" la receta con las funciones `prep()` y `bake()` respectivamente. Ello me va a dar como resultado el dataframe con las variables transformadas en mis **steps**.   
 Luego puedo aplicar la función `contrasts()` sobre alguna variable. Me va a mostrar las columnas suplmentarias creadas. **En caso de no saberlo, puedo chequear que categoría está actuando como base**
 ```{r}
