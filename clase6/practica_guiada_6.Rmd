@@ -22,6 +22,7 @@ knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
 ```{r librerias, results='hide'}
 library(tidyverse)
 library(tidymodels)
+library(kknn)
 
 options(dplyr.summarise.inform = FALSE)
 ```
@@ -96,7 +97,7 @@ ggplot(
 ```
 
 # Comparando modelos    
-Ahora bien, todo esto fue aplicado **sólamente** un sólo modelo (regresión líneal múltiple de grado 1). La "gracia" de el lenguaje tidymodels es poder comparar múltiples modelos al mismo tiempo, para elegir así el que mejor performe.   
+Ahora bien, todo esto fue aplicado **sólamente** con un modelo (regresión líneal múltiple de grado 1). La "gracia" de el lenguaje tidymodels es poder comparar múltiples modelos al mismo tiempo, para elegir así el que mejor performe.   
 
 Vamos a crear ahora una receta básica de regresión líneal múltiple, para luego agregarle o quitarle cosas a esa receta y comparar como performa el modelo.      
 ```{r}
@@ -109,7 +110,7 @@ receta_basica <- recipe(
   data = base_juguete)
 
 receta_2 <- receta_basica  %>%
-    step_poly(all_numeric_predictors(), degree = 2) # Agrego la variable de menores_hogar para aplicarla al 2
+    step_poly(all_numeric_predictors(), degree = 2) # Agrego término al cuadrado para variables numericas
 receta_3 <- receta_basica  %>%
     step_rm(c(menores_hogar,ingreso_individual)) # Saco 2 variables a ver que onda
 
@@ -117,6 +118,7 @@ recetario <-
   list(basica = receta_basica,
        poly = receta_2,
        bivariado = receta_3)
+
 
 lm_models <- workflow_set(preproc = recetario, # que recetas voy a aplicar
                           models = list(lm = linear_reg()), #con que modelos (siempre el mismo o distintos)
@@ -143,10 +145,11 @@ collect_metrics(lm_models_fiteados) %>%
   filter(.metric == "rmse")
 ```
 
-# Tuneando hiperparametros (super introductorio)     
-Hagamos otro ejercicio de predicción un poco distinto. Queremos predecir el **ingreso individual** a partir de las horas de trabajo, el sexo y la cantidad de menores en el hogar.    
+# Tuneando hiperparametros (super introductorio)       
+Muchas veces, el cross-validation es un proceso utilizado para el *tuneo* ("espanglish" de tune: afinación) de los hiperparámetros de un modelo. Consiste en evaluar, dentro de un rango especificado, cual es el mejor valor posible para setear un parámetro (en términos de como performa el modelo). 
 
-¿Cómo hacemos para saber hasta que grado de polinomio nos conviene avanzar?. El *tuneo* ("espanglish" de tune: afinación) de los hiperparámetros consiste en evaluar, dentro de un rango especificado, cual es el mejor valor posible para setear el mismo en términos de como performa el modelo. 
+
+Hagamos otro ejercicio de predicción un poco distinto. Queremos predecir el **ingreso individual** a partir de las horas de trabajo, el sexo y la cantidad de menores en el hogar. Tenemos la intuición de que **los predictores numéricos no se relacionan linealmente con la variable objetivo**.  ¿Cómo hacemos para saber hasta que grado de polinomio nos conviene avanzar? 
 ```{r}
 # Partimos de esta receta basica
 receta_basica <- recipe(
