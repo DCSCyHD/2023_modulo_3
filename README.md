@@ -90,8 +90,10 @@ __Clase 5 - Clasificación 2: Intro a KNN y LDA:__
 
 __Clase 6 - Cross-Validation y repaso general:__
 
+ [![](img/Download.png)](clase6.rar)
+
 + Temas de clase:
-  +	Limitantes del enfoque Train-Test
+  + Limitantes del enfoque Train-Test
   + Cross-Validation.
   + Repaso de clases 1 a 5
 
