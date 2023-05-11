@@ -125,6 +125,7 @@ receta <- recipe(x = base_asalariados,precario ~ grupos.calif + tamanio.establec
   step_interact( ~ CH04:EDAD) %>% 
   step_other(caes_eph_label,threshold = 0.05)
 
+tidy(receta)
 wf <- workflow() %>%
   add_model(logistic_reg()) %>% 
   add_recipe(receta)  
@@ -134,6 +135,29 @@ fited_model <- wf %>%
   fit(.,data = base_asalariados)
 
 tidy(fited_model) %>% 
+  gt()
+```
+#con ponderaciones
+```{r}
+receta_pond <- recipe(x = base_asalariados,precario ~ grupos.calif + tamanio.establecim + CH04 + CH06 + NIVEL_ED + caes_eph_label + PONDERA,
+                      data = base_asalariados) %>% 
+  ?update_role(PONDERA, new_role  = "case_weight") %>% 
+  step_num2factor(CH04, levels = c("Varon","Mujer")) %>% 
+  step_mutate(NIVEL_ED = ifelse(NIVEL_ED == 7,yes = 1,no = NIVEL_ED)) %>% 
+  step_rename(EDAD = CH06) %>% 
+  step_num2factor(NIVEL_ED,levels = c("Primaria incompleta","Primaria completa","Secundaria incompleta",
+                                      "Secundaria completa","Terciario/univ incompleta","Terciario/univ completa")) %>% 
+  step_interact( ~ CH04:EDAD) %>% 
+  step_other(caes_eph_label,threshold = 0.05)
+  
+wf_pond <- workflow() %>%
+  add_model(logistic_reg()) %>% 
+  add_recipe(receta_pond)
+
+fited_model_pond <- wf_pond %>% 
+  fit(.,data = base_asalariados)
+
+tidy(fited_model_pond) %>% 
   gt()
 ```
 
