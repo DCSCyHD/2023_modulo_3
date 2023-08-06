@@ -1,0 +1,82 @@
+---
+title: "Teórica 4 - Módulo 3"
+subtitle: "Regresión logística."
+author: 
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
+  - Carolina Pradier y Guido Weksler
+output: 
+  html_document:
+    toc: TRUE
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,comment = FALSE,
+                      fig.width=8)
+```
+
+```{r librerias, results='hide'}
+library(tidyverse)
+library(tidymodels)
+
+options(dplyr.summarise.inform = FALSE)
+options(scipen = 999)
+```
+
+
+## Práctica independiente   
+- Levantar la base real llamada **base_EAUH_TNR**.     
+- Crear una variable dicotómica "realiza_trabajo_doméstico" que tome los valores "Si" y "No" a partir de la variable original de **TIEMPO_TDNR**. *Ojo*: Necesitan crearla como un factor     
+- Eliminen la variable **TIEMPO_TDNR**. 
+- Exploren la base y elijan entre 3 o 5 variables que crean son las que mas influyen en la realizaci[on de trabajo domestico   
+- Utilizar el set de training para construir 2 modelos de regresión logistica. Uno con las variables que elijieron y otro con todas las variables de la base.    
+- Mostraer los coeficientes estimados para cada modelo. Interpretar el signo y su significatividad estadística. 
+- Comparar la **performance** de ambos modelos para predecir en el dataset de testing.  
+
+```{r include=FALSE}
+set.seed(9180)
+base_real<- readRDS(file = "fuentes/base_EAUH_TNR.RDS") %>% 
+  mutate(realiza_trabajo_domestico = factor(
+    ifelse(TIEMPO_TDNR == 0,
+           yes = "No",
+           no = "Si"))
+    ) %>% 
+  select(-TIEMPO_TDNR)
+
+base_balanceada <- base_real %>% 
+  group_by(realiza_trabajo_domestico) %>% 
+  sample_n(size = 15000) %>% 
+  ungroup()
+
+base_b_spliteada<- initial_split(base_balanceada)
+base_b_train<- training(base_b_spliteada)
+base_b_test<- testing(base_b_spliteada)
+
+log_model <- logistic_reg() %>% #Defino el tipo de modelo
+  set_mode("classification") %>%  #el modo (regresión o clasificación)
+  set_engine("glm")
+
+modelo_1b <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ .,
+      data = base_b_train)  
+
+modelo_2b <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_mercado+menores_hogar+CH04,
+      data = base_b_train)  
+
+tidy(modelo_1b)
+```
+
+```{r}
+base_2modelosb<- base_b_test %>% select(realiza_trabajo_domestico) %>% 
+bind_cols(predict(modelo_1b, base_b_test) %>% rename(pred_m1=.pred_class)) %>%  
+bind_cols(predict(modelo_2b, base_b_test) %>% rename(pred_m2=.pred_class)) 
+
+base_2modelosb %>% conf_mat(realiza_trabajo_domestico,pred_m1)
+base_2modelosb %>% conf_mat(realiza_trabajo_domestico,pred_m2)
+```
+

@@ -1,0 +1,181 @@
+---
+title: "Práctica guíada 4 - Módulo 3"
+subtitle: "Regresión logística."
+author: 
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
+  - Carolina Pradier y Guido Weksler
+output: 
+  html_document:
+    toc: TRUE
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,comment = FALSE,
+                      fig.width=8)
+```
+
+```{r librerias, results='hide'}
+library(tidyverse)
+library(tidymodels)
+library(gtsummary)
+library(modelsummary)
+library(gt)
+
+options(dplyr.summarise.inform = FALSE)
+options(scipen = 999)
+```
+
+
+# Introducción     
+
+Operemos con [Tidymodels](https://www.tidymodels.org/) para hacer un modelo de clasificación con el método de la regresión logística. Usaremos nuestra base de juguete de 200 datos ficticios, con la variable objetivo **realiza_trabajo_domestico**. Por ahora, tomaremos únicamente como variables explicativas las horas trabajadas en el mercado y el ingreso total familiar.    
+
+Visualicemos previamente estos datos. 
+
+```{r}
+base_juguete <- readRDS(file = "fuentes/eut_juguete_clase4.RDS")
+base_para_modelar <- base_juguete %>% 
+  mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico))
+base_spliteada <-  initial_split(base_para_modelar,prop = 0.8)
+base_train <-  training(base_spliteada)
+base_test <-  testing(base_spliteada)
+
+```
+
+
+## Espacio de práctica (en clase)   
+Supongan que les solicitan armar un modelo con una sola variable predictora de las disponibles. Entrenen *con un mismo training set* 2 modelos con un solo predictor (uno con cada una de las tres variables disponibles) y decidan cual es el que mejor pronostica la realización de TDNR en el *test set*. Pueden calcular solo el **accuracy**.
+```{r, include=FALSE}
+modelo_horas_mdo <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_trabajo_mercado,
+      data = base_train)  
+
+modelo_ingreso <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ ingreso_familiar,
+      data = base_train)  
+
+modelo_menores <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ menores_hogar,
+      data = base_train) 
+
+```
+
+```{r, include=FALSE}
+base_3modelos<- base_test %>% select(realiza_trabajo_domestico) %>% 
+bind_cols(predict(modelo_horas_mdo, base_test) %>% rename(pred_hs=.pred_class)) %>%  
+bind_cols(predict(modelo_ingreso, base_test) %>% rename(pred_ing=.pred_class)) %>%  
+bind_cols(predict(modelo_menores, base_test) %>% rename(pred_men=.pred_class))   
+
+base_3modelos %>% accuracy(realiza_trabajo_domestico,pred_hs)
+base_3modelos %>% accuracy(realiza_trabajo_domestico,pred_ing)
+base_3modelos %>% accuracy(realiza_trabajo_domestico,pred_men)
+
+base_3modelos %>% conf_mat(realiza_trabajo_domestico,pred_hs)
+base_3modelos %>% conf_mat(realiza_trabajo_domestico,pred_ing)
+base_3modelos %>% conf_mat(realiza_trabajo_domestico,pred_men)
+```
+
+
+## Práctica (indepte)         
+- Levantar la base real llamada **base_EAUH_TNR**.     
+- Crear una variable dicotómica "realiza_trabajo_doméstico" que tome los valores "Si" y "No" a partir de la variable original de **TIEMPO_TDNR**. *Ojo*: Necesitan crearla como un factor   
+- Separar el dataset en train y test.       
+- Utilizar el set de training para construir 2 modelos de regresión logistica con 3 variables predictoras cada uno.
+- Mostraer los coeficientes estimados para cada modelo. Interpretar el signo y su significatividad estadística. 
+- Comparar la **performance** de ambos modelos para predecir en el dataset de testing.  
+
+```{r include=FALSE}
+set.seed(9180)
+base_real<- readRDS(file = "fuentes/base_EAUH_TNR.RDS") %>% 
+  mutate(realiza_trabajo_domestico = factor(ifelse(TIEMPO_TDNR == 0,yes = "No",no = "Si")))
+
+
+base_spliteada<- initial_split(base_real,
+                               prop = 0.75)
+base_train<- training(base_spliteada)
+base_test<- testing(base_spliteada)
+
+log_model <- logistic_reg() %>% #Defino el tipo de modelo
+  set_mode("classification") %>%  #el modo (regresión o clasificación)
+  set_engine("glm")
+
+modelo_1 <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_mercado+menores_hogar+NIVEL_ED,
+      data = base_train)  
+
+modelo_2 <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_mercado+ingreso_indiv+CH04,
+      data = base_train)  
+
+modelo_1 %>% 
+  tidy()
+
+modelo_2 %>% 
+  tidy()
+
+modelsummary::modelsummary(
+  list("log modelo 1 " = modelo_1,
+       "log modelo 2 " = modelo_2)
+  )
+
+base_2modelos<- base_test %>% select(realiza_trabajo_domestico) %>% 
+bind_cols(predict(modelo_1, base_test) %>% rename(pred_m1=.pred_class)) %>%  
+bind_cols(predict(modelo_2, base_test) %>% rename(pred_m2=.pred_class)) 
+
+base_2modelos %>% conf_mat(realiza_trabajo_domestico,pred_m1)
+base_2modelos %>% conf_mat(realiza_trabajo_domestico,pred_m2)
+
+##Tomar nota del desbalanceo de clases y la tendencia a pronosticar la clase mayoritaria#
+
+```
+
+```{r}
+set.seed(18122022)
+
+
+table(base_real$realiza_trabajo_domestico)
+
+base_balanceada <- base_real %>% 
+  group_by(realiza_trabajo_domestico) %>% 
+  sample_n(size = 15000) %>% 
+  ungroup()
+
+base_b_spliteada<- initial_split(base_balanceada,
+                               prop = 0.75,
+                               strata = realiza_trabajo_domestico)
+base_b_train<- training(base_b_spliteada)
+base_b_test<- testing(base_b_spliteada)
+
+log_model <- logistic_reg() %>% #Defino el tipo de modelo
+  set_mode("classification") %>%  #el modo (regresión o clasificación)
+  set_engine("glm")
+
+modelo_1b <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_mercado+menores_hogar+NIVEL_ED,
+      data = base_b_train)  
+
+modelo_2b <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_mercado+ingreso_indiv+CH04,
+      data = base_b_train)  
+
+modelo_1b %>% 
+  tidy()
+
+modelo_2b %>% 
+  tidy()
+
+base_2modelosb<- base_b_test %>% select(realiza_trabajo_domestico) %>% 
+bind_cols(predict(modelo_1b, base_b_test) %>% rename(pred_m1=.pred_class)) %>%  
+bind_cols(predict(modelo_2b, base_b_test) %>% rename(pred_m2=.pred_class)) 
+
+base_2modelosb %>% conf_mat(realiza_trabajo_domestico,pred_m1)
+base_2modelosb %>% conf_mat(realiza_trabajo_domestico,pred_m2)
+
+
+```
+
