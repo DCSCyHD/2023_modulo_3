@@ -2,8 +2,8 @@
 title: "Teórica 2 - Módulo 3"
 subtitle: "Regresión lineal simple."
 author: 
-  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
-  - Carolina Pradier y Guido Weksler
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Agosto/Septiembre 2023
+  - Carolina Pradier, Guido Weksler y Karina Bartolomé
 output: 
   html_document:
     toc: TRUE
@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
                       fig.width=8)
 ```
 
-```{r librerias, results='hide'}
+```{r librerias, results='hide', echo=FALSE}
 library(tidyverse)
 
 options(dplyr.summarise.inform = FALSE)
@@ -28,11 +28,7 @@ options(dplyr.summarise.inform = FALSE)
 
 # Relaciones lineales
 
-El gráfico siguiente muestra dos variables. Podemos modelar esa relación
-entre ambas de forma **perfecta** con una línea recta. La ecuación de
-esa recta es
-
-$$y = 5 + 64.96 X$$
+El gráfico siguiente muestra dos variables (x e y):
 
 ```{r echo=FALSE}
 set.seed(1)
@@ -40,10 +36,22 @@ data = tibble(x = 1:13 + runif(13),
               y = 5 + 64.96 * x)
 
 data %>%
-ggplot(aes(x,y)) +
-        geom_line(color="black") + 
-        geom_point(color="blue") +
-        theme_minimal()
+  ggplot(aes(x, y)) +
+  geom_point(color = "blue") +
+  theme_minimal()
+```
+
+Podemos modelar esa relación
+entre ambas de forma **perfecta** con una línea recta. La ecuación de
+esa recta es:
+
+$$y = 5 + 64.96 X$$
+```{r echo=FALSE}
+data %>%
+  ggplot(aes(x, y)) +
+  geom_line(color = "black") +
+  geom_point(color = "blue") +
+  theme_minimal()
 ```
 
 La **pendiente** de esta recta es 64.96 y la **ordenada al origen** es 5.
@@ -73,19 +81,19 @@ La regresión lineal es una técnica estadística que se puede utilizar para var
 
 # ¿Qué preguntas responde la regresión lineal?
 
-¿Existe una relación entre las variables independiente y dependiente?
+- ¿Existe una relación entre las variables independiente y dependiente?
 
-¿Cuán fuerte es esa relación?
+- ¿Cuán fuerte es esa relación?
 
-¿Cuáles de las variables independientes tienen efecto en la variable dependiente?
+- ¿Cuáles de las variables independientes tienen efecto en la variable dependiente?
 
-¿Con cuánta precisión podemos estimar el efecto de cada variable independiente en la variable dependiente?
+- ¿Con cuánta precisión podemos estimar el efecto de cada variable independiente en la variable dependiente?
 
-¿Con cuánta precisión podemos predecir la variable dependiente?
+- ¿Con cuánta precisión podemos predecir la variable dependiente?
 
-¿La relación entre las variables es lineal?
+- ¿La relación entre las variables es lineal?
 
-¿Hay interacción/sinergia entre las variables independientes?
+- ¿Hay interacción/sinergia entre las variables independientes?
 
 ---
 
@@ -330,7 +338,7 @@ Esta métrica mide la proporción de variación en la variable de resultado $Y$,
 Podemos medir la variabilidad en los valores de $y$ en función de cuán
 lejos de su media $\overline{y}$ tienden a caer.
 
-Definimos este valor como la suma total de cuadrados (SST), calculada
+Definimos este valor como la suma total de cuadrados (SST: total sum of squares), calculada
 usando la siguiente fórmula, donde $y_{i}$ representa a cada valor de
 $y$ (es decir, cada registro de $y$ en el dataset) y $\overline{y}$
 representa la media de todos los valores de $y$ en el dataset.
@@ -338,7 +346,7 @@ representa la media de todos los valores de $y$ en el dataset.
 $$SST = (y_{1} - \overline{y})^2 + (y_{2} - \overline{y})^2 + ... + (y_{n} - \overline{y})^2 = \sum_{i=1}^n (y_{i} - \overline{y})^2$$
 La variabilidad que resta en los valores de $y$ conociendo $X$ se puede
 medir por la suma de los errores al cuadrado, o la suma de los residuos
-al cuadrado (SSE), calculada usando la fórmula a continuación, donde
+al cuadrado (SSE: sum of squared errors), calculada usando la fórmula a continuación, donde
 $\hat{y_{i}}$ representa el valor predicho de $y_{i}$ (es decir el valor
 predicho en cada caso del dataset) usando la recta de regresión.
 
@@ -349,6 +357,10 @@ $$SSE =  (y_{1} - \hat{y_{1}})^2 + (y_{2} - \hat{y_{2}})^2 + ... + (y_{n} - \hat
 El coeficiente de determinación puede ser calculado como:
 
 $$ R^{2} = \frac{SST - SSE}{SST} = 1 - \frac{SSE}{SST}$$ 
+
+Gráficamente:
+
+![Suma total de cuadrados (SST) en rojo y Suma de los residuos al cuadrado (SSE) en azul](https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Coefficient_of_Determination.svg/600px-Coefficient_of_Determination.svg.png)
 
 
 # Predicciones a partir del modelo, ¿cómo se interpretan?
@@ -387,8 +399,8 @@ analizada.
 
 # Referencias bibliográficas
 
-An Introduction to Statistical Learning with applications in R (James, Witten, Hastie y Tibshirani) -- 1st and 2nd version
+- An Introduction to Statistical Learning with applications in R (James, Witten, Hastie y Tibshirani) -- 1st and 2nd version
 
-Tidy Modeling with R (Kuhn y Silge)
+- Tidy Modeling with R (Kuhn y Silge)
 
-Introduction to Modern Statistics (Çetinkaya-Rundel y Hardin)
+- Introduction to Modern Statistics (Çetinkaya-Rundel y Hardin)
