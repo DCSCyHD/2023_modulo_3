@@ -2,8 +2,7 @@
 title: "Teórica 3 - Módulo 3"
 subtitle: "Regresión lineal simple y múltiple."
 author: 
-  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Agosto/Septiembre 2023
-  - Carolina Pradier, Guido Weksler y Karina Bartolomé
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM).
 output: 
   html_document:
     toc: TRUE
@@ -13,6 +12,8 @@ output:
     number_sections: true
     theme: readable
 ---
+
+> Material elaborado originalmente por Carolina Pradier y Guido Weksler
 
 ```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
