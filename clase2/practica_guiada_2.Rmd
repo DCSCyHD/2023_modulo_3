@@ -1,9 +1,8 @@
 ---
 title: "Práctica 2 - Módulo 3"
-subtitle: "Regresión lineal simple."
+subtitle: "Regresión lineal simple"
 author: 
-  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
-  - Carolina Pradier y Guido Weksler
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM).
 output: 
   html_document:
     toc: TRUE
@@ -13,6 +12,8 @@ output:
     number_sections: true
     theme: readable
 ---
+
+> Material elaborado originalmente por Carolina Pradier y Guido Weksler
 
 ```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
@@ -38,7 +39,7 @@ El paquete *tidymodels* nos va a permitir construir modelos usando una lógica d
 
 ## Exploramos
 
-Vamos a usar una base de **juguete** (es decir, con datos inventados), cuyas variables tiene nombres similares a los de la base de la Encuesta de Uso del Tiempo. Inventamos datos nuevos para que las relaciones sean claramente lineales (esto no suele pasar en ciencias sociales).
+Vamos a usar una base de **juguete** (es decir, con datos inventados), cuyas variables tiene nombres similares a los de la base de la Encuesta de Uso del Tiempo. Inventamos datos nuevos para que las relaciones sean claramente lineales (esto no suele pasar en ciencias sociales). Se busca entender la relación entre distintas características de uso del tiempo con el salario.
 
 ```{r}
 base_juguete <- readRDS("./fuentes/eut_juguete.RDS")
@@ -48,28 +49,39 @@ base_juguete <- readRDS("./fuentes/eut_juguete.RDS")
 names(base_juguete)
 ```
 
+```{r}
+#modifico los nombres usando espacios para que entren mejor en las etiquetas
+names(base_juguete) <- gsub(x = names(base_juguete),
+                            pattern = "\\_",
+                            replacement = " ")
+names(base_juguete)
+```
+
 Podemos mirar una matriz descriptiva de la base usando *ggpairs()* para tener una idea de las relaciones entre las variables e ir pensando cuáles incorporamos a nuestro modelo.
 
 ```{r}
-
-#modifico los nombres usando espacios para que entren mejor en las etiquetas
-names(base_juguete) <- gsub(x = names(base_juguete), pattern = "\\_", replacement = " ") 
 #graficamos
-ggpairs(base_juguete,labeller = label_wrap_gen(width=5))+
-  theme_minimal()+
+ggpairs(base_juguete, labeller = label_wrap_gen(width = 5)) +
+  theme_minimal() +
   theme(strip.text.x = element_text(size = 10),
-           strip.text.y = element_text(size = 10))
+        strip.text.y = element_text(size = 10))
 ```
 
 Como siempre, podemos mejorar la visualización para enfocarnos en lo que más nos interese (en ese caso las diferencias de acuerdo con la variable sexo):
 
 ```{r}
-ggpairs(base_juguete, ggplot2::aes(color=sexo, fill=sexo, alpha = 0.8),labeller = label_wrap_gen(width=5))+
-  theme_minimal()+
-  scale_color_manual(values = c("#45818e","#CA225E"))+
-  scale_fill_manual(values = c("#45818e","#CA225E"))+
+ggpairs(base_juguete,
+        ggplot2::aes(
+          color = sexo,
+          fill = sexo,
+          alpha = 0.8
+        ),
+        labeller = label_wrap_gen(width = 5)) +
+  theme_minimal() +
+  scale_color_manual(values = c("#45818e", "#CA225E")) +
+  scale_fill_manual(values = c("#45818e", "#CA225E")) +
   theme(strip.text.x = element_text(size = 10),
-           strip.text.y = element_text(size = 10))
+        strip.text.y = element_text(size = 10))
 ```
 
 ```{r include=F}
@@ -87,6 +99,11 @@ $$ IngInd = \beta_{0} + \beta_{1}HorasTD + \epsilon$$
 
 *Nota:* Mirando las correlaciones entre las variables, este no es el par que mejor correlaciona. ¿Por qué podría interesarnos enfocarnos en esta relación de todas formas?
 
+```{r}
+cor(base_juguete$horas_trabajo_domestico, 
+    base_juguete$ingreso_individual)
+```
+
 ------------------------------------------------------------------------
 
 Veamos la relación gráficamente:
@@ -96,9 +113,11 @@ base_juguete%>%
   #filter(horas_trabajo_domestico > 0) %>% 
   ggplot(aes(x=horas_trabajo_domestico, y=ingreso_individual)) + 
   geom_point() + 
-  geom_smooth(method='lm', color = 'red', se = FALSE) + 
-  #method='lm' indica que queremos graficar una relación lineal
-  #se = TRUE nos permite observar un intervalo de confianza en torno a los puntos
+  geom_smooth(
+    method='lm', # Indica que queremos graficar una relación lineal
+    se = FALSE, # Añadir el intervalo de confianza en torno a los puntos
+    color = 'red'
+  ) + 
   theme_minimal()
 ```
 
@@ -120,11 +139,18 @@ Para empezar tenemos que indicarle a R:
 lm_spec <- linear_reg() %>%
   #set_mode("regression") %>%
   set_engine("lm")
+
+lm_spec
 ```
 
 Noten dos cosas importantes:
 
 -   Esta misma estructura funciona para **cualquier modelo que quieran implementar**: tidymodels es muy flexible, sólo hay que modificar los parámetros de cada función. No es necesario aprender una serie de comandos para implementar KNN, otro para regresión logística, etc.
+
+    ```         
+    # tidymodels incluye al paquete parsnip, que provee una función para generar especificaciones de múltiples tipos de modelos.
+    parsnip::parsnip_addin()
+    ```
 
 -   El momento de ingresar los datos y el momento de definir el modelo están **separados**. Podríamos trabajar con múltiples bases de datos aplicando siempre un modelo con estas especificaciones.
 
@@ -139,7 +165,6 @@ Una vez que especificamos cuál es nuestro modelo, vamos a fitearlo (es decir, e
 Hay dos sintaxis posibles:
 
 ```{r}
-
 lm_fit <- lm_spec %>%
   fit_xy(
     x = base_juguete %>% select(horas_trabajo_domestico),
@@ -147,16 +172,14 @@ lm_fit <- lm_spec %>%
   )
 
 #usamos select() para "x" y pull() para "y" porque en el primer caso tenemos que obtener un data frame (aunque tenga una sola columna) y en el segundo un vector.
-
 ```
 
 ```{r}
-
 lm_fit <- lm_spec %>%
-  fit(ingreso_individual ~ horas_trabajo_domestico, data = base_juguete)
+  fit(ingreso_individual ~ horas_trabajo_domestico, 
+      data = base_juguete)
 
 #nos queda "y" del lado izquierdo y "x" del lado derecho
-
 ```
 
 Veamos los coeficientes:
@@ -164,9 +187,13 @@ Veamos los coeficientes:
 ```{r}
 tabla_coeficientes <- tidy(lm_fit) 
 
-tabla_coeficientes%>% 
-  gt() #para visualizar de forma más prolija
+tabla_coeficientes %>% 
+  gt() %>% #para visualizar de forma más prolija
+  #fmt_number(decimals=2) %>% 
+  tab_header("Regresión lineal")
 ```
+
+Noten que la información viene en forma de *data.frame*, por lo que es fácil extraer los coeficientes de la regresión.
 
 ```{r include=FALSE}
 options(scipen = 999) #notación científica
@@ -179,11 +206,21 @@ De acuerdo con nuestra estimación:
 
 $\hat{IngInd} =$ `r intercepto` $+$ `r beta1` $HorasTD$
 
+Con el paquete equatiomatic es posible extraer la ecuación del modelo ajustado en formato Latex (muy útil para realizar investigación académica).
+
+```{r}
+equatiomatic::extract_eq(lm_fit$fit)
+```
+
+Con el parámetro use_coefs=TRUE se reemplazan las letras griegas por los coeficientes estimados en el modelo:
+
+```{r}
+equatiomatic::extract_eq(lm_fit$fit, use_coefs = TRUE)
+```
+
 ```{r include=FALSE}
 options(scipen = 0) #notación científica
 ```
-
-Noten que la información viene en forma de *data.frame*, por lo que no tenemos que aplicar ninguna transformación adicional para graficar.
 
 Para tener más información sobre nuestro modelo, aplicamos:
 
@@ -208,7 +245,8 @@ Plantee un modelo donde la variable explicativa sea la variable horas_trabajo_me
 ```{r}
 #respuesta
 lm_spec %>%
-  fit(ingreso_individual ~ horas_trabajo_mercado, data = base_juguete) %>% 
+  fit(ingreso_individual ~ horas_trabajo_mercado, 
+      data = base_juguete) %>%
   pluck("fit") %>%
   summary()
 ```
@@ -222,10 +260,11 @@ Para que el modelo nos arroje sus predicciones, usamos el comando *predict()*, d
 Podemos ver tanto la predicción puntual para cada observación (por default), como un intervalo de canfianza.
 
 ```{r}
-predict(lm_fit, #modelo
-        new_data = base_juguete #datos
-        #, type = "pred_int"
-        )
+predict(
+  lm_fit, #modelo
+  new_data = base_juguete #datos
+  #, type = "pred_int"
+)
 ```
 
 ------------------------------------------------------------------------
@@ -237,21 +276,19 @@ predict(lm_fit, #modelo
 También podemos usar la función *augment()* para anexar nuestras predicciones y sus residuos a la base.
 
 ```{r}
-
 augment(lm_fit, new_data = base_juguete) %>% 
   select(ingreso_individual, .pred, .resid)
-
 ```
 
 Grafiquemos los residuos para ver si hay algún problema con el modelo.
 
 ```{r}
-augment(lm_fit, new_data = base_juguete) %>% 
-  dplyr::select(.resid, .pred)%>%
-         ggplot(aes(x=.pred, y=.resid)) + 
-                 geom_point() + 
-                 theme_minimal() +
-                geom_hline(yintercept=0, linetype='dashed') 
+augment(lm_fit, new_data = base_juguete) %>%
+  dplyr::select(.resid, .pred) %>%
+  ggplot(aes(x = .pred, y = .resid)) +
+  geom_point() +
+  theme_minimal() +
+  geom_hline(yintercept = 0, linetype = 'dashed') 
 ```
 
 ```{r}
@@ -265,11 +302,13 @@ max(augment(lm_fit, new_data = base_juguete)$ingreso_individual)
 Quizás falta agregar alguna variable al modelo
 
 ```{r}
-base_juguete%>% 
-  #filter(horas_trabajo_domestico > 0) %>% 
-  ggplot(aes(x=horas_trabajo_domestico, y=ingreso_individual, color = sexo)) + 
-  geom_point() + 
-  geom_smooth(method='lm', color = 'gray', se = FALSE) +
+base_juguete %>%
+  #filter(horas_trabajo_domestico > 0) %>%
+  ggplot(aes(x = horas_trabajo_domestico, 
+             y = ingreso_individual, 
+             color = sexo)) +
+  geom_point() +
+  geom_smooth(method = 'lm', color = 'black', se = FALSE) +
   theme_minimal()
 ```
 
@@ -287,8 +326,8 @@ Para implementar una regresión lineal simple en tidymodels necesitamos:
 
 # Referencias bibliográficas
 
-An Introduction to Statistical Learning with applications in R (James, Witten, Hastie y Tibshirani) -- 1st and 2nd version
+- An Introduction to Statistical Learning with applications in R (James, Witten, Hastie y Tibshirani) -- 1st and 2nd version
 
-Tidy Modeling with R (Kuhn y Silge)
+- Tidy Modeling with R (Kuhn y Silge)
 
-Introduction to Modern Statistics (Çetinkaya-Rundel y Hardin)
+- Introduction to Modern Statistics (Çetinkaya-Rundel y Hardin)

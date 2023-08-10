@@ -2,8 +2,7 @@
 title: "Teórica 3 - Módulo 3"
 subtitle: "Regresión lineal simple y múltiple."
 author: 
-  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
-  - Carolina Pradier y Guido Weksler
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM).
 output: 
   html_document:
     toc: TRUE
@@ -13,6 +12,8 @@ output:
     number_sections: true
     theme: readable
 ---
+
+> Material elaborado originalmente por Carolina Pradier y Guido Weksler
 
 ```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
@@ -48,8 +49,7 @@ $$ y = \beta_{0} + \beta_{1}X_{1} + \beta_{2}X_{2} + \beta_{3}X_{3} + ... + \bet
 
 **¿Cómo se lee un coeficiente de regresión múltiple?**
 
-$\beta_{p}$ en una regresión lineal múltiple es la cantidad de unidades que aumenta en promedio nuestra predicción de la variable $Y$ cuando aumenta una unidad la variable $X_{p}$, **manteniendo todas las demás variables ($X_{1}$,$X_{2}$,...) estables**.
-
+$\beta_{p}$ en una regresión lineal múltiple es la cantidad de unidades que aumenta en promedio nuestra predicción de la variable $Y$ cuando aumenta una unidad la variable $X_{p}$, **manteniendo todas las demás variables ($X_{1}$,$X_{2}$,...) estables (constantes)**. 
 
 
 # Variables independientes cualitativas
@@ -221,10 +221,10 @@ De este modo, el $R^{2}$ ajustado sólo crece si agregar variables se compensa c
 
 # Referencias bibliográficas
 
-An Introduction to Statistical Learning with applications in R (James, Witten, Hastie y Tibshirani) -- 1st and 2nd version
+- An Introduction to Statistical Learning with applications in R (James, Witten, Hastie y Tibshirani) -- 1st and 2nd version
 
-Tidy Modeling with R (Kuhn y Silge)
+- Tidy Modeling with R (Kuhn y Silge)
 
-Introduction to Modern Statistics (Çetinkaya-Rundel y Hardin)
+- Introduction to Modern Statistics (Çetinkaya-Rundel y Hardin)
 
 
