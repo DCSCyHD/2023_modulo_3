@@ -2,8 +2,7 @@
 title: "Práctica 1 - Módulo 3"
 subtitle: "Introducción al modelado de datos."
 author: 
-  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
-  - Carolina Pradier y Guido Weksler
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)
 output: 
   html_document:
     toc: TRUE
@@ -13,6 +12,8 @@ output:
     number_sections: true
     theme: readable
 ---
+
+> Material elaborado originalmente por Carolina Pradier y Guido Weksler
 
 ```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,

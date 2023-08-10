@@ -9,8 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023" />
-<meta name="author" content="Carolina Pradier y Guido Weksler" />
+<meta name="author" content="Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)" />
 
 
 <title>Práctica 1 - Módulo 3</title>
@@ -1385,17 +1384,23 @@ overflow-y: auto;
 border: 1px solid #ddd;
 border-radius: 4px;
 }
-.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-content: "\e259";
+.tabset-dropdown > .nav-tabs > li.active:before {
+content: "";
 font-family: 'Glyphicons Halflings';
 display: inline-block;
 padding: 10px;
 border-right: 1px solid #ddd;
 }
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-content: "\e258";
-font-family: 'Glyphicons Halflings';
+content: "";
 border: none;
+}
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+content: "";
+font-family: 'Glyphicons Halflings';
+display: inline-block;
+padding: 10px;
+border-right: 1px solid #ddd;
 }
 .tabset-dropdown > .nav-tabs > li.active {
 display: block;
@@ -1500,12 +1505,15 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Práctica 1 - Módulo 3</h1>
 <h3 class="subtitle">Introducción al modelado de datos.</h3>
 <h4 class="author">Diplomatura en Ciencias Sociales Computacionales y
-Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023</h4>
-<h4 class="author">Carolina Pradier y Guido Weksler</h4>
+Humanidades Digitales (IDAES-UNSAM)</h4>
 
 </div>
 
 
+<blockquote>
+<p>Material elaborado originalmente por Carolina Pradier y Guido
+Weksler</p>
+</blockquote>
 <pre class="r"><code>library(tidyverse)
 library(viridis)
 library(ggridges)
