@@ -73,7 +73,7 @@ Tomo la especificación anterior y excplicito que variables usaré y de que data
 
 ```{r}
 base_para_modelar <- base_juguete %>% 
-  mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico))
+  mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,levels = c("No","Si")))
 
 #Lo entreo con los datos 
 log_fiteado <- log_model %>% 
@@ -144,7 +144,13 @@ base_con_pred
 Sobre la base de los valores reales y los valores predichos podríamos tomar la matriz de confusión como un tabulado bivariado entre ambas columas
 
 ```{r}
-matriz_confusion <- conf_mat(data = base_con_pred,
+# Para usar las funciones que calculas directo las metricas necesitamos el orden alternativo de la variable objetivo 
+base_p_metricas<- base_con_pred %>% 
+  mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,
+                                            levels = c("Si","No")),
+         .pred_class = factor(.pred_class,levels = c("Si","No"))) 
+
+matriz_confusion <- conf_mat(data = base_p_metricas ,
                              truth = realiza_trabajo_domestico,
                              estimate = .pred_class)
 
@@ -156,36 +162,30 @@ matriz_confusion
 Accuracy, Sensitividad/Recall, Specificity y Precision
 
 ```{r}
-accu <- accuracy(data = base_con_pred,
+accu <- accuracy(data = base_p_metricas,
             truth = realiza_trabajo_domestico,
             estimate =  .pred_class)
 
 accu
 ```
 
- - El modelo predice correctamente un `r scales::percent(accu,accuracy = 0.01) ` de los casos.
+ - El modelo predice correctamente un `r scales::percent(accu$.estimate,accuracy = 0.1) ` de los casos.
 
 ```{r}
-sens <- sensitivity(base_con_pred,truth = realiza_trabajo_domestico,estimate =  .pred_class)
+
+sens <- sensitivity(base_p_metricas,truth = realiza_trabajo_domestico,estimate =  .pred_class)
 
 
-spec <- specificity(base_con_pred,truth = realiza_trabajo_domestico,estimate =  .pred_class)
+spec <- specificity(base_p_metricas,truth = realiza_trabajo_domestico,estimate =  .pred_class)
 
-prec <- precision(base_con_pred,truth = realiza_trabajo_domestico,estimate =  .pred_class)
+prec <- precision(base_p_metricas,truth = realiza_trabajo_domestico,estimate =  .pred_class)
 
 bind_rows(accu,sens,spec,prec)
-
-#######OMITIR ESTAS FORMULAS: ESTABAN ARMADAS CON LA MATRIZ AL REVÉS#####
-#accu <- (matriz_confusion$table[2,2]+matriz_confusion$table[1,1])/sum(matriz_confusion$table)
-#error_rate <- 1-accu
-#Sensitivity <- matriz_confusion$table[2,2]/sum(matriz_confusion$table[,2])
-#Specificity <- matriz_confusion$table[1,1]/sum(matriz_confusion$table[,1])
-#precision <- matriz_confusion$table[2,2]/sum(matriz_confusion$table[2,])
 ```
     
- - De los casos positivos (que efectivamente realizan trabajo doméstico), el modelo predice bien un `r scales::percent(sens,accuracy = 0.01) `.     
- - De los casos negativos (que no realizan trabajo doméstico), el modelo predice bien un `r scales::percent(spec,accuracy = 0.01) `.    
- - De los casos que son clasificados como positivos, sólo un `r scales::percent(prec,accuracy = 0.01)` . lo son.
+ - De los casos positivos (que efectivamente realizan trabajo doméstico), el modelo predice bien un `r scales::percent(sens$.estimate,accuracy = 0.01) `.     
+ - De los casos negativos (que no realizan trabajo doméstico), el modelo predice bien un `r scales::percent(spec$.estimate,accuracy = 0.01) `.    
+ - De los casos que son clasificados como positivos, sólo un `r scales::percent(prec$.estimate,accuracy = 0.01)` . lo son.
 
 
 Veamos esto de forma gráfica para tratar de entender como está operando nuestro modelo:       
@@ -385,6 +385,13 @@ base_2modelosb<- base_b_test %>%
   rename(pred_m1=.pred_class) %>%  
   bind_cols(predict(modelo_2b, base_b_test)) %>%
               rename(pred_m2=.pred_class) 
+
+base_2modelosb <- base_2modelosb %>% # Necesito ordenar al reves categorias 
+  mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,
+                                            levels = c("Si","No")),
+         pred_m1 = factor(pred_m1,levels = c("Si","No")),
+         pred_m2 = factor(pred_m2,levels = c("Si","No")),
+         ) 
 
 base_2modelosb %>% conf_mat(realiza_trabajo_domestico,pred_m1)
 base_2modelosb %>% conf_mat(realiza_trabajo_domestico,pred_m2)
