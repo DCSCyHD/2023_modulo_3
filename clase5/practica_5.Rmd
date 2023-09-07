@@ -1,9 +1,8 @@
 ---
 title: "Práctica 5 - Módulo 3"
-subtitle: "Implementación de oros modelos de clasificación"
+subtitle: "Implementación de otros modelos de clasificación"
 author: 
-  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
-  - Carolina Pradier y Guido Weksler
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)
 output: 
   html_document:
     toc: TRUE
@@ -14,9 +13,16 @@ output:
     theme: readable
 ---
 
+\> Material elaborado originalmente por Carolina Pradier y Guido Weksler
+
 ```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
-knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
-                      fig.width=8)
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  tidy = FALSE,
+  fig.width = 8
+)
 ```
 
 ```{r librerias, results='hide'}
@@ -25,65 +31,79 @@ library(tidymodels)
 library(gt)
 library(kableExtra)
 library(discrim)
+library(patchwork) # Visualizar múltiples plots juntos
+
 
 options(dplyr.summarise.inform = FALSE)
+shape_values = c(4,1)
+theme_set(theme_bw())
 ```
 
+# Introducción
 
-# Introducción       
-Este material está destinado a ver la implementación de otros modelos de clasificación supervisada (K-nearest neighbours y Linear Discriminant Analisis) y analizar su performance de manera comparada a la regresión logística.  A su vez, se avanzará sobre ciertas propiedades particulares de estas técnicas. A lo largo del material, repasaremos el enfoque de **train-test** y el trade off existente entre sesgo-varianza a la hora de definir los parámetros de los modelos.   
+Este material está destinado a ver la implementación de otros modelos de clasificación supervisada (K-nearest neighbours y Linear Discriminant Analisis) y analizar su performance de manera comparada a la regresión logística. A su vez, se avanzará sobre ciertas propiedades particulares de estas técnicas. A lo largo del material, repasaremos el enfoque de **train-test** y el trade off existente entre sesgo-varianza a la hora de definir los parámetros de los modelos.
 
-## Retomando el ejemplo previo           
-A los fines de visualizar como opera el modelo de KNN, tomamos la base de juguete y vamos a continuar con el ejemplo de intentar clasificar a quienes realizan trabajo doméstico a partir de 2 predictores:   
+## Retomando el ejemplo previo
 
- - horas_trabajo_mercado    
- - ingreso_familiar      
- 
- 
- 
+A los fines de visualizar como opera el modelo de KNN, tomamos la base de juguete y vamos a continuar con el ejemplo de intentar clasificar a quienes realizan trabajo doméstico a partir de 2 predictores:
+
+-   horas_trabajo_mercado\
+-   ingreso_familiar
+
 ```{r}
-base_juguete<- readRDS(file = "fuentes/eut_juguete_clase4.RDS") %>% 
+base_juguete <- readRDS(file = "fuentes/eut_juguete_clase4.RDS") %>%
   mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,
-                                            levels = c("Si","No")
-                                            )
-         ) 
+                                            levels = c("Si", "No")))
 
-ggplot(base_juguete,aes(x = horas_trabajo_mercado,
-                         y = ingreso_familiar,
-                         shape = realiza_trabajo_domestico))+
-  geom_point(size = 3)
+base_juguete %>%
+  ggplot(
+    aes(x = horas_trabajo_mercado,
+        y = ingreso_familiar,
+        shape = realiza_trabajo_domestico)
+  ) +
+  geom_point(size = 3)+
+  scale_shape_manual(values=shape_values)
+
 ```
 
-# KNN    
+# KNN
 
-## En base completa    
-Aunque ya sabemos que no conviene modelar con la base completa, veamos que ocurre al hacerlo de esta manera, para luego pasar a hacer el train-test split.     
+## En base completa
 
-<br>
-
-Siguiendo con el lenguaje de tidymodels, para utilizar el método KNN para un modelo de clasificación, podemos aplicar `nearest_neighbor()`, cuyo parametro central es la cantidad de vecinos que queremos considerar. Tiene otros parámetros que permiten cambiar el tipo de distancia, la ponderación que se le da a cada vecino, etc.    
+Aunque ya sabemos que no conviene modelar con la base completa, veamos que ocurre al hacerlo de esta manera, para luego pasar a hacer el train-test split.
 
 <br>
-**Aclaración**: Por un error de tidymodels, si queremos correr KNN con variables explicativas categóricas debemos cargar adicionalmente el paquete "kknn". Acá elegimos no incluirlas para no sumar otros paquetes más
-<br>
+
+Siguiendo con el lenguaje de tidymodels, para utilizar el método KNN para un modelo de clasificación, podemos aplicar `nearest_neighbor()`, cuyo parametro central es la cantidad de vecinos que queremos considerar. Tiene otros parámetros que permiten cambiar el tipo de distancia, la ponderación que se le da a cada vecino, etc.
+
+<br> **Aclaración**: Por un error de tidymodels, si queremos correr KNN con variables explicativas categóricas debemos cargar adicionalmente el paquete "kknn". Acá elegimos no incluirlas para no sumar otros paquetes más <br>
+
 ```{r}
-knn_model5 <- nearest_neighbor(neighbors = 5,
-                                weight_func = "rectangular") %>% # Rectangular es una forma de no asignarle peso a cada una de las distancias
+knn_model5 <- nearest_neighbor(
+    neighbors = 5,
+    weight_func = "rectangular" #Sin asignar peso a las distancias
+  ) %>% 
   set_engine("kknn") %>% 
-  set_mode("classification") 
- 
-knn_fiteado5<-  fit(
+  set_mode("classification")
+```
+
+```{r}
+knn_fiteado5 <-  fit(
   object = knn_model5,
-  formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado + ingreso_familiar,
+  formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado +
+                                         ingreso_familiar,
   data = base_juguete
-  ) 
+)
 
 knn_fiteado5
 ```
+
 Veamos que ocurre con las predicciones (tomo 50 casos al azar)
+
 ```{r}
 base_completa_predi <- augment(x = knn_fiteado5, base_juguete) 
 
+set.seed(42)
 base_completa_predi %>% 
   select(realiza_trabajo_domestico,.pred_class,.pred_No,.pred_Si) %>% 
   sample_n(50)
@@ -91,139 +111,296 @@ base_completa_predi %>%
 
 <br>
 
-Veamos ahora gráficamente todos los casos. Las predicciones correctas son aquellas en que los Triangulos están en amarillo (realiza TDNR y predigo que lo realiza) y las que los circulos están en violeta (No realiza TDNR y predigo que no lo hace).   
+Veamos ahora gráficamente todos los casos. Las predicciones correctas son aquellas en que los Triangulos están en amarillo (realiza TDNR y predigo que lo realiza) y las que los circulos están en violeta (No realiza TDNR y predigo que no lo hace).
 
 ```{r}
-ggplot(base_completa_predi,aes(
-  x = horas_trabajo_mercado,
-  y = ingreso_familiar,
-  shape = realiza_trabajo_domestico,
-  color = .pred_class))+
-  geom_point(size = 3)+
-  scale_color_viridis_d()
+ggplot(
+    base_completa_predi,
+    aes(
+      x = horas_trabajo_mercado,
+      y = ingreso_familiar,
+      shape = realiza_trabajo_domestico,
+      color = .pred_class
+    )
+  ) +
+  geom_point(size = 3) +
+  scale_shape_manual(values=shape_values)+
+  scale_color_manual(values=c("red","blue"))
 ```
- - **¿Pueden imaginarse una línea de corte viendo el gráfico?**     
- - **¿Como explican lo que pasa con el punto amarillo que destaca arriba?**    
- - **¿Piensan que funciona mejor KNN (respecto a otros modelos) cuando los grupos están bien separados o cuando hay mayor superposición?**      
- 
-Aclaración: Al predecir sobre el propio dataset completo, cada uno de los puntos está contando como su propio vecino. En una utilización correcta del modelo, prediciendo sobre el test set, esto no ocurrirá.   
 
-<br>
-**¿Que pasa a medida que aumentamos K?**
+-   **¿Pueden imaginarse una línea de corte viendo el gráfico?**\
+-   **¿Como explican lo que pasa con el punto clasificado erróneamente arriba a la derecha?**\
+-   **¿Piensan que funciona mejor KNN (respecto a otros modelos) cuando los grupos están bien separados o cuando hay mayor superposición?**
+
+Aclaración: Al predecir sobre el propio dataset completo, cada uno de los puntos está contando como su propio vecino. En una utilización correcta del modelo, prediciendo sobre el test set, esto no ocurrirá.
+
+<br> **¿Que pasa a medida que aumentamos K?**
+
 ```{r echo=FALSE}
-
 base_juguete_loop <- base_juguete
-for(vecinos in c(1,3,5,50)){
+
+for (vecinos in c(1, 3, 5, 50)) {
+  knn_model <-
+    nearest_neighbor(neighbors = vecinos, weight_func = "rectangular") %>%
+    set_engine("kknn") %>%
+    set_mode("classification")
   
-knn_model <- nearest_neighbor(neighbors = vecinos,weight_func = "rectangular") %>%
-  set_engine("kknn") %>% 
-  set_mode("classification") 
+  knn_fiteado <-  fit(
+    object = knn_model,
+    formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado +
+                                           ingreso_familiar,
+    data = base_juguete
+  )
+  
+  preds <- knn_fiteado %>% 
+    predict(base_juguete_loop)
 
-knn_fiteado<-  fit(object = knn_model,
-                   formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado + ingreso_familiar,
-                   data = base_juguete)
-
-base_juguete_loop <- augment(x = knn_fiteado, base_juguete_loop)
-
-names(base_juguete_loop)[names(base_juguete_loop) == ".pred_class"] <- paste0("k_",vecinos)
-
+  base_juguete_loop[,paste0("k_",vecinos)] = preds
+  
+  names(base_juguete_loop)[names(base_juguete_loop) == ".pred_class"] <-
+    paste0("k_", vecinos)
+  
 }
-
-base_juguete_loop %>% 
-  select(horas_trabajo_mercado,ingreso_familiar,realiza_trabajo_domestico,starts_with("k_")) %>% 
-  pivot_longer(cols = starts_with("k_"),names_to = "k_elegido",values_to = ".pred_class") %>% 
-ggplot(.,aes(
-  x = horas_trabajo_mercado,
-  y = ingreso_familiar,
-  shape = realiza_trabajo_domestico,
-  color = .pred_class))+
-  geom_point(size = 3)+
-  scale_color_viridis_d()+
-  facet_wrap(vars(k_elegido))
 ```
 
-## Aplicando split traing-test 
+```{r echo=FALSE}
+base_juguete_loop %>%
+  select(
+    horas_trabajo_mercado,
+    ingreso_familiar,
+    realiza_trabajo_domestico,
+    starts_with("k_")
+  ) %>%
+  pivot_longer(cols = starts_with("k_"),
+               names_to = "k_elegido",
+               values_to = ".pred_class") %>%
+  ggplot(
+    .,
+    aes(
+      x = horas_trabajo_mercado,
+      y = ingreso_familiar,
+      shape = realiza_trabajo_domestico,
+      color = .pred_class
+    )
+  ) +
+  geom_point(size = 3) +
+  facet_wrap(vars(k_elegido))+
+  scale_shape_manual(values=shape_values)+
+  scale_color_manual(values=c("red","blue"))
+```
+
+## Aplicando split traing-test
+
 ```{r}
 set.seed(18122022)
 
-base_splietada<- initial_split(base_juguete)
-base_train<- training(base_splietada)
-base_test<- testing(base_splietada)
+base_splietada <- initial_split(base_juguete)
+base_train <- training(base_splietada)
+base_test <- testing(base_splietada)
 
-knn_fiteado_en_train<-  fit(object = knn_model5,
-                   formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado + ingreso_familiar,
-                   data = base_train)
+knn_fiteado_en_train <-  fit(
+  object = knn_model5,
+  formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado + ingreso_familiar,
+  data = base_train
+)
 
 base_test_knn <- augment(x = knn_fiteado_en_train, base_test)
- 
-ggplot(base_test_knn,aes(x = horas_trabajo_mercado,
-                         y = ingreso_familiar,
-                         shape = realiza_trabajo_domestico,
-                         color = .pred_class))+
-  geom_point(size = 3)+
-  scale_color_viridis_d()
+
+ggplot(
+  base_test_knn,
+  aes(
+    x = horas_trabajo_mercado,
+    y = ingreso_familiar,
+    shape = realiza_trabajo_domestico,
+    color = .pred_class
+  )
+) +
+  geom_point(size = 3) +
+  scale_shape_manual(values=shape_values)+
+  scale_color_manual(values=c("red","blue"))
 
 ```
 
 ## Matriz de confusión y otras métricas
+
 ```{r}
-conf_mat(data = base_test_knn,truth = realiza_trabajo_domestico,estimate = .pred_class )
-accuracy(data = base_test_knn,truth = realiza_trabajo_domestico,estimate = .pred_class )
+cm <- conf_mat(data = base_test_knn,
+               truth = realiza_trabajo_domestico,
+               estimate = .pred_class )
+
+cm %>% autoplot("heatmap")
 ```
 
-# LDA    
-Para correr un modelo de LDA necesitamos un paquete adicional llamado **discrim**. Además de LDA, existen otros modelos "discriminant" no lineales que no veremos en el curso. La función [`discrim_linear()`](https://parsnip.tidymodels.org/reference/discrim_linear.html) es la que determina que utilizaremos la variante lineal. A su vez, dentro de los lineales hay diferentes engines (motores) que se pueden elegir y varían en ciertos parametros adicionales que permiten incluir en el modelo.   
-
-Usaremos el engine default (MASS).   
 ```{r}
-lda_model <- discrim_linear() 
+accuracy(data = base_test_knn,
+         truth = realiza_trabajo_domestico,
+         estimate = .pred_class)
+```
+
+# LDA
+
+Para correr un modelo de LDA necesitamos un paquete adicional llamado **discrim**. Además de LDA, existen otros modelos "discriminant" no lineales que no veremos en el curso. La función [`discrim_linear()`](https://parsnip.tidymodels.org/reference/discrim_linear.html) es la que determina que utilizaremos la variante lineal. A su vez, dentro de los lineales hay diferentes engines (motores) que se pueden elegir y varían en ciertos parametros adicionales que permiten incluir en el modelo.
+
+Usaremos el engine default (MASS).
+
+```{r}
+lda_model <- discrim_linear()
 
 
-lda_fiteado<-  fit(object = lda_model,
-                   formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado + ingreso_familiar,
-                   data = base_train)
+lda_fiteado <-  fit(
+  object = lda_model,
+  formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado + ingreso_familiar,
+  data = base_train
+)
 
 base_test_lda <- augment(x = lda_fiteado, base_test)
 
-conf_mat(data = base_test_lda,truth = realiza_trabajo_domestico,estimate = .pred_class )
-accuracy(data = base_test_lda,truth = realiza_trabajo_domestico,estimate = .pred_class )
+conf_mat(data = base_test_lda,
+         truth = realiza_trabajo_domestico,
+         estimate = .pred_class)
+
+accuracy(data = base_test_lda,
+         truth = realiza_trabajo_domestico,
+         estimate = .pred_class)
 ```
 
-# Comparando modelos    
-Una de las potencialidades de **tidymodels** es que, al ordenar las estimaciones de los modelos en formato tidy, nos permite con mucha facilidad comparar métricas de cada uno de ellos. Adicionemos a los dos modelos vistos recién una regresión logística (como la de la clase pasada).      
-Crando una lista de todos los modelos a evaluar, puedo luego con la función `imap_dfr` pasar cada uno de estos modelos como argumento de la función **augment()** y así agregar las predicciones de cada modelo al set de testing. 
+# Regresión logística
+
+Adicionemos a los dos modelos vistos recién una regresión logística (como la de la clase pasada).
 
 ```{r}
-logistica_fiteada <-  logistic_reg() %>% 
-  fit(formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado +ingreso_familiar,
-  data = base_train
-  ) 
+logistica_fiteada <-  logistic_reg() %>%
+  fit(formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado +
+                                             ingreso_familiar,
+      data = base_train)
 
-#Armo una lista de modelos#
+```
+
+# Naive bayes
+
+```{r}
+naive_bayes <-
+  naive_Bayes() %>%
+  set_engine('naivebayes')
+
+naive_bayes_fitteado <-  naive_bayes %>%
+  fit(formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado +
+                                             ingreso_familiar,
+      data = base_train)
+
+```
+
+# Comparando modelos
+
+Una de las potencialidades de **tidymodels** es que, al ordenar las estimaciones de los modelos en formato tidy, nos permite con mucha facilidad comparar métricas de cada uno de ellos.\
+Se crea una lista de todos los modelos a evaluar, puedo luego con la función `imap_dfr` pasar cada uno de estos modelos como argumento de la función **augment()** y así agregar las predicciones de cada modelo al set de testing.
+
+```{r}
+#Lista de modelos
 modelos <- list("logistica" = logistica_fiteada,
-               "LDA" = lda_fiteado,
-               "KNN-5" = knn_fiteado5)
+                "LDA" = lda_fiteado,
+                "KNN-5" = knn_fiteado5, 
+                "Naive bayes" = naive_bayes_fitteado
+            )
 
-#La función imap_dfr una lista de modelos#
+names(modelos)
 
-base_test_preds <- imap_dfr(modelos,
-                  augment, 
-                  new_data = base_test, .id = "model")
-
-#Veamos
-base_test_preds %>%
-  select(model, realiza_trabajo_domestico, .pred_class, .pred_No, .pred_Si)
 ```
-La función **metric_set()** nos permite establecer un conjunto de metricas de interés que luego podemos aplicar sobre nuestros modelos a los fines de compararlos.   
+
 ```{r}
-multi_metric <- metric_set(accuracy, sensitivity, specificity)
+#La función imap_dfr permite aplicar la función augment a una lista de modelos, considerando la data de evaluación (base_test)
+base_test_preds <- imap_dfr(modelos,
+                            augment,
+                            new_data = base_test,
+                            .id = "model")
+
+#Visualizando las columnas generadas
+base_test_preds %>%
+  select(model,
+         realiza_trabajo_domestico,
+         .pred_class,
+         .pred_No,
+         .pred_Si) %>% 
+  sample_n(10)
 ```
 
-Si agrupamos por modelo, podemos consultar para cada uno de llos las metricas en cuestión.
+La función **metric_set()** nos permite establecer un conjunto de metricas de interés que luego podemos aplicar sobre nuestros modelos a los fines de compararlos.
+
+```{r}
+multi_metric <- metric_set(
+  accuracy, sensitivity, specificity)
+
+multi_metric
+```
+
+Si agrupamos por modelo, podemos consultar para cada uno de las métricas:
+
 ```{r}
 base_test_preds %>%
   group_by(model) %>%
-  multi_metric(truth = realiza_trabajo_domestico, estimate = .pred_class)
+  multi_metric(truth = realiza_trabajo_domestico,
+               estimate = .pred_class)
 ```
 
+# Visualmente
 
+Luego de haber revisado las métricas, se encontraron diferencias en la performance de distintos modelos. En este punto, vamos a realizar una simulación de N observaciones para visualizar la frontera de decisión de cada uno de los modelos (decision boundary).
+
+```{r, fig.width=10, fig.height=10}
+source("plot_decision_boundary.R")
+p_knn5 <- plot_decision_boundary(
+  data = base_juguete,
+  model = knn_fiteado5,
+  x_names = c("horas_trabajo_mercado", "ingreso_familiar"),
+  y_name = "realiza_trabajo_domestico",
+  n_points = 100,
+  model_name = "KNN (k=5)"
+)
+
+p_lda <- plot_decision_boundary(
+  data = base_juguete,
+  model = lda_fiteado,
+  x_names = c("horas_trabajo_mercado", "ingreso_familiar"),
+  y_name = "realiza_trabajo_domestico",
+  n_points = 100,
+  model_name = "LDA"
+)
+
+p_reglog <- plot_decision_boundary(
+  data = base_juguete,
+  model = logistica_fiteada,
+  x_names = c("horas_trabajo_mercado", "ingreso_familiar"),
+  y_name = "realiza_trabajo_domestico",
+  n_points = 100,
+  model_name = "Regresión logística"
+)
+
+p_naivebayes <- plot_decision_boundary(
+  data = base_juguete,
+  model = naive_bayes_fitteado,
+  x_names = c("horas_trabajo_mercado", "ingreso_familiar"),
+  y_name = "realiza_trabajo_domestico",
+  n_points = 500,
+  model_name = "Naive Bayes"
+)
+
+(p_knn5 | p_lda) / (p_reglog | p_naivebayes)
+```
+
+Se observa que el modelo KNN (k=5) tiene una frontera más flexible, mientras que los modelos LDA y regresión logística muestran un límite de decisión lineal a medida que se incrementa el número de observaciones simuladas.
+
+Notar que, aunque la regresión logística y el modelo LDA son similares, no son iguales y por eso se observaban métricas diferentes entre modelos en el punto anterior.
+
+# Resumen
+
+Se ajustaron 4 tipos de modelos distintos
+
+-   KNN
+
+-   LDA
+
+-   Regresión logística
+
+-   Naive bayes
+
+En los 4 casos es posible predecir la realización de trabajo doméstico con cierto margen de error.
