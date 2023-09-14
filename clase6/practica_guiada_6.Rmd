@@ -24,6 +24,7 @@ knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
 library(tidyverse)
 library(tidymodels)
 library(kknn)
+library(gt)
 
 options(dplyr.summarise.inform = FALSE)
 theme_set(theme_bw())
@@ -45,7 +46,7 @@ base_juguete <- readRDS("fuentes/eut_juguete.RDS")
 set.seed(42)
 base_folds <- vfold_cv(data = base_juguete, v = 10)
 
-head(base_folds)
+base_folds
 ```
 
 Comencemos con un caso sencillo, un modelo de regresión lineal con dos predictores.
@@ -83,7 +84,7 @@ validacion_fit <- fit_resamples(
 
 ```{r}
 head(validacion_fit)
-# validacion_fit %>% head(1) %>% pull(.predictions) %>% pluck(1) %>% head()
+validacion_fit %>% head(1) %>% pull(.predictions) %>% pluck(1) %>% head()
 ```
 
 Con la función collect_metrics, puedo hacer un resumen de todas las métricas obtenidas en cada uno de mis folds. Es decir, promedio el MAE (mean absolute error) obtenido con cada fold y también promedio el RMSE (root mean squeared error) obtenido con cada fold.
@@ -131,7 +132,11 @@ receta_basica <- recipe(
 
 receta_2 <- receta_basica  %>%
     # Agrego término al cuadrado para variables numericas
-    step_poly(all_numeric_predictors(), degree = 2) 
+    step_poly(all_numeric_predictors(), 
+              degree = 2, 
+              options = c(raw = TRUE),
+              keep_original_cols=FALSE
+              ) 
 
 receta_3 <- receta_basica  %>%
     # Saco 2 variables a ver qué pasa
@@ -147,6 +152,14 @@ modelos <- list(
   reg_lineal = reg_lineal_spec
 )
 ```
+
+Receta procesada:
+
+```{r}
+receta_2 %>% 
+  prep() %>% juice()
+```
+
 
 Se genera una combinación de preprocesadores (recetario) con modelos:
 
@@ -188,10 +201,10 @@ collect_metrics(lm_models_fiteados) %>%
 ```
 
 ```{r}
-# collect_metrics(lm_models_fiteados) %>% 
-#   select(wflow_id, .metric, mean) %>% 
-#   pivot_wider(id_cols=wflow_id, names_from=.metric, values_from=mean) %>% 
-#   gt() %>% fmt_number()
+collect_metrics(lm_models_fiteados) %>%
+  select(wflow_id, .metric, mean) %>%
+  pivot_wider(id_cols=wflow_id, names_from=.metric, values_from=mean) %>%
+  gt() %>% fmt_number()
 ```
 
 # Tuneando hiperparametros (super introductorio)
@@ -268,7 +281,7 @@ tune_res %>%
             n = 2)
 ```
 
-## Clasificación (con múltiples modelos --> más avanzado!)
+## Clasificación (con múltiples modelos --\> más avanzado!)
 
 ```{r}
 set.seed(42)
@@ -303,10 +316,7 @@ receta_extendida <- receta_basica %>%
             threshold = 0.8) %>% 
   
   #Elimino variables con varianza cercana a 0
-  step_nzv(all_predictors()) %>% 
-  
-  #Normalizacion
-  step_normalize(all_numeric_predictors())
+  step_nzv(all_predictors()) 
 ```
 
 Se definen 2 especificaciones de modelos:
@@ -350,7 +360,6 @@ workflows_spec <-
       cross = TRUE
    )
 ```
-
 
 ```{r}
 # Se añaden espacios de hiperparametros a considerar en cada modelo
@@ -436,7 +445,7 @@ workflows_fit %>% rank_results(rank_metric = "recall",
 ```{r}
 # Se extrae el workflow
 workflow_fit <- extract_workflow_set_result(
-  workflows_fit, id = 'extendida_arbol'
+  workflows_fit, id = 'extendida_knn'
 ) 
 
 # Visualizamos las métricas según los valores que tomaron los hiperparams
@@ -445,5 +454,3 @@ workflow_fit %>% autoplot()
 # M[etricas]
 workflow_fit %>% tune::show_best(metric='recall', n=10)
 ```
-
-
