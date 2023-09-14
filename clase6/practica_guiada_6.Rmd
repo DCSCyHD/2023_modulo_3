@@ -2,8 +2,7 @@
 title: "Práctica 6 - Módulo 3"
 subtitle: "CrossValidation."
 author: 
-  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
-  - Carolina Pradier y Guido Weksler
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)
 output: 
   html_document:
     toc: TRUE
@@ -13,6 +12,8 @@ output:
     number_sections: true
     theme: readable
 ---
+
+> Material elaborado originalmente por Carolina Pradier y Guido Weksler
 
 ```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
@@ -25,171 +26,424 @@ library(tidymodels)
 library(kknn)
 
 options(dplyr.summarise.inform = FALSE)
+theme_set(theme_bw())
 ```
 
+# Introducción
 
-# Introducción   
-En este material aplicaremos la técnica de cross-validation para testear distintos modelos vistos a lo largo del módulo. Utilizaremos las herramientas específicas de tidymodels para aprender a comparar modelos.
+En este material aplicaremos la técnica de **cross-validation** para testear distintos modelos vistos a lo largo del módulo. Utilizaremos las herramientas específicas de tidymodels para aprender a comparar modelos.
 
-# Cross-Validation   
-La función ```vfold_cv()``` nos crea un objeto que contiene las particiones en cuestión.   
- Aplicando CV con 10 folds para un solo modelo. Usaremos **K = 10**, lo que implica que pparticionaremos en 10 el dataset, para que cada parte actue como testing de las otras 9 en cada una de las iteraciones  
+# Cross-Validation
+
+La función `vfold_cv()` crea un objeto que contiene las particiones. Usaremos **K = 10**, lo que implica que se particionará el dataset en 10 (folds). En cada una de las 10 iteraciones se toman 9 particiones para entrenamiento o ajuste del modelo y 1 partición para la evaluación. Esto permite obtener 10 métricas de performance del modelo, pudiendo observar medidas como el promedio y desvío de las métricas de interés.
 
 ```{r}
 base_juguete <- readRDS("fuentes/eut_juguete.RDS")
-base_folds <- vfold_cv(
-              data  = base_juguete,
-              v       = 10)
+```
+
+```{r}
+set.seed(42)
+base_folds <- vfold_cv(data = base_juguete, v = 10)
+
 head(base_folds)
 ```
-Comencemos con un caso sencillo, un modelo de regresión lineal con dos predictores.    
+
+Comencemos con un caso sencillo, un modelo de regresión lineal con dos predictores.
+
 ```{r}
-mi_modelo <- linear_reg() %>% 
+# Especificación del modelo
+reg_lineal_spec <- linear_reg() %>%
   set_engine("lm")
 
-mi_formula_gral <- recipe(
-  formula = horas_trabajo_domestico ~ horas_trabajo_mercado+ingreso_individual,
+# Fórmula general 
+formula_general <- recipe(
+  formula = horas_trabajo_domestico ~ horas_trabajo_mercado +
+                                      ingreso_individual,
   data =  base_juguete
-               ) 
-
-validacion_fit <- fit_resamples(
-  object       = mi_modelo,# Definición de mi (mis) modelos
-  preprocessor = mi_formula_gral, #formula a aplicar
-  resamples    = base_folds, # De donde saco las particiones 
-  metrics      = metric_set(rmse, mae), #Metricas (Root mean squear error y Mean abs error)
-  control      = control_resamples(save_pred = TRUE) # parametro para guardar predicciones
-                  )
-
-
+)
 ```
-¿Que contiene **validacion fit**? Para cada Fold (que se corresponde con una interación distinta) contiene las métricas y las predicciones
+
+Se ajusta el modelo en validación cruzada, obteniendo las métricas de interés para cada uno de los folds
+
+-   RMSE
+
+-   MAE
+
+```{r}
+validacion_fit <- fit_resamples(
+  object       = reg_lineal_spec, # Definición de mi (mis) modelos
+  preprocessor = formula_general, # Fórmula a aplicar
+  resamples    = base_folds, # De donde saco las particiones
+  metrics = metric_set(rmse, mae), # Root mean squear error y Mean abs error
+  control = control_resamples(save_pred = TRUE) # Guardar predicciones
+)
+```
+
+¿Que contiene **validacion fit**? Para cada Fold (que se corresponde con una iteración distinta) contiene las métricas y las predicciones
+
 ```{r}
 head(validacion_fit)
+# validacion_fit %>% head(1) %>% pull(.predictions) %>% pluck(1) %>% head()
 ```
 
+Con la función collect_metrics, puedo hacer un resumen de todas las métricas obtenidas en cada uno de mis folds. Es decir, promedio el MAE (mean absolute error) obtenido con cada fold y también promedio el RMSE (root mean squeared error) obtenido con cada fold.
 
-Con la función collect_metrics, puedo hacer un resumen de todas las métricas obtenidas en cada uno de mis folds. Es decir, promedio el MAE (mean absolute error) obtenido con cada fold y también promedio el RMSE (root mean squeared error) obtenido con cada fold. 
 ```{r}
 validacion_fit %>% 
   collect_metrics()
 ```
 
 Si quiero las métricas por separado, sin promediar. Así veo, por ejemplo que el **Fold 1** performó mejor que el **Fold 2**, etc.
+
 ```{r}
 metricas_por_fold <- validacion_fit %>%
   collect_metrics(summarize = FALSE)  
 
-head(metricas_por_fold)
+metricas_por_fold
 ```
 
-Miremos como se distribuyen las dos métric errores de cada una de las validaciones cruzadas
+Miremos como se distribuyen las dos métricas en cada una de las validaciones cruzadas
+
 ```{r}
-# Valores de validación (mae y rmse) obtenidos en cada partición y repetición.
-
-ggplot(
-        data = metricas_por_fold,
-        aes(x = .metric, y = .estimate, fill = .metric, shape = .metric)) +
-      geom_boxplot(outlier.shape = NA, alpha = 0.1) +
-      geom_jitter(aes(color = id),size = 2,width = 0.05) +
-      theme_bw() +
-      theme()
-
+metricas_por_fold %>%
+  ggplot(aes(x = .metric, y = .estimate)) +
+  geom_jitter(aes(color = id), size = 2, width = 0.05) +
+  geom_line(aes(group=id), color='lightgrey')+
+  geom_boxplot(show.legend = FALSE, fill=NA) +
+  labs(title = "Distribución de métricas (10 folds)",
+       color = 'Fold')
 ```
 
-# Comparando modelos    
-Ahora bien, todo esto fue aplicado **sólamente** con un modelo (regresión líneal múltiple de grado 1). La "gracia" de el lenguaje tidymodels es poder comparar múltiples modelos al mismo tiempo, para elegir así el que mejor performe.   
+# Comparando modelos
 
-Vamos a crear ahora una receta básica de regresión líneal múltiple, para luego agregarle o quitarle cosas a esa receta y comparar como performa el modelo.      
+Ahora bien, todo esto fue aplicado solamente con un modelo (regresión lineal múltiple de grado 1). La "gracia" de el framework de tidymodels es poder comparar múltiples modelos al mismo tiempo, para elegir así el que mejor performe.
+
+Vamos a crear ahora una receta básica de regresión lineal múltiple, para luego agregarle o quitarle cosas a esa receta y comparar cómo performa el modelo.
+
 ```{r}
-
-class(base_juguete$menores_hogar) <- "numeric"
-
-
 receta_basica <- recipe(
-  horas_trabajo_domestico ~ horas_trabajo_mercado+ingreso_individual+sexo+menores_hogar,
-  data = base_juguete)
+  horas_trabajo_domestico ~ horas_trabajo_mercado + 
+                            ingreso_individual + 
+                            sexo +
+                            menores_hogar,
+  data = base_juguete
+)
 
 receta_2 <- receta_basica  %>%
-    step_poly(all_numeric_predictors(), degree = 2) # Agrego término al cuadrado para variables numericas
+    # Agrego término al cuadrado para variables numericas
+    step_poly(all_numeric_predictors(), degree = 2) 
+
 receta_3 <- receta_basica  %>%
-    step_rm(c(menores_hogar,ingreso_individual)) # Saco 2 variables a ver que onda
+    # Saco 2 variables a ver qué pasa
+    step_rm(c(menores_hogar,ingreso_individual))
 
-recetario <- 
-  list(basica = receta_basica,
-       poly = receta_2,
-       bivariado = receta_3)
+recetario <- list(
+  basica = receta_basica,
+  poly = receta_2,
+  bivariado = receta_3
+)
 
+modelos <- list(
+  reg_lineal = reg_lineal_spec
+)
+```
 
-lm_models <- workflow_set(preproc = recetario, # que recetas voy a aplicar
-                          models = list(lm = linear_reg()), #con que modelos (siempre el mismo o distintos)
-                          cross = FALSE) #¿quiero hacer todas las combinaciones de recetas-modelos?
+Se genera una combinación de preprocesadores (recetario) con modelos:
+
+```{r}
+lm_models <- workflow_set(
+  preproc = recetario, # Recetas a aplicar
+  models = modelos, # Lista de modelos (en este caso es uno solo)
+  cross = TRUE) #¿quiero hacer todas las combinaciones de recetas-modelos?
+
 lm_models
 ```
 
+A partir de lm_models, puedo observar qué información quedó incluida en cada workflow:
 
-
-Hasta acá tengo el listado de todos mis workflows (combinación de recetas y modelos), pero no realicé ningún tipo de entrenamiento. La función ``workflow_map` me permite acceder a este tibble y aplicar un mismo procedimiento a cada una de sus
-Entreno
 ```{r}
+lm_models %>% 
+  filter(wflow_id=="poly_reg_lineal") %>% # Filtro por un workflow
+  pull(info) %>% # Extraigo la información asociada a ese workflow
+  pluck(1) %>% # Como info es una lista, extraigo el primer elemento
+  pull(workflow) # Extraigo el workflow
+```
 
+Hasta acá tengo el listado de todos mis workflows (combinación de recetas y modelos), pero no realicé ningún tipo de entrenamiento. La función \``workflow_map` me permite acceder a este tibble y aplicar un mismo procedimiento a cada una de sus Entreno
+
+```{r}
 lm_models_fiteados <- lm_models %>% 
-  workflow_map(fn = "fit_resamples", 
+  workflow_map(fn = "fit_resamples", #Ajuste con cross validation
                seed = 1101,  #Semilla para reproducibilidad
                verbose = TRUE, #Que me muestre a medida que avanza
-               resamples = base_folds) # de donde tomo los folds)
+               resamples = base_folds #De donde tomo los folds
+  )
 ```
 
 Recolecto métricas promedio de los 10 folds, de los 3 modelos al mismo tiempo. Puedo comparar muy fácilmente qué modelo performa mejor en términos de la métrica elegida.
+
 ```{r}
 collect_metrics(lm_models_fiteados) %>% 
   filter(.metric == "rmse")
 ```
 
-# Tuneando hiperparametros (super introductorio)       
-Muchas veces, el cross-validation es un proceso utilizado para el *tuneo* ("espanglish" de tune: afinación) de los hiperparámetros de un modelo. Consiste en evaluar, dentro de un rango especificado, cual es el mejor valor posible para setear un parámetro (en términos de como performa el modelo). 
+```{r}
+# collect_metrics(lm_models_fiteados) %>% 
+#   select(wflow_id, .metric, mean) %>% 
+#   pivot_wider(id_cols=wflow_id, names_from=.metric, values_from=mean) %>% 
+#   gt() %>% fmt_number()
+```
 
+# Tuneando hiperparametros (super introductorio)
 
-Hagamos otro ejercicio de predicción un poco distinto. Queremos predecir el **ingreso individual** a partir de las horas de trabajo, el sexo y la cantidad de menores en el hogar. Tenemos la intuición de que **los predictores numéricos no se relacionan linealmente con la variable objetivo**.  ¿Cómo hacemos para saber hasta que grado de polinomio nos conviene avanzar? 
+## Regresión
+
+Muchas veces, el cross-validation es un proceso utilizado para el *tuneo* ("espanglish" de tune: afinación) de los hiperparámetros de un modelo. Consiste en evaluar, dentro de un rango especificado, cual es el mejor valor posible para setear un parámetro (en términos de como performa el modelo).
+
+Hagamos otro ejercicio de predicción un poco distinto. Queremos predecir el **ingreso individual** a partir de las horas de trabajo, el sexo y la cantidad de menores en el hogar. Tenemos la intuición de que **los predictores numéricos no se relacionan linealmente con la variable objetivo**. ¿Cómo hacemos para saber hasta que grado de polinomio nos conviene avanzar?
+
 ```{r}
 # Partimos de esta receta basica
 receta_basica <- recipe(
-  ingreso_individual ~ horas_trabajo_mercado+sexo+menores_hogar,
+  ingreso_individual ~ horas_trabajo_mercado+
+                       sexo+
+                       menores_hogar,
   data = base_juguete)
 
-# Agregamos un step de polinomio, pero en vez de fijar el grado, ponemos el parametro tune()
-receta_para_tunear <- receta_basica %>%
-  step_poly(all_numeric_predictors(), degree = tune()) #ACA LA CLAVE
+# receta_basica %>% prep() %>% juice() %>% head(2) %>% gt()
+```
 
-#Creamos una grilla con los valores que queremos evaluar
-mi_grilla <- tibble(degree = 1:6)
+```{r}
+receta_para_tunear <- receta_basica %>%
+  # Agregamos un step de polinomio, pero en vez de fijar el grado, ponemos el parametro tune()
+  step_poly(all_numeric_predictors(), 
+            degree = tune() #ACA LA CLAVE
+  )
 
 #Creamos el workflow y agregamos la receta y el modelo
 workflow_tuneo <- workflow() %>%
   add_recipe(receta_para_tunear) %>% 
-  add_model(linear_reg())
+  add_model(reg_lineal_spec)
+
+workflow_tuneo
+```
+
+```{r}
+#Creamos una grilla con los valores que queremos evaluar
+mi_grilla <- tibble(degree = 1:5)
 
 #Con la función tune_grid() probamos los distintos parametros
-
+set.seed(42)
 tune_res <- tune_grid(
-  object = workflow_tuneo,# Que modelo voy a tunear
-  resamples = base_folds, # De donde saco los folds de datos 
-  grid = mi_grilla # Donde esta la grilla de hiperparametros a evaluar
+  object = workflow_tuneo,# Qué modelo voy a tunear
+  resamples = base_folds, # De dónde saco los folds de datos 
+  grid = mi_grilla, # Hiperparametros a evaluar
+  metrics = metric_set(rmse, rsq) # Métricas a evaluar
 )
+```
 
-```
-La función autopolot me grafica para cada grado, la raíz del error cuadratico medio (rmse) y el R cuadrado (RSQ) que en promedio arrojan los modelos estimados con cada uno de los 10 folds.
+La función autopolot() genera un plot automático a partir del resultado del ajuste (tune_res). Para cada grado, se observa la raíz del error cuadratico medio (rmse) y el R cuadrado (RSQ) que en promedio arrojan los modelos estimados con cada uno de los 10 folds.
+
 ```{r}
-autoplot(tune_res)
+tune_res
 ```
-Si quiero cierta metrica en particular, y más detalle sobre la misma...
+
 ```{r}
-collect_metrics(tune_res) %>% 
+tune_res %>% autoplot()
+```
+
+Si quiero cierta métrica en particular, y más detalle sobre la misma:
+
+```{r}
+tune_res %>% 
+  collect_metrics() %>% 
   filter(.metric == "rmse")
 ```
-Si estuviera trabajando con muchiiiisimos valores posibles a evaluar, la función ``show_best()`` me permite especificar cual es mi métrica de interés y me devuelve los *n* mejores valores de hiperparámetros en ese sentido.
+
+Si estuviera trabajando con muchísimos valores posibles a evaluar, la función `show_best()` me permite especificar cual es mi métrica de interés y me devuelve los *n* mejores valores de hiperparámetros en ese sentido.
+
 ```{r}
-show_best(tune_res, 
-          metric = "rmse",
-          n = 2)
+tune_res %>% 
+  show_best(metric = "rmse",
+            n = 2)
 ```
+
+## Clasificación (con múltiples modelos --> más avanzado!)
+
+```{r}
+set.seed(42)
+splits <- vfold_cv(data = base_juguete, v = 5, 
+                       strata='realiza_trabajo_domestico')
+
+head(base_folds)
+```
+
+Se definen 2 recetas de preprocesamiento:
+
+```{r}
+receta_basica <- recipe(
+  formula = realiza_trabajo_domestico  ~ 
+    horas_trabajo_mercado + 
+    menores_hogar + 
+    sexo + 
+    ingreso_individual,
+  data = base_juguete) 
+
+#incorporamos la fórmula
+receta_extendida <- receta_basica %>% 
+  
+  #Interacciones
+  step_interact(~ all_predictors():all_predictors()) %>% 
+  
+  #vuelvo dummy la variable sexo
+  step_dummy(all_nominal_predictors(), one_hot = TRUE) %>% 
+  
+  #Elimino variables altamente correlacionadas
+  step_corr(all_numeric_predictors(), 
+            threshold = 0.8) %>% 
+  
+  #Elimino variables con varianza cercana a 0
+  step_nzv(all_predictors()) %>% 
+  
+  #Normalizacion
+  step_normalize(all_numeric_predictors())
+```
+
+Se definen 2 especificaciones de modelos:
+
+```{r}
+# KNN 
+knn_spec <- nearest_neighbor(
+    neighbors = tune(),
+    dist_power = 2, 
+    weight_func = tune()
+  ) %>% 
+  set_engine("kknn") %>% 
+  set_mode("classification")
+
+
+
+# Árbol de decisión
+arbol_spec <- decision_tree(
+    tree_depth = tune(),
+    min_n = tune(),
+  ) %>%
+  set_engine('rpart') %>%
+  set_mode('classification')
+
+
+```
+
+Se genera una especificación de la combinación de modelos con recetas de preprocesamiento:
+
+```{r}
+workflows_spec <- 
+   workflow_set(
+      preproc = list(
+        basica = receta_basica, 
+        extendida = receta_extendida
+      ),
+      models = list(
+        knn = knn_spec,
+        arbol = arbol_spec
+      ),
+      cross = TRUE
+   )
+```
+
+
+```{r}
+# Se añaden espacios de hiperparametros a considerar en cada modelo
+# De lo contrario, toma un rango definido en cada hiperparam por defecto
+# knn_params <- knn_spec %>% 
+#   extract_parameter_set_dials() %>% 
+#   update(
+#     neighbors = neighbors(c(1, 15)), 
+#     weight_func = weight_func(c("rectangular", "optimal", "rank"))
+#   )
+# 
+# arbol_params <- arbol_spec %>% 
+#   extract_parameter_set_dials() %>% 
+#   update(tree_depth = tree_depth(c(1, 10)))
+# 
+# workflows_spec <- workflows_spec %>% 
+#   option_add(param_info = knn_params, id = "basica_knn") %>%
+#   option_add(param_info = knn_params, id = "extendida_knn") %>%
+#   option_add(param_info = arbol_params, id = "basica_arbol") %>%
+#   option_add(param_info = arbol_params, id = "extendida_arbol")
+```
+
+Se realiza el ajuste de hiperparámetros para los 4 workflows:
+
+```{r}
+set.seed(42)
+workflows_fit <-
+  workflows_spec %>%
+  workflow_map(
+    fn = "tune_grid",
+    resamples = splits,
+    grid = 4,
+    metrics = metric_set(recall,
+                         roc_auc),
+    verbose = TRUE
+  )
+```
+
+Se visualizan las métricas:
+
+```{r}
+workflows_fit %>% autoplot()
+```
+
+Opción más avanzada para ver detalles según qué preprocesador se usó:
+
+```{r}
+collect_metrics(workflows_fit) %>% 
+  separate(wflow_id, into = c("Recipe", "Model_Type"), 
+           sep = "_", remove = F, extra = "merge") %>% 
+  filter(.metric == 'recall') %>% 
+  group_by(model) %>% 
+  select(-.config) %>% 
+  distinct() %>%
+  ungroup() %>% 
+  mutate(Workflow_Rank =  row_number(-mean),
+         .metric = str_to_upper(.metric)) %>%
+  ggplot(aes(x=Workflow_Rank, 
+             y = mean, 
+             shape = Recipe, 
+             color = Model_Type)) +
+    geom_point(size=4) +
+    geom_errorbar(aes(ymin = mean-std_err, ymax = mean+std_err)) +
+    labs(x = "Ranking de workflows", 
+         y = "Métrica", 
+         color = "Tipos de modelos", 
+         shape = "Preprocesadores")
+```
+
+Rankeo de resultados:
+
+```{r}
+workflows_fit %>% rank_results(rank_metric = "recall",
+                               select_best = TRUE) %>%
+  select(wflow_id, .metric, mean) %>%
+  pivot_wider(id_cols = wflow_id,
+              names_from = .metric,
+              values_from = mean) 
+```
+
+¿Cuáles fueron los hiperparámetros que mejor funcionaron para un workflow específico?
+
+```{r}
+# Se extrae el workflow
+workflow_fit <- extract_workflow_set_result(
+  workflows_fit, id = 'extendida_arbol'
+) 
+
+# Visualizamos las métricas según los valores que tomaron los hiperparams
+workflow_fit %>% autoplot()
+
+# M[etricas]
+workflow_fit %>% tune::show_best(metric='recall', n=10)
+```
+
 
