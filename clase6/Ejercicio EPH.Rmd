@@ -35,11 +35,14 @@ library(mfx)
 
 options(dplyr.summarise.inform = FALSE)
 theme_set(theme_bw())
+
+conflicted::conflict_prefer("filter", "dplyr")
+conflicted::conflict_prefer("select", "dplyr")
 ```
 
 # Introducción
 
-Este material tiene dos propositos simultaneos. Por un lado, está destinado a ver la implementación de un ejercicio de regresión logística utilizando varias de las herramientas de **recipes** para preprocesar la información original.Por otro lado, está destinado a discutir un poco sobre el espíritu de utilizar regresiones para la inferencia en el marco de una pregunta de investigación científica. En este caso, partiremos de la pregunta sobre los determinantes de la precariedad laboral (para lo cual aplicaremos un modelo de regresión logística). Luego, extenderemos el ejercicio a evaluar ingresos los determinantes del salario (para lo cual aplicaremos un modelo de regresión lineal).
+Este material tiene dos propósitos simultáneos. Por un lado, está destinado a ver la implementación de un ejercicio de regresión logística utilizando varias de las herramientas de **recipes** para preprocesar la información original.Por otro lado, está destinado a discutir un poco sobre el espíritu de utilizar regresiones para la inferencia en el marco de una pregunta de investigación científica. En este caso, partiremos de la pregunta sobre los determinantes de la precariedad laboral (para lo cual aplicaremos un modelo de regresión logística). Luego, extenderemos el ejercicio a evaluar ingresos los determinantes del salario (para lo cual aplicaremos un modelo de regresión lineal).
 
 Utilizaremos como fuente de información la Encuesta Permanente de Hogares.
 
@@ -142,8 +145,12 @@ A pesar de que uno haya desplegado a partir de su "marco teórico" que estas var
 A la hora de modelar, agreguemos algunas de las variables típicas que se incluyen como controles en este tipo de ejercicios. Sexo (CH04), Edad (CH06), nivel educativo, rama. Antes de comenzar veamos un poco las variables categóricas que tenemos
 
 ```{r}
-table(base_asalariados %>% select(NIVEL_ED) %>% eph::organize_labels())
-table(base_asalariados$caes_eph_label)
+table(base_asalariados %>% select(NIVEL_ED) %>% eph::organize_labels()) %>% 
+   data.frame() %>% gt()
+
+
+table(base_asalariados$caes_eph_label) %>%
+  data.frame() %>% gt()
 ```
 
 ```{r}
@@ -216,7 +223,7 @@ Dado que la EPH contiene una variable para indicar el peso de cada observación 
 ```{r}
 base_asalariados_ponderada <- base_asalariados %>%
   # Con ponderadores completos no converge por lo que los achico para el ejemplo.
-  mutate(PONDERA = round(PONDERA/min(PONDERA),0)) %>% 
+  mutate(PONDERA = round(PONDERA/min(PONDERA), 0)) %>% 
   mutate(PONDERA = frequency_weights(PONDERA))
 
 base_asalariados_ponderada %>% 
@@ -225,23 +232,30 @@ base_asalariados_ponderada %>%
   summary()
 
 receta_ponderada <- recipe(
-  precario ~ grupos_calif +
-             tamanio_est +
-             CH04 +
-             CH06 +
-             NIVEL_ED +
-             caes_eph_label +
+  precario ~ grupos_calif + 
+             tamanio_est + 
+             CH04 + 
+             CH06 + 
+             NIVEL_ED + 
+             caes_eph_label + 
              PONDERA,
   data = base_asalariados_ponderada
   ) %>%
-
-  step_num2factor(CH04, levels = c("Varon", "Mujer")) %>%
+  
+  # Variables categóticas
+  step_num2factor(CH04, levels = c("Varon", "Mujer"), id='sexo') %>%
   
   step_mutate(
-    NIVEL_ED = ifelse(NIVEL_ED == 7, yes = 1, no = NIVEL_ED)
+    NIVEL_ED = ifelse(NIVEL_ED == 7, 1, NIVEL_ED), 
+    id='nivel_educativo'
   ) %>%
-  step_rename(EDAD = CH06) %>%
-
+  
+  step_rename(
+    EDAD = CH06, 
+    SEXO = CH04, 
+    id = 'rename'
+  ) %>%
+  
   step_num2factor(
     NIVEL_ED,
     levels = c(
@@ -251,14 +265,13 @@ receta_ponderada <- recipe(
       "Secundaria completa",
       "Terciario/univ incompleta",
       "Terciario/univ completa"
-    )
+    ),
+    id='nivel_educativo_factor'
   ) %>%
-
-  step_interact(~ CH04:EDAD) %>%
-
-  step_other(caes_eph_label, threshold = 0.05) %>%
-
-  step_normalize(all_numeric_predictors())
+  
+  step_interact(~ SEXO:EDAD, id='interacciones') %>%
+  
+  step_other(caes_eph_label, threshold = 0.05, id='others') 
 
 
 wf_pond <- workflow() %>%
@@ -277,9 +290,11 @@ Para comparar coeficientes lado a lado:
 
 ```{r}
 modelsummary::modelsummary(
-  list("a" = fited_model),
+  list("Modelo sin ponderadores" = fited_model,
+       "Modelo con ponderadores" = fited_model_pond
+       ),
   statistic = NULL,
-  estimate = "{estimate} [{conf.low}, {conf.high}]"
+  estimate = "{estimate} ({p.value})"
 )
 ```
 
@@ -290,14 +305,15 @@ Si quisiera mostrar solo las variables de interes en un cuadro puedo filtrar alg
 
 ```{r}
 tidy(fited_model) %>% 
-  filter(str_detect(term,"(grupos|establecim|Interc)"))
+  filter(str_detect(term,"(grupos|tamanio_est|Interc)")) %>% 
+  gt() %>% fmt_number()
 
 ```
 
 La función `glance()` me da indicadores de la capacidad de ajuste del modelo (log-likelihood y sus derivados). Si estuviera comparando con otro modelo (loglikelihood más cercanos a 0 son mejores, AIC y BIC más bajos son mejores)
 
 ```{r}
-glance(fited_model)
+glance(fited_model) %>% gt()
 ```
 
 Si quiero ver como se construyeron las variables **dummy** a partir de mis varibles cualitativas, puedo "preparar y cocinar" la receta con las funciones `prep()` y `bake()` respectivamente. Ello me va a dar como resultado el dataframe con las variables transformadas en mis **steps**.\
@@ -308,9 +324,18 @@ receta_cocinada <- receta %>%  #
   prep() %>% 
   bake(new_data = NULL)
 
-contrasts(receta_cocinada$NIVEL_ED) #Categoría base es primaria incompleta
-contrasts(receta_cocinada$caes_eph_label) #Categoría base es primaria incompleta
+```
 
+```{r}
+#Categoría base es Industria Manufacturera
+contrasts(receta_cocinada$caes_eph_label) %>% data.frame() %>% 
+  rownames_to_column() %>% gt()
+```
+
+```{r}
+#Categoría base es primaria incompleta
+contrasts(receta_cocinada$NIVEL_ED) %>% data.frame() %>% 
+    rownames_to_column() %>% gt()
 ```
 
 ## Efectos marginales
@@ -332,7 +357,7 @@ El paquete [mfx](https://strengejacke.github.io/ggeffects/) permite calcular los
 efectos_marg_en_media <- logitmfx(
     formula = precario ~ grupos_calif + 
                          tamanio_est + 
-                         CH04 + 
+                         SEXO + 
                          EDAD + 
                          NIVEL_ED + 
                          caes_eph_label,
@@ -369,7 +394,7 @@ efectos_marg_promedio <-
   logitmfx(
     formula = precario ~ grupos_calif +
       tamanio_est +
-      CH04 +
+      SEXO +
       EDAD +
       NIVEL_ED +
       caes_eph_label,
@@ -510,7 +535,13 @@ receta_cocinada <- receta_mincer %>%
   prep() %>%
   bake(new_data = NULL)
 
-receta_cocinada %>% skimr::skim()
+receta_cocinada %>% 
+  select(where(is.numeric)) %>% 
+  skimr::skim()
+
+receta_cocinada %>% 
+  select(where(is.factor)) %>% 
+  skimr::skim()
 
 #contrasts(receta_cocinada$caes_eph_label)
 #contrasts(receta_cocinada$NIVEL_ED)
@@ -534,7 +565,8 @@ fitted_linear_model <- wf %>%
 Observamos los coeficientes (y su significatividad)
 
 ```{r}
-tidy(fitted_linear_model) %>% arrange(p.value) %>% 
+tidy(fitted_linear_model) %>% 
+  arrange(p.value) %>% 
   gt() %>% fmt_number()
 ```
 
@@ -555,7 +587,7 @@ Otra forma de ver todo junto:
 
 ```{r, eval=FALSE}
 fitted_linear_model %>%  
-  pull_workflow_fit() %>% 
+  extract_fit_parsnip() %>% 
   pluck("fit") %>% 
   summary()
 ```
