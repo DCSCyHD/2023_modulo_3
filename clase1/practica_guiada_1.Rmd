@@ -1,6 +1,6 @@
 ---
 title: "Práctica 1 - Módulo 3"
-subtitle: "Introducción al modelado de datos."
+subtitle: "Introducción al modelado de datos"
 author: 
   - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)
 output: 
@@ -11,6 +11,8 @@ output:
     toc_depth: 3
     number_sections: true
     theme: readable
+editor_options: 
+  chunk_output_type: console
 ---
 
 > Material elaborado originalmente por Carolina Pradier y Guido Weksler
@@ -80,13 +82,13 @@ $$ \frac{1}{n} \sum_{i=1}^{n} (x_{i} - \overline{x})^2 $$
 
 ------------------------------------------------------------------------
 
-¿Cómo lo calculamos en R?
+¿Cómo la calculamos en R?
 
 ```{r}
 var(c(1,2,3,4))
 ```
 
-El **desvío estándar** nos brinda una información similar a la varianza, pero al calcular su raíz cuadrada, nos brinda la información en la misma unidad que la variable original.
+El **desvío estándar** nos brinda una información similar a la varianza, pero al calcular su raíz cuadrada, la llevamos a la misma unidad que la variable original, haciéndola más comparable.
 
 $$ \sqrt{\frac{1}{n} \sum_{i=1}^{n} (x_{i} - \overline{x})^2} $$
 
@@ -156,14 +158,15 @@ ggplot(aes(y=TIEMPO_TDNR, x =horas_mercado_agrup , fill=Sexo)) +
 ```{r}
 base_EAUH_TNR%>% 
   filter(CH06 > 17) %>% 
-  ggplot(aes(x=TIEMPO_TDNR, y=ingreso_indiv, color = Sexo)) + 
+ggplot(aes(x=TIEMPO_TDNR, y=ingreso_indiv, color = Sexo)) + 
   geom_point(alpha = 0.4) + 
   ylim(0,100000)+
   xlim(0,40)+
   ylab("Ingresos individuales") +
   xlab("Horas de trabajo no remunerado") +
-  geom_hline(yintercept = mean(base_EAUH_TNR$ingreso_indiv[base_EAUH_TNR$ingreso_indiv >0]), size = 0.5)+
-  geom_vline(xintercept = mean(base_EAUH_TNR$TIEMPO_TDNR), size = 0.5)+
+  geom_hline(yintercept = mean(base_EAUH_TNR$ingreso_indiv[base_EAUH_TNR$ingreso_indiv >0]),
+             linewidth = 0.5)+
+  geom_vline(xintercept = mean(base_EAUH_TNR$TIEMPO_TDNR), linewidth = 0.5)+
   theme_minimal()+
   scale_color_manual(values = c("#91CBD968","#CA225E"))+
   facet_wrap(~Sexo)
@@ -195,13 +198,15 @@ ggplot(aes(fill=Sexo, y=TIEMPO_TDNR, x=menores_hogar_agrup)) +
 
 La correlación describe la **fuerza** y la **dirección** de la relación lineal entre dos variables. Puede tomar valores entre -1 (relación negativa perfecta) y 1 (relación positiva perfecta), pasando por 0 (si no existe una relación lineal). Su valor no tiene unidades y no es sensible a transformaciones lineales en las variables.
 
-Podemos calcular la correlación usando la siguiente fórmula:
-
-$$ r_{xy} = \frac{\sum_{i=1}^n (x_{i} - \overline{x}_{i})(y_{i} - \overline{y}_{i})}{(n - 1)s_x s_y} = \frac{\sum_{i=1}^n (x_{i} - \overline{x}_{i})(y_{i} - \overline{y}_{i})}{\sqrt{\sum_{i=1}^n (x_{i} - \overline{x}_{i})^2} \sqrt{\sum_{i=1}^n (y_{i} - \overline{y}_{i})^2}}$$
-
 ![](./img/correlaciones.png)
 
-La anterior muestra ocho parcelas y sus correlaciones correspondientes. Solo cuando la relación es perfectamente lineal, la correlación es -1 o 1. Si la relación es fuerte y positiva, la correlación será cercana a +1. Si es fuerte y negativo, estará cerca de -1. Si no existe una relación lineal aparente entre las variables, entonces la correlación será cercana a cero.
+Esta figura muestra ocho parcelas y sus correlaciones correspondientes. Solo cuando la relación es perfectamente lineal, la correlación es -1 o 1. Si la relación es fuerte y positiva, la correlación será cercana a +1. Si es fuerte y negativa, estará cerca de -1. Si no existe una relación lineal aparente entre las variables, entonces la correlación será cercana a cero.
+
+Podemos calcular la correlación usando la siguiente fórmula:
+
+$$\rho_{xy} \equiv r_{xy} = \frac{\sum_{i=1}^n (x_{i} - \overline{x}_{i})(y_{i} - \overline{y}_{i})}{\sqrt{\sum_{i=1}^n (x_{i} - \overline{x}_{i})^2} \sqrt{\sum_{i=1}^n (y_{i} - \overline{y}_{i})^2}}=\frac{\sum_{i=1}^n (x_{i} - \overline{x}_{i})(y_{i} - \overline{y}_{i})}{(n - 1)s_x s_y} =\frac{cov(x,y)}{s_x s_y} $$
+
+La correlación es una forma "normalizada" de la _covarianza_, para que esté entre -1 y 1. Es decir que si dos variables tienen una relación lineal fuerte y positiva, podemos decir que tienen eleveda correlación o elevada covarianza. Noten que el nombre "covarianza" viene de que se calcula muy parecido a la varianza (la varianza es, de hecho, la covarianza de una variable consigo misma).
 
 ## Matriz de correlación
 
