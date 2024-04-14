@@ -1,5 +1,6 @@
 library(tidyverse)
 library(tidymodels)
+options(scipen = 999)
 
 #En esta práctica vamos a implementar una regresión lineal múltiple sobre la siguiente base de datos
 
@@ -13,10 +14,10 @@ df <- read_delim('https://raw.githubusercontent.com/rmcelreath/rethinking/master
 #¿Todas las variables aportan al modelo? Considere las variaciones del R cuadrado y R cuadrado ajustado al incorporar/quitar distintas variables para llegar a una selección final de variables relevantes.
 
 
-lm_spec <- linear_reg() %>%
+lm_model <- linear_reg() %>%
   set_engine("lm")
 
-lm_fit <- lm_spec %>%
+lm_fit <- lm_model %>%
   fit(weight ~ ., data = df)
 
 lm_fit %>% 
@@ -25,23 +26,28 @@ lm_fit %>%
 
 #Interpretar, probar otros modelos por ej:
 
-lm_fit_v2 <- lm_spec %>%
+lm_fit2 <- lm_model %>%
   fit(weight ~ height + age + height:age + male, data = df)
 
-lm_fit_v2 %>% 
+lm_fit2 %>% 
   pluck("fit") %>%
   summary()
 
 
 ###otra forma
 
-workflow() %>% 
-  add_model(lm_spec) %>% 
+lm_wflow <- workflow() %>% 
+  add_model(lm_model) %>% 
   add_recipe(recipe(weight ~ height + age, data = df)%>%
-               step_interact(~height:age)) %>% 
-  fit(.,df) %>% 
-  extract_fit_parsnip() %>% 
-  tidy()
+               step_interact(~ height:age))
+
+lm_fit <- lm_wflow %>% 
+  fit(df) 
+
+lm_fit %>% 
+  extract_fit_engine() %>% 
+  summary()
+
 
 ##### Ejercicio 2 #####
 

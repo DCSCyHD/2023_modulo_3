@@ -1,6 +1,6 @@
 ---
 title: "Práctica 3 - Módulo 3"
-subtitle: "Regresión lineal simple y múltiple."
+subtitle: "Regresión lineal simple y múltiple"
 author: 
   - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM).
 output: 
@@ -11,6 +11,8 @@ output:
     toc_depth: 3
     number_sections: true
     theme: readable
+editor_options: 
+  chunk_output_type: console
 ---
 
 > Material elaborado originalmente por Carolina Pradier y Guido Weksler
@@ -29,6 +31,8 @@ library(tidyverse)
 library(tidymodels)
 library(viridis)
 library(car)
+library(performance)
+tidymodels_prefer()
 
 options(dplyr.summarise.inform = FALSE)
 ```
@@ -43,16 +47,16 @@ base_juguete <- readRDS("./fuentes/eut_juguete.RDS")
 
 # Regresión lineal simple
 
-En la clase anterior habíamos llegado a una regresión lineal simple, pero notábamos que nuestro modelo tenía problemas para explicar algunos de los valores. Vamos a intentar mejorarlo agregando más información con otras variables.
+En la clase anterior habíamos llegado a esta regresión lineal simple, pero notábamos que nuestro modelo tenía problemas para explicar algunos de los valores. Vamos a intentar mejorarlo agregando más información con otras variables.
 
 ```{r}
-lm_spec <- linear_reg() %>%
- # set_mode("regression") %>%
+lm_model <- linear_reg() %>%
+  set_mode("regression") %>%
   set_engine("lm")
 ```
 
 ```{r}
-lm_fit <- lm_spec %>%
+lm_fit <- lm_model %>%
   fit(ingreso_individual ~ horas_trabajo_domestico,
       data = base_juguete)
 ```
@@ -62,34 +66,30 @@ lm_fit <- lm_spec %>%
 Antes de empezar, chequeamos multicolinealidad con la función vif() del paquete *car*. 
 
 ```{r}
-modelo_lineal<-lm(ingreso_individual~.,data =base_juguete)
+lm_vif <- lm(ingreso_individual ~ . , #Con . indicamos "todas las demas"
+               data = base_juguete)
 
-#calculo vif (variance inflation factor)
-vif(modelo_lineal)
+# Calculo vif (variance inflation factor)
+vif(lm_vif)
 ```
 
-Otro paquete que permite revisar los supuestos de los modelos es el paquete performance, incluido en easystats. En este caso, se utiliza para revissar VIF:
+Otro paquete que permite revisar los supuestos de los modelos es la función check_model(), incluida en easystats. En este caso, se utiliza para revisar el VIF:
 
 ```{r, fig.show='hide'}
-p <- performance::check_model(modelo_lineal, check='vif') %>%
-  plot()
-```
-
-```{r, echo=FALSE}
-p %>%  + 
+check_model(lm_vif, check='vif') %>%
+  plot() + 
   theme(axis.text.x = element_text(angle=90, hjust=1))
 ```
 
 En todos los casos los valores son bajos, por lo que podemos incorporar todas las variables que nos parezcan relevantes. Probemos con todas:
 
 ```{r}
-lm_fit2 <- lm_spec %>%
-  #usamos el "." para decir "todas las demás variables"
-  fit(ingreso_individual ~ ., 
+lm_fit2 <- lm_model %>%
+  fit(formula = ingreso_individual ~ ., #Con "." indicamos "todas las demás"
       data = base_juguete)
 ```
 
-Veamos los coeficientes y la significatividad de las relaciones.
+Notemos cómo tidymodels nos permite aplicar fácilmente el modelo que estamos trabajando (lm_model) a distintas fórmulas. Veamos los coeficientes y la significatividad de las relaciones.
 
 ```{r}
 lm_fit2 %>% 
@@ -97,19 +97,18 @@ lm_fit2 %>%
   summary()
 ```
 
-La variable realiza_trabajo_domestico no es significativa para analizar el nivel de ingresos. Esto es esperable, dado que la variable *horas_trabajo_domestico* incluye a la información de la variable *realiza_trabajo_domestico* (valores positivos indican Sí). Por esta razón, se excluye del modelo. Entonces, la ecuación que caracterizaría nuestro modelo es:
+La variable realiza_trabajo_domestico no es significativa para analizar el nivel de ingresos. Esto es esperable, dado que la variable *horas_trabajo_domestico* ya incluye la información de la variable *realiza_trabajo_domestico* (valores positivos indican Sí). Por esta razón, se excluye del modelo. Entonces, la ecuación que caracterizaría nuestro modelo es:
 
 $$ IngInd = \beta_{0} + \beta_{1}HorasTD + \beta_{2}HorasM + \beta_{3}Sexo + \beta_{4}Menores + \epsilon$$
 
 ```{r}
 #planteamos el nuevo modelo
-lm_fit2 <- lm_spec %>%
+lm_fit2 <- lm_model %>%
   fit(ingreso_individual ~ horas_trabajo_domestico + 
                            horas_trabajo_mercado + 
                            sexo + 
                            menores_hogar,
-    data = base_juguete
-  )
+    data = base_juguete)
 
 #y vemos los coeficientes
 lm_fit2 %>%
@@ -123,7 +122,8 @@ Veamos la distribución de los residuos:
 
 ```{r}
 #calculamos
-augment(lm_fit2, new_data = base_juguete) %>%
+lm_fit2 %>% 
+  augment(new_data = base_juguete) %>%
   dplyr::select(.resid, .pred) %>%
   #graficamos
   ggplot(aes(x = .pred, y = .resid)) +
@@ -142,15 +142,13 @@ $$ IngInd = \beta_{0} + \beta_{1}HorasTD + \beta_{2}HorasM + \beta_{3}Sexo + \be
 
 ```{r}
 #usamos los ":" para agregar la interacción
-lm_fit3 <- lm_spec %>%
-  fit(
-    ingreso_individual ~ horas_trabajo_domestico +
+lm_fit3 <- lm_model %>%
+  fit(ingreso_individual ~ horas_trabajo_domestico +
                          sexo:horas_trabajo_mercado +
                          horas_trabajo_mercado + 
                          sexo + 
                          menores_hogar,
-    data = base_juguete
-  )
+    data = base_juguete)
 ```
 
 Veamos los coeficientes:
@@ -161,31 +159,27 @@ lm_fit3 %>%
   summary()
 ```
 
-No sólo es significativo el coeficiente de la interacción, sino que además mejoraron tanto el $R^{2}$ como el $R^{2}$ ajustado.
+No sólo es significativo el coeficiente de la interacción, sino que además mejoraró el $R^{2}$ ajustado.
 
-# Feature engineering en el workflow
+# Transformar variables en workflows (feature engineering) 
 
 El herramental de tidymodels nos permite aplicar distintas transformaciones sobre nuestros datos antes de estimar los coeficientes. La lógica de tidymodels nos permite separar este paso de aquel de especificación del modelo.
 
-Una sintáxis más general para los pasos que aplicamos anteriormente es usar un *workflow.*
+Una sintáxis más general para los pasos que aplicamos anteriormente es usar un *workflow.* Es decir, dentro de un workflow, especificamos primero el modelo, luego la fórmula o "receta" de las transformaciones que vamos a hacer a las variables, finalmente estimamos. La gracia de hacer estos pasos por separado es que cada uno es una etapa del proceso de modelado, que merece su propio proceso y que, como vamos a ver, podemos querer combinar de distintas maneras con los otros pasos. 
+
+Podemos consultar la presentación de Tidymodels a modo de _cheatsheet_ de cómo funcionan los workflows.
 
 Primero agregamos un modelo:
 
 ```{r}
-lm_wflow <- 
-  workflow() %>% 
-  add_model(lm_spec)
-```
-
-```{r}
-lm_wflow
+lm_wflow <- workflow() %>% 
+  add_model(lm_model)
 ```
 
 Luego agregamos la fórmula:
 
 ```{r}
-lm_wflow <- 
-  lm_wflow %>% 
+lm_wflow <- lm_wflow %>% 
   add_formula(ingreso_individual ~ horas_trabajo_domestico + 
                                    sexo:horas_trabajo_mercado +
                                    horas_trabajo_mercado + 
@@ -194,33 +188,30 @@ lm_wflow <-
   )
 ```
 
-```{r}
-lm_wflow
-```
-
-Y finalmente fitteamos:
+Y finalmente estimamos:
 
 ```{r}
-lm_fit3 <- fit(lm_wflow, base_juguete)
+lm_fit3 <- lm_wflow %>% 
+  fit(base_juguete)
 ```
 
-Veamos los coeficientes y la significatividad:
+Veamos los coeficientes y la significatividad. Para extraer los resultados después de aplicar fit a un workflow usamos la función `extract_fit_engine()`, que nos devuelve el objeto `lm` subyacente.
 
 ```{r}
 lm_fit3 %>% 
-  extract_fit_parsnip() %>% 
-  tidy()
+  extract_fit_engine() %>% 
+  summary() #%>% tidy()
 ```
 
-Para definir los predictores y las **transformaciones** que queremos aplicarles podemos usar *recipe().*
+En vez de una fórmula, para definir los predictores y las **transformaciones** que queremos aplicarles podemos usar *recipe().* A esto lo llamamos "preprocesamiento" (porque lo hacemos antes de estimar).
 
 Las transformaciones se aplican encadenando comandos *step_xxx()* que se aplican sobre grupos de variables definidas según su rol (*all_predictors()*, *all_outcomes(),* etc) o el tipo de variable (*all_numeric()*, *all_nominal()*).
 
-Se genera una receta de preprocesamiento (simple_recipe):
+Se genera una receta de preprocesamiento (lm_rec):
 
 ```{r}
 #incorporamos la fórmula
-simple_recipe <- recipe(
+lm_rec <- recipe(
     ingreso_individual ~ horas_trabajo_domestico +
                          horas_trabajo_mercado +
                          sexo +
@@ -247,32 +238,33 @@ simple_recipe <- recipe(
   step_other(menores_hogar, threshold = 0.2, id="other") 
 ```
 
-Dada una receta de preprocesamiento, es posible observar cómo quedarán los datos previo al ajuste del modelo:
+Le dimos la base de datos, pero no estimamos nada. Solo necesita la abse de datos para saber qué variables hay y de qué tipo son. Podemos ver cómo quedarán los datos previo al ajuste del modelo:
 
 ```{r}
-simple_recipe %>% 
-  prep() %>% 
-  juice() %>% 
-  head(2)
+lm_rec %>% 
+  prep() %>% #Aplica transformaciones a las variables (hace la cuenta)
+  juice()  #Extrae las variables transformadas (nos muestra el resultado)
 ```
 
-Incorporamos al workflow nuestro nuevo preprocesamiento
+Notemos que ahora la variable cualitativa "menores_hogar" tiene agrupadas a las categorías con pocas observaciones, la dummy "sexo" ya está codificada como "sexo_Mujer", entre otras transformaciones. 
+
+Incorporamos al workflow nuestro nuevo preprocesamiento. Si ya teníamos una fórmula o receta, tenemos que eliminarla para reemplazarla por la nueva.
 
 ```{r}
-lm_wflow <-
-  lm_wflow %>% 
+lm_wflow <- lm_wflow %>% 
   
   #se remueve la fórmula anterior ya que ahora la receta contiene la fórmula
   remove_formula() %>% 
   
   #se añade la receta de preprocesamiento
-  add_recipe(simple_recipe)
+  add_recipe(lm_rec)
 ```
 
 Luego aplicamos fit:
 
 ```{r}
-lm_fit4 <- fit(lm_wflow, base_juguete)
+lm_fit4 <- lm_wflow %>% 
+  fit(base_juguete)
 ```
 
 Miremos la performance de este modelo:
@@ -281,15 +273,14 @@ Miremos la performance de este modelo:
 glance(lm_fit4)
 ```
 
-Y los estimadores:
+Y los coeficientes estimados:
 
 ```{r}
-tidy(lm_fit4) %>% 
-  select(term,p.value) %>% 
-  arrange(p.value)
+lm_fit4 %>% 
+  tidy()
 ```
 
-Vemos que el coeficiente de la interacción entre horas_trabajo_doméstico y sexo es el menos significativo, podríamos pensar en sacarlo del modelo.
+Vemos que el coeficiente de la interacción entre horas_trabajo_doméstico y sexo es poco significativo, podríamos pensar en sacarlo del modelo.
 
 ¿Qué pasó exactamente cuando usamos step_other()?
 
@@ -299,7 +290,7 @@ Vemos que el coeficiente de la interacción entre horas_trabajo_doméstico y sex
   tidy(.,id = "other") #id del step (también es posible buscar por número del step (number=4))
 ```
 
-Se agrupó a la variable menores_hogar en 4 categorías: 0, 1, 2 y otros (entonces, ¿por qué hay 3 dummys en el modelo?)
+Se agrupó a la variable menores_hogar en 4 categorías: 0, 1, 2 y otros.
 
 ¿No nos acordamos qué pasos habíamos seguido? Si no, podemos extraerlo:
 
@@ -313,7 +304,8 @@ lm_fit4 %>%
 Veamos primero la distribución de los errores y luego la capacidad predictora del modelo
 
 ```{r}
-augment(lm_fit4, new_data = base_juguete) %>%
+lm_fit4 %>% 
+augment(new_data = base_juguete) %>%
   mutate(.resid = ingreso_individual - .pred) %>%
   #graficamos
   dplyr::select(.resid, .pred) %>%
@@ -326,7 +318,8 @@ augment(lm_fit4, new_data = base_juguete) %>%
 Comparamos el valor real con nuestra predicción:
 
 ```{r}
-augment(lm_fit4, new_data = base_juguete) %>%
+lm_fit4 %>% 
+augment(new_data = base_juguete) %>%
   mutate(.resid = ingreso_individual - .pred) %>%
   dplyr::select(ingreso_individual, .pred, .resid) %>%
   #graficamos
@@ -355,11 +348,39 @@ Al implementar una regresión lineal múltiple:
 
 -   Interpretación de los coeficientes de las variables cualitativas
 
--   Interacciones
+-   Transformaciones (codificación, interacciones, etc.)
 
--   Feature engineering
+En tidymodels: usar recipes con workflows. Un workflow podría ser:
 
-En tidymodels: usar recipes con workflow
+```{r}
+# Elijo el modelo
+lm_model <- linear_reg() %>% 
+  set_mode("regression") %>% 
+  set_engine("lm")
+
+# Armo mi receta (fórmula y transformaciones)
+lm_rec <- recipe(
+    ingreso_individual ~ sexo,
+    data = base_juguete) %>% 
+  step_dummy(sexo, id="dummy") 
+
+# Junto todo en un workflow
+lm_wflow <- workflow() %>% 
+  add_model(lm_model) %>% 
+  add_recipe(lm_rec)
+
+# Estimo
+lm_fit <- lm_wflow %>% 
+  fit(base_juguete)
+  
+# Extraigo resultados
+lm_fit %>% 
+  tidy()
+
+lm_fit %>% 
+  augment(base_juguete) %>% select(sexo,ingreso_individual,.pred)
+```
+
 
 # Referencias bibliográficas
 

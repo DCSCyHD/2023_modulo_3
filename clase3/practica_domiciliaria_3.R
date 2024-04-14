@@ -1,5 +1,6 @@
 library(tidyverse)
 library(tidymodels)
+options(scipen = 999)
 
 #En esta práctica vamos a implementar una regresión lineal múltiple sobre la siguiente base de datos
 
