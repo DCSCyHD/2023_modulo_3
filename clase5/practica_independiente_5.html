@@ -9,7 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)." />
+<meta name="author" content="Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)" />
 
 
 <title>Practica independiente 5 - Módulo 3</title>
@@ -1491,9 +1491,9 @@ border-radius: 0px;
 
 
 <h1 class="title toc-ignore">Practica independiente 5 - Módulo 3</h1>
-<h3 class="subtitle">Regresión logística.</h3>
+<h3 class="subtitle">Regresión logística</h3>
 <h4 class="author">Diplomatura en Ciencias Sociales Computacionales y
-Humanidades Digitales (IDAES-UNSAM).</h4>
+Humanidades Digitales (IDAES-UNSAM)</h4>
 
 </div>
 
@@ -1531,9 +1531,9 @@ base_muestra&lt;- base_real  %&gt;%
   select(realiza_trabajo_domestico,horas_mercado,menores_hogar) %&gt;% 
   ungroup()
 
-base_spliteada  &lt;- initial_split(base_muestra)
-train_data &lt;- training(base_spliteada)
-test_data &lt;- testing(base_spliteada) 
+base_split  &lt;- initial_split(base_muestra)
+train_data &lt;- training(base_split)
+test_data &lt;- testing(base_split) 
 
 #Especifico modelo logistico y fiteo
 lreg &lt;- logistic_reg() %&gt;% 
@@ -1947,88 +1947,87 @@ text-indent: 25px;
 </style>
 <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-    
     <tr class="gt_col_headings">
       <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="model">model</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="realiza_trabajo_domestico">realiza_trabajo_domestico</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="horas_mercado">horas_mercado</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="menores_hogar">menores_hogar</th>
       <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id=".pred_class">.pred_class</th>
       <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id=".pred_Si">.pred_Si</th>
       <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id=".pred_No">.pred_No</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="realiza_trabajo_domestico">realiza_trabajo_domestico</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="horas_mercado">horas_mercado</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="menores_hogar">menores_hogar</th>
     </tr>
   </thead>
   <tbody class="gt_table_body">
     <tr><td headers="model" class="gt_row gt_left">KNN</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
-<td headers="horas_mercado" class="gt_row gt_right">0</td>
-<td headers="menores_hogar" class="gt_row gt_right">2</td>
 <td headers=".pred_class" class="gt_row gt_center">Si</td>
 <td headers=".pred_Si" class="gt_row gt_right">0.5600000</td>
-<td headers=".pred_No" class="gt_row gt_right">0.4400000</td></tr>
-    <tr><td headers="model" class="gt_row gt_left">logistica</td>
+<td headers=".pred_No" class="gt_row gt_right">0.4400000</td>
 <td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
 <td headers="horas_mercado" class="gt_row gt_right">0</td>
-<td headers="menores_hogar" class="gt_row gt_right">0</td>
+<td headers="menores_hogar" class="gt_row gt_right">2</td></tr>
+    <tr><td headers="model" class="gt_row gt_left">logistica</td>
 <td headers=".pred_class" class="gt_row gt_center">Si</td>
 <td headers=".pred_Si" class="gt_row gt_right">0.5562006</td>
-<td headers=".pred_No" class="gt_row gt_right">0.4437994</td></tr>
+<td headers=".pred_No" class="gt_row gt_right">0.4437994</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
+<td headers="horas_mercado" class="gt_row gt_right">0</td>
+<td headers="menores_hogar" class="gt_row gt_right">0</td></tr>
     <tr><td headers="model" class="gt_row gt_left">KNN</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
-<td headers="horas_mercado" class="gt_row gt_right">36</td>
-<td headers="menores_hogar" class="gt_row gt_right">2</td>
 <td headers=".pred_class" class="gt_row gt_center">No</td>
 <td headers=".pred_Si" class="gt_row gt_right">0.0000000</td>
-<td headers=".pred_No" class="gt_row gt_right">1.0000000</td></tr>
+<td headers=".pred_No" class="gt_row gt_right">1.0000000</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
+<td headers="horas_mercado" class="gt_row gt_right">36</td>
+<td headers="menores_hogar" class="gt_row gt_right">2</td></tr>
     <tr><td headers="model" class="gt_row gt_left">logistica</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
-<td headers="horas_mercado" class="gt_row gt_right">48</td>
-<td headers="menores_hogar" class="gt_row gt_right">2</td>
 <td headers=".pred_class" class="gt_row gt_center">No</td>
 <td headers=".pred_Si" class="gt_row gt_right">0.4427000</td>
-<td headers=".pred_No" class="gt_row gt_right">0.5573000</td></tr>
+<td headers=".pred_No" class="gt_row gt_right">0.5573000</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
+<td headers="horas_mercado" class="gt_row gt_right">48</td>
+<td headers="menores_hogar" class="gt_row gt_right">2</td></tr>
     <tr><td headers="model" class="gt_row gt_left">KNN</td>
+<td headers=".pred_class" class="gt_row gt_center">No</td>
+<td headers=".pred_Si" class="gt_row gt_right">0.4000000</td>
+<td headers=".pred_No" class="gt_row gt_right">0.6000000</td>
 <td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
 <td headers="horas_mercado" class="gt_row gt_right">15</td>
-<td headers="menores_hogar" class="gt_row gt_right">3</td>
-<td headers=".pred_class" class="gt_row gt_center">No</td>
-<td headers=".pred_Si" class="gt_row gt_right">0.4000000</td>
-<td headers=".pred_No" class="gt_row gt_right">0.6000000</td></tr>
+<td headers="menores_hogar" class="gt_row gt_right">3</td></tr>
     <tr><td headers="model" class="gt_row gt_left">logistica</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
-<td headers="horas_mercado" class="gt_row gt_right">20</td>
-<td headers="menores_hogar" class="gt_row gt_right">0</td>
 <td headers=".pred_class" class="gt_row gt_center">No</td>
 <td headers=".pred_Si" class="gt_row gt_right">0.4850991</td>
-<td headers=".pred_No" class="gt_row gt_right">0.5149009</td></tr>
-    <tr><td headers="model" class="gt_row gt_left">KNN</td>
+<td headers=".pred_No" class="gt_row gt_right">0.5149009</td>
 <td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
-<td headers="horas_mercado" class="gt_row gt_right">0</td>
-<td headers="menores_hogar" class="gt_row gt_right">1</td>
+<td headers="horas_mercado" class="gt_row gt_right">20</td>
+<td headers="menores_hogar" class="gt_row gt_right">0</td></tr>
+    <tr><td headers="model" class="gt_row gt_left">KNN</td>
 <td headers=".pred_class" class="gt_row gt_center">No</td>
 <td headers=".pred_Si" class="gt_row gt_right">0.1600000</td>
-<td headers=".pred_No" class="gt_row gt_right">0.8400000</td></tr>
-    <tr><td headers="model" class="gt_row gt_left">logistica</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
-<td headers="horas_mercado" class="gt_row gt_right">32</td>
-<td headers="menores_hogar" class="gt_row gt_right">0</td>
-<td headers=".pred_class" class="gt_row gt_center">No</td>
-<td headers=".pred_Si" class="gt_row gt_right">0.4425431</td>
-<td headers=".pred_No" class="gt_row gt_right">0.5574569</td></tr>
-    <tr><td headers="model" class="gt_row gt_left">KNN</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
-<td headers="horas_mercado" class="gt_row gt_right">36</td>
-<td headers="menores_hogar" class="gt_row gt_right">1</td>
-<td headers=".pred_class" class="gt_row gt_center">No</td>
-<td headers=".pred_Si" class="gt_row gt_right">0.4000000</td>
-<td headers=".pred_No" class="gt_row gt_right">0.6000000</td></tr>
-    <tr><td headers="model" class="gt_row gt_left">KNN</td>
+<td headers=".pred_No" class="gt_row gt_right">0.8400000</td>
 <td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
 <td headers="horas_mercado" class="gt_row gt_right">0</td>
-<td headers="menores_hogar" class="gt_row gt_right">0</td>
+<td headers="menores_hogar" class="gt_row gt_right">1</td></tr>
+    <tr><td headers="model" class="gt_row gt_left">logistica</td>
+<td headers=".pred_class" class="gt_row gt_center">No</td>
+<td headers=".pred_Si" class="gt_row gt_right">0.4425431</td>
+<td headers=".pred_No" class="gt_row gt_right">0.5574569</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
+<td headers="horas_mercado" class="gt_row gt_right">32</td>
+<td headers="menores_hogar" class="gt_row gt_right">0</td></tr>
+    <tr><td headers="model" class="gt_row gt_left">KNN</td>
+<td headers=".pred_class" class="gt_row gt_center">No</td>
+<td headers=".pred_Si" class="gt_row gt_right">0.4000000</td>
+<td headers=".pred_No" class="gt_row gt_right">0.6000000</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
+<td headers="horas_mercado" class="gt_row gt_right">36</td>
+<td headers="menores_hogar" class="gt_row gt_right">1</td></tr>
+    <tr><td headers="model" class="gt_row gt_left">KNN</td>
 <td headers=".pred_class" class="gt_row gt_center">Si</td>
 <td headers=".pred_Si" class="gt_row gt_right">0.6800000</td>
-<td headers=".pred_No" class="gt_row gt_right">0.3200000</td></tr>
+<td headers=".pred_No" class="gt_row gt_right">0.3200000</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
+<td headers="horas_mercado" class="gt_row gt_right">0</td>
+<td headers="menores_hogar" class="gt_row gt_right">0</td></tr>
   </tbody>
   
   
@@ -2060,9 +2059,9 @@ que la transferencia se otorge a personas que NO realizan trabajo
 doméstico respecto a equivocarse y que no se otorgue a quien SI
 realiza</strong>.</p>
 <ul>
-<li>¿Con cual de los modelos se quedaría?, ¿qué metrica resulta más
-importante para definir ello?</li>
-<li>Una vez tomada la decisión sobre cual modelo elegir (KNN o
+<li><p>¿Con cual de los modelos se quedaría?, ¿qué metrica resulta más
+importante para definir ello?</p></li>
+<li><p>Una vez tomada la decisión sobre cual modelo elegir (KNN o
 logistica), le muestra la matriz de confusión a su jefe y este le
 plantea lo siguiente: <strong>“El nivel de personas que realiza TDNR,
 pero no recibirían la transferencia dado este modelo sigue siendo muy
@@ -2071,7 +2070,7 @@ la inquietud de su jefe? <strong>Pista</strong>: Miren la variable
 <code>.pred_class</code>, del data frame.
 <strong>base_test_preds</strong> Luego miren <code>.pred_Si</code> y
 <code>.pred_No</code> ¿Cómo se está definiendo
-<code>.pred_class</code>?</li>
+<code>.pred_class</code>?</p></li>
 </ul></li>
 </ul>
 <pre class="r"><code>#</code></pre>

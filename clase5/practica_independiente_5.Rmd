@@ -1,8 +1,8 @@
 ---
 title: "Practica independiente 5 - Módulo 3"
-subtitle: "Regresión logística."
+subtitle: "Regresión logística"
 author: 
-  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM).
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)
 output: 
   html_document:
     toc: TRUE
@@ -21,6 +21,7 @@ knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
 ```
 
 # Practica Independiente    
+
 - De forma similar a lo visto en clase, en el siguiente código tomamos la base real **base_EAUH_TNR**, creamos la variable binaria "realiza_trabajo_domestico", y tomamos una muestra de 7000 casos positivos y 7000 negativos para armar luego dos modelos (un KNN y una regresión logistica) con sólo dos variables explicativas (horas mercado y menores_hogar).          
 
 
@@ -43,9 +44,9 @@ base_muestra<- base_real  %>%
   select(realiza_trabajo_domestico,horas_mercado,menores_hogar) %>% 
   ungroup()
 
-base_spliteada  <- initial_split(base_muestra)
-train_data <- training(base_spliteada)
-test_data <- testing(base_spliteada) 
+base_split  <- initial_split(base_muestra)
+train_data <- training(base_split)
+test_data <- testing(base_split) 
 
 #Especifico modelo logistico y fiteo
 lreg <- logistic_reg() %>% 
@@ -70,7 +71,9 @@ sample_n(base_test_preds,10) %>%
   gt()
 
 ```
+
 - Acá se muestra la matriz de confusión para cada uno de los modelos estimados
+
 ```{r echo=FALSE}
 #Si agrupo por modelo puedo crear la matriz de confusión al mismo tiempo para cada uno de ellos, pero queda almacenada como una lista
 matrices_conf <- base_test_preds %>% 
@@ -93,7 +96,9 @@ base_test_preds %>%
 ```
 
 - Suponga que el modelo en cuestión se utiliza para definir una política en la cual el Estado le otorga una transferencia de dinero a las personas que se estima que realizan trabajo doméstico no remunerado. Su jefe le aclara expresamente que **es preferible equivocarse y que la transferencia se otorge a personas que NO realizan trabajo doméstico respecto a equivocarse y que no se otorgue a quien SI realiza**.   
+
   - ¿Con cual de los modelos se quedaría?, ¿qué metrica resulta más importante para definir ello?
+  
   - Una vez tomada la decisión sobre cual modelo elegir (KNN o logistica), le muestra la matriz de confusión a su jefe y este le plantea lo siguiente: **"El nivel de personas que realiza TDNR, pero no recibirían la transferencia dado este modelo  sigue siendo muy alto"**. ¿Que puede hacer con este mismo modelo para satisfacer la inquietud de su jefe? **Pista**: Miren la variable `.pred_class`, del data frame. **base_test_preds** Luego miren `.pred_Si` y `.pred_No`  ¿Cómo se está definiendo `.pred_class`?
   
 ```{r echo=TRUE}
