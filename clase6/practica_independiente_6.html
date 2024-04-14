@@ -9,7 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)." />
+<meta name="author" content="Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)" />
 
 
 <title>Practica independiente 6 - Módulo 3</title>
@@ -1492,7 +1492,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">Practica independiente 6 - Módulo 3</h1>
 <h4 class="author">Diplomatura en Ciencias Sociales Computacionales y
-Humanidades Digitales (IDAES-UNSAM).</h4>
+Humanidades Digitales (IDAES-UNSAM)</h4>
 
 </div>
 
@@ -1502,10 +1502,10 @@ Humanidades Digitales (IDAES-UNSAM).</h4>
 Weksler</p>
 </blockquote>
 <p><strong>Importante</strong> Esta práctica presenta un nivel de
-dificultad un poco alto. Está pensada para quienes quieran darse manija
-con las técnicas relativamente avanzadas vistas en la última clase. No
-es necesario que la hagan quienes no quieran/puedan y no deben
-preocuparse ahora si lo intentan y no sale.</p>
+dificultad un poco alto. Está pensada para quienes quieran profundizar
+en las técnicas relativamente avanzadas vistas en la última clase. No es
+necesario que la hagan quienes no quieran/puedan y no deben preocuparse
+ahora si lo intentan y no sale.</p>
 <div id="datos" class="section level1" number="1">
 <h1><span class="header-section-number">1</span> Datos</h1>
 <p>De forma similar a lo visto en clase, en el siguiente código tomamos
@@ -1528,29 +1528,30 @@ base_muestra &lt;- base_real  %&gt;%
   group_by(realiza_trabajo_domestico) %&gt;%
   sample_n(size = 7000, replace = F) %&gt;%
   select(realiza_trabajo_domestico, horas_mercado, CH04, menores_hogar) %&gt;%
-  ungroup()</code></pre>
+  ungroup() %&gt;% 
+  rename(&quot;sexo&quot;=CH04)</code></pre>
 </div>
-<div id="evaluando-un-knn-con-k-fold-cross-validation" class="section level1" number="2">
-<h1><span class="header-section-number">2</span> Evaluando un KNN con
-k-fold cross-validation</h1>
+<div id="k-fold-cross-validation" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> K-fold
+cross-validation</h1>
 <p>Dada <code>base_muestra</code>:</p>
 <ul>
 <li><p>Creen 10 folds para aplicar cross-validation</p></li>
 <li><p>Establezcan como receta que van a querer predecir la realización
-de trabajo domestico a partir de <code>CH04 (sexo)</code> y
+de trabajo domestico a partir de <code>sexo</code> y
 <code>menores_hogar</code></p></li>
 <li><p>Evaluen la capacidad de predicción un KNN (k=7) con la métrica de
 accuracy</p></li>
 </ul>
 </div>
-<div id="tuneando-un-knn" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> Tuneando un KNN</h1>
+<div id="tuneando-un-hiperparámetro" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Tuneando un
+hiperparámetro</h1>
 <p>A partir de este código, intenten encontrar el mejor valor para el
 parametro K. Tengan en cuenta tanto el accuracy, specificity y
 sensitivity</p>
 <pre class="r"><code>knn_a_tunear &lt;- nearest_neighbor(neighbors = tune()) %&gt;% 
   set_mode(&quot;classification&quot;) </code></pre>
-<p>Ajuste de hiperparámetros</p>
 </div>
 
 

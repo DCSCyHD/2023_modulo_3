@@ -2,7 +2,7 @@
 title: "Practica independiente 6 - Módulo 3"
 subtitle: ""
 author: 
-  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM).
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)
 output: 
   html_document:
     toc: TRUE
@@ -11,6 +11,8 @@ output:
     toc_depth: 3
     number_sections: true
     theme: readable
+editor_options: 
+  chunk_output_type: console
 ---
 
 > Material elaborado originalmente por Carolina Pradier y Guido Weksler
@@ -25,7 +27,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-**Importante** Esta práctica presenta un nivel de dificultad un poco alto. Está pensada para quienes quieran darse manija con las técnicas relativamente avanzadas vistas en la última clase. No es necesario que la hagan quienes no quieran/puedan y no deben preocuparse ahora si lo intentan y no sale.      
+**Importante** Esta práctica presenta un nivel de dificultad un poco alto. Está pensada para quienes quieran profundizar en las técnicas relativamente avanzadas vistas en la última clase. No es necesario que la hagan quienes no quieran/puedan y no deben preocuparse ahora si lo intentan y no sale.      
 
 # Datos
 
@@ -53,16 +55,17 @@ base_muestra <- base_real  %>%
   group_by(realiza_trabajo_domestico) %>%
   sample_n(size = 7000, replace = F) %>%
   select(realiza_trabajo_domestico, horas_mercado, CH04, menores_hogar) %>%
-  ungroup()
+  ungroup() %>% 
+  rename("sexo"=CH04)
 ```
 
-# Evaluando un KNN con k-fold cross-validation     
+# K-fold cross-validation    
 
 Dada `base_muestra`:    
 
 - Creen 10 folds para aplicar cross-validation  
 
-- Establezcan como receta que van a querer predecir la realización de trabajo domestico a partir de `CH04 (sexo)` y `menores_hogar`   
+- Establezcan como receta que van a querer predecir la realización de trabajo domestico a partir de `sexo` y `menores_hogar`   
 
 - Evaluen la capacidad de predicción un KNN (k=7) con la métrica de accuracy
 
@@ -80,7 +83,7 @@ mi_modelo <- nearest_neighbor(neighbors = 7) %>%
 ```{r eval=FALSE, include=FALSE}
 mi_formula_gral <- recipe(
   formula = realiza_trabajo_domestico ~ horas_mercado +
-                                        CH04 + 
+                                        sexo + 
                                         menores_hogar,
   data =  base_muestra)
 ```
@@ -101,7 +104,7 @@ validacion_fit %>%
   collect_metrics()
 ```
 
-# Tuneando un KNN   
+# Tuneando un hiperparámetro   
 
 A partir de este código, intenten encontrar el mejor valor para el parametro K. Tengan en cuenta tanto el accuracy, specificity y sensitivity   
 
