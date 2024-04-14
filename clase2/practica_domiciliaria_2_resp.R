@@ -20,10 +20,10 @@ ggpairs(df)
 
 #Plantee un modelo de regresión lineal simple entre weight y la variable seleccionada usando herramientas de tidymodels
 
-lm_spec <- linear_reg() %>%
+lm_model <- linear_reg() %>%
   set_engine("lm")
 
-lm_fit <- lm_spec %>%
+lm_fit <- lm_model %>%
   fit(weight ~ height, data = df)
 
 ##### Ejercicio 3 #####
@@ -36,12 +36,13 @@ lm_fit %>%
 
 #bonus: grafique las predicciones respecto a los valores reales 
 
-augment(lm_fit, new_data = df) %>% 
+lm_fit %>% 
+augment(new_data = df) %>% 
   select(weight, .pred, .resid) %>% 
   ggplot(aes(x=.pred, y=weight,color=.resid)) + 
   geom_point() + 
   theme_minimal()+
-  scale_color_viridis()
+  scale_color_viridis_b()
 
 #¿Cuán fuerte es la relación entre la variable dependiente y la variable independiente? ¿Esta relación es estadísticamente significativa? ¿Por qué? Interprete el coeficiente beta. 
 

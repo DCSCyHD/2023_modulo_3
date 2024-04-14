@@ -11,6 +11,8 @@ output:
     toc_depth: 3
     number_sections: true
     theme: readable
+editor_options: 
+  chunk_output_type: console
 ---
 
 > Material elaborado originalmente por Carolina Pradier y Guido Weksler
@@ -39,7 +41,7 @@ El paquete *tidymodels* nos va a permitir construir modelos usando una lógica d
 
 ## Exploramos
 
-Vamos a usar una base de **juguete** (es decir, con datos inventados), cuyas variables tiene nombres similares a los de la base de la Encuesta de Uso del Tiempo. Inventamos datos nuevos para que las relaciones sean claramente lineales (esto no suele pasar en ciencias sociales). Se busca entender la relación entre distintas características de uso del tiempo con el salario.
+Vamos a usar una base de **juguete** (es decir, con datos inventados), cuyas variables tienen nombres similares a los de la base de la Encuesta de Uso del Tiempo. Inventamos datos nuevos para que las relaciones sean claramente lineales (esto no suele pasar en ciencias sociales). Se busca entender la relación entre distintas características de uso del tiempo con el salario.
 
 ```{r}
 base_juguete <- readRDS("./fuentes/eut_juguete.RDS")
@@ -61,7 +63,8 @@ Podemos mirar una matriz descriptiva de la base usando *ggpairs()* para tener un
 
 ```{r}
 #graficamos
-ggpairs(base_juguete, labeller = label_wrap_gen(width = 5)) +
+ggpairs(base_juguete, 
+        labeller = label_wrap_gen(width = 5)) +  #Para que las etiquetas entren mejor
   theme_minimal() +
   theme(strip.text.x = element_text(size = 10),
         strip.text.y = element_text(size = 10))
@@ -91,13 +94,13 @@ base_juguete <- base_juguete %>% janitor::clean_names()
 
 ## Modelamos
 
-Les propongo usar el modelo de regresión lineal para estudiar la relación entre el ingreso individual de las personas (Y) y las horas que dedican por semana al trabajo doméstico (X). Es decir:
+Les proponemos usar el modelo de regresión lineal para estudiar la relación entre el ingreso individual de las personas (Y) y las horas que dedican por semana al trabajo doméstico (X). Es decir:
 
 $$ IngInd = \beta_{0} + \beta_{1}HorasTD + \epsilon$$
 
 ------------------------------------------------------------------------
 
-*Nota:* Mirando las correlaciones entre las variables, este no es el par que mejor correlaciona. ¿Por qué podría interesarnos enfocarnos en esta relación de todas formas?
+*Nota:* La correlación entre las horas de trabajo doméstico y el ingreso individual (ver abajo) no es necesariamente la más alta. ¿Por qué podría interesarnos enfocarnos en esta relación de todas formas?
 
 ```{r}
 cor(base_juguete$horas_trabajo_domestico, 
@@ -110,7 +113,6 @@ Veamos la relación gráficamente:
 
 ```{r}
 base_juguete%>% 
-  #filter(horas_trabajo_domestico > 0) %>% 
   ggplot(aes(x=horas_trabajo_domestico, y=ingreso_individual)) + 
   geom_point() + 
   geom_smooth(
@@ -136,11 +138,11 @@ Para empezar tenemos que indicarle a R:
 3.  El **motor** (el tipo de software que va a estar detrás del modelo).
 
 ```{r}
-lm_spec <- linear_reg() %>%
-  #set_mode("regression") %>%
+lm_model <- linear_reg() %>%
+  set_mode("regression") %>%
   set_engine("lm")
 
-lm_spec
+lm_model
 ```
 
 Noten dos cosas importantes:
@@ -154,49 +156,37 @@ Noten dos cosas importantes:
 
 -   El momento de ingresar los datos y el momento de definir el modelo están **separados**. Podríamos trabajar con múltiples bases de datos aplicando siempre un modelo con estas especificaciones.
 
-Usando el comando *translate()*, R nos indica de forma tal que un humano pueda entenderlo las características de nuestro modelo.
+Podemos usar el comando *translate()* para que R nos indique qué le falta al modelo para realizar una estimación.
 
 ```{r}
-lm_spec %>% translate()
+lm_model %>% translate()
 ```
 
-Una vez que especificamos cuál es nuestro modelo, vamos a fitearlo (es decir, estimar los coeficientes a partir de los datos del modelo).
-
-Hay dos sintaxis posibles:
+Una vez que especificamos cuál es nuestro modelo, vamos a estimarlo/"fitearlo" (es decir, estimar los coeficientes a partir de los datos del modelo).
 
 ```{r}
-lm_fit <- lm_spec %>%
-  fit_xy(
-    x = base_juguete %>% select(horas_trabajo_domestico),
-    y = base_juguete %>% pull(ingreso_individual)
-  )
-
-#usamos select() para "x" y pull() para "y" porque en el primer caso tenemos que obtener un data frame (aunque tenga una sola columna) y en el segundo un vector.
-```
-
-```{r}
-lm_fit <- lm_spec %>%
+lm_fit <- lm_model %>%
   fit(ingreso_individual ~ horas_trabajo_domestico, 
       data = base_juguete)
 
-#nos queda "y" del lado izquierdo y "x" del lado derecho
+#Siempre va "y" del lado izquierdo y "x" del lado derecho
 ```
 
 Veamos los coeficientes:
 
 ```{r}
-tabla_coeficientes <- tidy(lm_fit) 
+tabla_coeficientes <- lm_fit %>% tidy() 
 
 tabla_coeficientes %>% 
-  gt() %>% #para visualizar de forma más prolija
-  #fmt_number(decimals=2) %>% 
+  gt() %>%   #para visualizar de forma más prolija
+  fmt_number(decimals=2) %>% 
   tab_header("Regresión lineal")
 ```
 
 Noten que la información viene en forma de *data.frame*, por lo que es fácil extraer los coeficientes de la regresión.
 
 ```{r include=FALSE}
-options(scipen = 999) #notación científica
+options(scipen = 999) #Evitar notación científica
 
 intercepto <- round(tabla_coeficientes$estimate[1],1)
 beta1 <- round(tabla_coeficientes$estimate[2])
@@ -206,27 +196,18 @@ De acuerdo con nuestra estimación:
 
 $\hat{IngInd} =$ `r intercepto` $+$ `r beta1` $HorasTD$
 
-Con el paquete equatiomatic es posible extraer la ecuación del modelo ajustado en formato Latex (muy útil para realizar investigación académica).
-
-```{r}
-equatiomatic::extract_eq(lm_fit$fit)
-```
-
-Con el parámetro use_coefs=TRUE se reemplazan las letras griegas por los coeficientes estimados en el modelo:
-
-```{r}
-equatiomatic::extract_eq(lm_fit$fit, use_coefs = TRUE)
-```
 
 ```{r include=FALSE}
 options(scipen = 0) #notación científica
 ```
 
-Para tener más información sobre nuestro modelo, aplicamos:
+Si queremos más información sobre nuestro modelo, podemos mirar qué hay dentro del objeto `lm_fit` (una lista). A su vez, dentro del elemento "fit" encontramos el $R^2$ y otra información. 
 
 ```{r}
+names(lm_fit)
+
 lm_fit %>% 
-  pluck("fit") %>%
+  pluck("fit") %>% #Pluck es la versión "tidy" de lm_fit[["fit"]]
   summary()
 ```
 
@@ -244,7 +225,7 @@ Plantee un modelo donde la variable explicativa sea la variable horas_trabajo_me
 
 ```{r}
 #respuesta
-lm_spec %>%
+lm_model %>%
   fit(ingreso_individual ~ horas_trabajo_mercado, 
       data = base_juguete) %>%
   pluck("fit") %>%
@@ -255,16 +236,15 @@ lm_spec %>%
 
 ## Predecimos
 
-Para que el modelo nos arroje sus predicciones, usamos el comando *predict()*, donde tenemos que especificar el modelo y los datos sobre los cuales predecir.
+Para que el modelo nos arroje sus predicciones, usamos el comando *predict()*, donde tenemos que especificar el modelo y los datos sobre los cuales predecir. Como en este caso queremos recuperar las predicciones "dentro de la muestra", usamos los mismos datos.
 
-Podemos ver tanto la predicción puntual para cada observación (por default), como un intervalo de canfianza.
+Podemos ver tanto la predicción puntual para cada observación (por default), como un intervalo de confianza.
 
 ```{r}
-predict(
-  lm_fit, #modelo
-  new_data = base_juguete #datos
-  #, type = "pred_int"
-)
+lm_fit %>% 
+  predict(new_data = base_juguete
+          #,type = "pred_int"  #Si queremos el intervalo de confianza de la prediccion
+          )
 ```
 
 ------------------------------------------------------------------------
@@ -273,17 +253,18 @@ predict(
 
 ------------------------------------------------------------------------
 
-También podemos usar la función *augment()* para anexar nuestras predicciones y sus residuos a la base.
+También podemos usar la función *augment()* para anexar nuestras predicciones y sus residuos a la base. Es lo mismo que *predict()* pero nos pega todos los datos.
 
 ```{r}
-augment(lm_fit, new_data = base_juguete) %>% 
-  select(ingreso_individual, .pred, .resid)
+lm_fit %>% 
+  augment(new_data = base_juguete)
 ```
 
 Grafiquemos los residuos para ver si hay algún problema con el modelo.
 
 ```{r}
-augment(lm_fit, new_data = base_juguete) %>%
+lm_fit %>% 
+  augment(new_data = base_juguete) %>%
   dplyr::select(.resid, .pred) %>%
   ggplot(aes(x = .pred, y = .resid)) +
   geom_point() +
@@ -291,10 +272,19 @@ augment(lm_fit, new_data = base_juguete) %>%
   geom_hline(yintercept = 0, linetype = 'dashed') 
 ```
 
-```{r}
-max(augment(lm_fit, new_data = base_juguete)$.pred)
+Si queremos inspeccionar, podemos usar pull() (que es como $) para acceder a la columna de residuos y calcular el máximo.
 
-max(augment(lm_fit, new_data = base_juguete)$ingreso_individual)
+```{r}
+lm_fit %>% 
+  augment(new_data = base_juguete) %>% 
+  pull(.pred) %>% 
+  max()
+
+lm_fit %>% 
+  augment(new_data = base_juguete) %>% 
+  pull(ingreso_individual) %>% 
+  max()
+
 ```
 
 ¿Dónde funciona mal el modelo? Para los casos con ingresos altos y muy pocas horas de trabajo no remunerado.
@@ -303,7 +293,6 @@ Quizás falta agregar alguna variable al modelo
 
 ```{r}
 base_juguete %>%
-  #filter(horas_trabajo_domestico > 0) %>%
   ggplot(aes(x = horas_trabajo_domestico, 
              y = ingreso_individual, 
              color = sexo)) +
@@ -318,11 +307,11 @@ Vemos que la relación entre ambas variables es muy distinta para mujeres y varo
 
 Para implementar una regresión lineal simple en tidymodels necesitamos:
 
-1.  Especificar el modelo
+1.  Especificar el modelo. Por ejemplo lm_model <- linear_reg() (aclarar mode y engine)
 
-2.  fit()
+2.  Estimarlo con fit() (aclarando con qué datos)
 
-3.  predict()
+3.  Usarlo, por ejemplo para recuperar las predicciones con predict() o augment()
 
 # Referencias bibliográficas
 
