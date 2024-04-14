@@ -1,8 +1,8 @@
 ---
-title: "Práctica guíada 4 - Módulo 3"
-subtitle: "Regresión logística."
+title: "Práctica guiada 4 - Módulo 3"
+subtitle: "Regresión logística"
 author: 
-  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM). Marzo/Abril 2023
+  - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)
   - Carolina Pradier y Guido Weksler
 output: 
   html_document:
@@ -12,6 +12,8 @@ output:
     toc_depth: 3
     number_sections: true
     theme: readable
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, message=FALSE, warning=FALSE, include=FALSE}
@@ -34,7 +36,9 @@ options(scipen = 999)
 ```
 
 
-# Introducción     
+# Regresión logística
+
+## Introducción
 
 Operemos con [Tidymodels](https://www.tidymodels.org/) para hacer un modelo de clasificación con el método de la regresión logística. Usaremos nuestra base de juguete de 200 datos ficticios, con la variable objetivo **realiza_trabajo_domestico**. Por ahora, tomaremos únicamente como variables explicativas las horas trabajadas en el mercado y el ingreso total familiar.    
 
@@ -45,29 +49,34 @@ base_juguete <- readRDS(file = "fuentes/eut_juguete_clase4.RDS")
 
 
 ggplot(base_juguete,aes(x = horas_trabajo_mercado,
-                         y = ingreso_familiar,
-                         shape = realiza_trabajo_domestico))+
+                        y = ingreso_familiar,
+                        shape = realiza_trabajo_domestico))+
   geom_point(size = 3)
 ```
 
-Ahora veamos los pasos necesarios para correr el modelo. Luego, discutamos la interpretación de los coeficientes.    
+Ahora vamos a repasar los pasos necesarios para correr el modelo. Luego, discutamos la interpretación de los coeficientes y las métricas de ajuste.    
 
 
 ## Seteo el tipo de modelo         
 
 En formato tidy, comienzo especificando el tipo de modelo. En este caso,  **logistic_reg()**. De ser necesario puedo especificar con **set_mode()** el modo del modelo (qué tipo de predicción tiene el outcome, numérica o categórica) Luego,  especifico cual es el sistema que utilizaré para estimar el modelo con la función  **set_engine()** (en muchos casos responde al paquete que voy a usar para correr el modelo). 
+
 ```{r}
 log_model <- logistic_reg() %>% #Defino el tipo de modelo
   set_mode("classification") %>%  #el modo (regresión o clasificación)
-  set_engine("glm") #el motor sera de "Generalized linear models"
-log_model
+  set_engine("glm") #el motor en este caso es glm ("Generalized linear models")
+
 ```
-## Fiteo (entreno) el modelo      
+
+## Fiteo (entreno/estimo) el modelo  
+
 Tomo la especificación anterior y excplicito que variables usaré y de que dataset.  
 
 ----
 
-*Importante:* La variable objetivo `realiza_trabajo_domestico` **debo convertirla en factor** para correr una regresión logistica (es decir, que sea una variable con categorías). Por otra parte, si van a utilizar funciones que calculan métricas derivadas de la matriz de confusión es mucho muy importante que las **categorías estén ordenadas con el valor positivo como primer nivel y el negativo como el segundo nivel**
+*Importante:* La variable objetivo `realiza_trabajo_domestico` **debo convertirla en factor** para correr una regresión logistica (es decir, que sea una variable con categorías). El primer nivel del factor va a ser el caso base, que en general queremos que sea "No" para facilitar la interpretación. 
+
+Por otra parte, si van a utilizar funciones que calculan métricas derivadas de la matriz de confusión es muy importante que las **categorías estén ordenadas con el valor positivo ("Si") como primer nivel y el negativo ("No") como el segundo nivel**. Así que lo vamos a ir cambiando.
 
 ---
 
@@ -76,29 +85,37 @@ base_para_modelar <- base_juguete %>%
   mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,levels = c("No","Si")))
 
 #Lo entreo con los datos 
-log_fiteado <- log_model %>% 
-  fit(realiza_trabajo_domestico ~ horas_trabajo_mercado+ingreso_familiar,
+log_fit <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_trabajo_mercado + 
+                                  ingreso_familiar,
       data = base_para_modelar)
 
 ```
 
-### Veamos resultados de los parámetros estimados        
-Si bien podemos correr directo el objeto **log_fiteado** para ver los resultados, la función  `tidy()`  nos transforma  los coeficientes estimados (y también su desvío estandar, z-statistic y p.valor) a un formato data_frame. Para visualizarlo de forma más prolija usamos aquí también la función `gt()` del paquete homónimo.
+## Veamos resultados de los parámetros estimados
+
+Si bien podemos correr directo el objeto **log_fit** para ver los resultados, la función  `tidy()`  nos transforma  los coeficientes estimados (y también su desvío estandar, z-statistic y p.valor) a un formato data_frame. Para visualizarlo de forma más prolija usamos aquí también la función `gt()` del paquete homónimo.
+
 ```{r}
-tidy(log_fiteado) %>% 
+log_fit %>% 
+  tidy() %>% 
   gt()
 ```
+
 El paquete `modelsummary` y su función homónima nos arroja también datos sobre la bondad de ajuste del modelo. Tenemos medidas como el Akaike information criterion (AIC) y el Bayesian Information Criterion (BIC). Una herramienta interesante es que podemos pasar una lista de modelos y comparar entre ellos. Solo para estos fines, entrenemos otro modelo que también incluye la variable de menores en el hogar.
+
 ```{r}
 
-log_fiteado2 <- log_model %>% 
-  fit(realiza_trabajo_domestico ~ horas_trabajo_mercado+ingreso_familiar+menores_hogar,
+log_fit2 <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_trabajo_mercado +
+                                  ingreso_familiar +
+                                  menores_hogar,
       data = base_para_modelar)
 
 
-modelsummary::modelsummary(
-  list("logistica 2 predictores " = log_fiteado,
-       "logistica 3 predictores" = log_fiteado2)
+modelsummary(
+  list("logistica 2 predictores " = log_fit,
+       "logistica 3 predictores" = log_fit2)
   )
 ```
 
@@ -108,61 +125,80 @@ modelsummary::modelsummary(
 *Aclaración:* Dado que nos interesan más otro tipo de métricas, no veremos en detalle la estimación de medidas de bondad de ajuste como AIC y BIC. A los fines prácticos basta con tener noción de que:
 
 - Su utilidad es para **comparar modelos** (la interpretación del AIC o BIC de 1 modelo en si mismo es irrelevante)        
-- Las formulas de AIC y BIC tienen la siguiente "pinta": $xIC= complejidad-ajuste$.     
-Un termino positivo que actua como penalización a la complejidad del modelo (asociado a la cantidad de parametros o variables que utiliza). Un termino restando asociado a la capacidad de ajuste del modelo (vinculada a la **máxima verosimilitud**, es decir, cuan cerca le paso a los valores reales con mi predicción de probabilidad)    
-- Al comparar dos modelos, son mejores **los que tienen menor valor de AIC o BIC**.      
-- En el ejemplo anterior, a pesar de haber agregado complejidad en el 2do modelo (1 variable más), ganamos mucho en ajuste, por eso el AIC y BIC son más bajos.    
+
+- Las formulas de AIC y BIC tienen la siguiente "pinta": $xIC= flexibilidad-ajuste$.     
+Un termino positivo que actua como penalización a la flexibilidad del modelo (asociado a la cantidad de parametros o variables que utiliza). Un termino restando asociado a la capacidad de ajuste del modelo (vinculada a la **máxima verosimilitud**, es decir, cuan cerca le paso a los valores reales con mi predicción de probabilidad)  
+
+- Al comparar dos modelos, son mejores los que tienen **menor valor de AIC o BIC**    
+
+- En el ejemplo anterior, a pesar de haber agregado flexibilidad en el 2do modelo (1 variable más), ganamos mucho en ajuste, por eso el AIC y BIC son más bajos.    
 
 ---
 
 ## Predicción   
+
 ### Aplicado sobre datos nuevos        
-Si queremos sólo obtener la predicción que nuestro modelo hará sobre un nuevo par de datos, la función `predict()` requiere como imput un data.frame que contenga columnas nombradas igual que los predictores de nuestro modelo y devuelve, en el mismo orden, las predicciones para la variable Y.    
+
+Si queremos sólo obtener la predicción que nuestro modelo hará sobre nuevos datos, la función `predict()` requiere como imput un data.frame que contenga columnas nombradas igual que los predictores de nuestro modelo y devuelve, en el mismo orden, las predicciones para la variable Y.    
 
 ```{r}
-data_nueva<- data.frame(horas_trabajo_mercado = c(40,13),
+data_nueva <- data.frame(horas_trabajo_mercado = c(40,13),
                         ingreso_familiar = c(60000,10000))
 
-predict(object = log_fiteado,new_data = data_nueva)
+log_fit %>% 
+  predict(new_data = data_nueva)
 ```
-Una función que puede resultar todavía más úlil que `predict()` es `augment()`. Al pasarle un modelo entrenado y un dataset para realizar predicciones, esta última  añade a dicho dataset el valor de la clase predicha y también las probabilidades estimadas que respaldan dicha predicción 
+
+Una función que puede resultar todavía más útil que `predict()` es `augment()`. Al pasarle un modelo entrenado y un dataset para realizar predicciones, esta última añade a dicho dataset el valor de la clase predicha y también las probabilidades estimadas que respaldan dicha predicción 
 ```{r}
-augment(x = log_fiteado,new_data = data_nueva)
+log_fit %>% 
+  augment(new_data = data_nueva)
 
 ```
 
 ### Aplicado sobre el total de la base
-Tomemos la función `augment()` para agregar a nuestro dataset  **base_para_modelar** las probabilidades asignadas por nuestro modelo a cada uno de los calsos, y por ende, la clase predicha 
+
+Tomemos la función `augment()` para agregar a nuestro dataset  **base_para_modelar** las probabilidades asignadas por nuestro modelo a cada uno de los casos, y por ende, la clase predicha.
+
+Podemos usar las probabilidades para cambiar el umbral de clasificación.
+
 ```{r}
-base_con_pred<- augment(x = log_fiteado, base_para_modelar) %>% 
-  mutate(prediccion_gw = ifelse(.pred_No > 0.8,yes = "No",no = "Si"))
+base_con_pred <- log_fit %>% 
+  augment(base_para_modelar) %>% 
+  mutate(prediccion_80 = ifelse(.pred_No > 0.8, yes = "No", no = "Si"))
 
 base_con_pred
 ```
-## Metricas de evaluación
-### Matriz de confusión
-Sobre la base de los valores reales y los valores predichos podríamos tomar la matriz de confusión como un tabulado bivariado entre ambas columas
+
+# Metricas de evaluación
+
+## Matriz de confusión
+
+Sobre la base de los valores reales y los valores predichos calcular la matriz de confusión. Como adelantamos, necesitamos revertir el orden de los factores para que las funciones que nos calculan las métricas anden bien (sorry).
 
 ```{r}
-# Para usar las funciones que calculas directo las metricas necesitamos el orden alternativo de la variable objetivo 
-base_p_metricas<- base_con_pred %>% 
+# Aplicamos orden alternativo
+base_metricas <- base_con_pred %>% 
   mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,
                                             levels = c("Si","No")),
-         .pred_class = factor(.pred_class,levels = c("Si","No"))) 
+         .pred_class = factor(.pred_class,
+                              levels = c("Si","No"))) 
 
-matriz_confusion <- conf_mat(data = base_p_metricas ,
+matriz_confusion <- conf_mat(data = base_metricas ,
                              truth = realiza_trabajo_domestico,
                              estimate = .pred_class)
 
 matriz_confusion
 ```
+
 >¿Quien se anima a leer estos resultados?
 
-### Métricas derivadas de la matriz
+## Métricas derivadas de la matriz
+
 Accuracy, Sensitividad/Recall, Specificity y Precision
 
 ```{r}
-accu <- accuracy(data = base_p_metricas,
+accu <- accuracy(data = base_metricas,
             truth = realiza_trabajo_domestico,
             estimate =  .pred_class)
 
@@ -173,23 +209,25 @@ accu
 
 ```{r}
 
-sens <- sensitivity(base_p_metricas,truth = realiza_trabajo_domestico,estimate =  .pred_class)
+sens <- sensitivity(base_metricas,truth = realiza_trabajo_domestico,estimate =  .pred_class)
 
+spec <- specificity(base_metricas,truth = realiza_trabajo_domestico,estimate =  .pred_class)
 
-spec <- specificity(base_p_metricas,truth = realiza_trabajo_domestico,estimate =  .pred_class)
-
-prec <- precision(base_p_metricas,truth = realiza_trabajo_domestico,estimate =  .pred_class)
+prec <- precision(base_metricas,truth = realiza_trabajo_domestico,estimate =  .pred_class)
 
 bind_rows(accu,sens,spec,prec)
 ```
     
- - De los casos positivos (que efectivamente realizan trabajo doméstico), el modelo predice bien un `r scales::percent(sens$.estimate,accuracy = 0.01) `.     
+ - De los casos positivos (que efectivamente realizan trabajo doméstico), el modelo predice bien un `r scales::percent(sens$.estimate,accuracy = 0.01) `.   
+ 
  - De los casos negativos (que no realizan trabajo doméstico), el modelo predice bien un `r scales::percent(spec$.estimate,accuracy = 0.01) `.    
+ 
  - De los casos que son clasificados como positivos, sólo un `r scales::percent(prec$.estimate,accuracy = 0.01)` . lo son.
 
 
 Veamos esto de forma gráfica para tratar de entender como está operando nuestro modelo:       
 En este gráfico utilizamos el parametro **shape** para distinguir el valor real de la variable objetivo ("No" o "Si") y el **color** para mostrar las probabildiades de pertenecer a la clase "Si" estimadas por nuestro modelo.
+
 ```{r}
 ggplot(base_con_pred,aes(x = horas_trabajo_mercado,
                          y = ingreso_familiar,
@@ -219,114 +257,155 @@ ggplot(base_con_pred,aes(x = horas_trabajo_mercado,
 Hagamos un modelo nuevo con un split de la base original en test y train. Aclaración: Si queremos resultados replicables debemos **setear una semilla** con `set.seed()`, para guardar el mecanismo de pseudo-aleatorización que realiza la computadora.   
 
  
-### Split train-test    
+### Split 
+
 ```{r}
-set.seed(18/12/2022)
-base_spliteada <-  initial_split(base_para_modelar,prop = 0.8)
-base_train <-  training(base_spliteada)
-base_test <-  testing(base_spliteada)
+set.seed(2024) #Cualquier cosa
+
+base_split <-  initial_split(base_para_modelar, prop = 0.8)
+base_train <-  training(base_split)
+base_test <-  testing(base_split)
 
 ```
 
-### Fiteo     
+### Fit     
+
+Estimamos el modelo con la base train.
 
 ```{r}
-#log_model <- logistic_reg() %>% # Ya lo corri arriba este paso 
-#  set_engine("glm")
-
-modelo_sobre_train <- log_model  %>% 
-  fit(realiza_trabajo_domestico ~ horas_trabajo_mercado+ingreso_familiar,
+log_fit_train <- log_model  %>% 
+  fit(realiza_trabajo_domestico ~ horas_trabajo_mercado +
+                                  ingreso_familiar,
       data = base_train)
 
-tidy(modelo_sobre_train)
+log_fit_train %>% tidy()
 ```
 
 
 ### Aplico predicciones a la base de testeo    
 
+Usamos el modelo para predecir, aplicándolo sobre la base test.
+
 ```{r}
-base_test_con_pred <- augment(x = modelo_sobre_train,new_data = base_test)
+base_test_con_pred <- log_fit_train %>% 
+  augment(new_data = base_test)
+
 base_test_con_pred
 ```
+
 ### Matriz de confusión
-Sobre la base de los valores reales y los valores predichos podríamos tomar la matriz de confusión como un tabulado bivariado entre ambas columas
+
+Ahora podemos calcular las métricas sobre la base de los valores reales y los valores predichos. Estas predicciones se hicieron sin usar los valores reales para estimar.
 
 ```{r}
 matriz_confusion_test<- conf_mat(data = base_test_con_pred,
-                                 truth =realiza_trabajo_domestico,
+                                 truth = realiza_trabajo_domestico,
                                  estimate =.pred_class)
 
 matriz_confusion_test
 ```
 
-## Espacio de práctica (en clase)   
+# Espacio de práctica (en clase)  
+
 Supongan que les solicitan armar un modelo con una sola variable predictora de las disponibles. Entrenen *con un mismo training set* 2 modelos con un solo predictor y evaluen como pronostica la realización de TDNR en el *test set*. Pueden calcular solo el **accuracy**.
-```{r, include=FALSE}
-
-```
 
 ```{r, include=FALSE}
 
 ```
 
+```{r, include=FALSE}
 
-## Ejercicio con datos reales             
+```
+
+
+# Ejercicio con datos reales      
+
 - Levantemos la base de datos reales llamada **base_EAUH_TNR** (tiene un pre-procesamiento de seleccion y recategorización de algunas variables).     
-- Creamos allí la variable dicotómica "realiza_trabajo_doméstico" que tome los valores "Si" y "No" a partir de la variable original de **TIEMPO_TDNR**. *Recordatorio*: Necesitamos crearla como un factor para modelar   
-- Separamos el dataset en train y test.       
+
+- Creamos allí la variable dicotómica "realiza_trabajo_doméstico" que tome los valores "Si" y "No" a partir de la variable original de **TIEMPO_TDNR**. *Recordatorio*: Necesitamos crearla como un factor, y el primer nivel es la referencia. 
+
+- Separamos el dataset en train y test.  
+
 - Utilizamos el set de training para construir 2 modelos de regresión logistica con 3 variables predictoras cada uno.     
+
 - Comparamos la **performance** de ambos modelos para predecir en el dataset de testing.    
 
+Traemos los datos y hacemos el split.
+
 ```{r}
-base_real<- readRDS(file = "fuentes/base_EAUH_TNR.RDS") %>% 
-  mutate(realiza_trabajo_domestico = factor(
-    ifelse(TIEMPO_TDNR != 0,
-           yes = "Si",
-           no = "No"),
-    levels = c("No","Si")))
+# Base de datos
+base_real <- readRDS(file = "fuentes/base_EAUH_TNR.RDS") %>% 
+  mutate(realiza_trabajo_domestico = factor(ifelse(TIEMPO_TDNR != 0,
+                                                   yes = "Si",
+                                                   no = "No"),
+                                            levels = c("No","Si"))) %>% 
+  rename("sexo"=CH04)
 
-set.seed(18/12/2022)
-base_spliteada<- initial_split(base_real)
-base_train<- training(base_spliteada)
-base_test<- testing(base_spliteada)
+# Train-test split
+set.seed(123)
+base_split <- initial_split(base_real)
+base_train <- training(base_split)
+base_test <- testing(base_split)
 
+```
+
+Estimamos los modelos.
+
+```{r}
+# Elijo modelo
 log_model <- logistic_reg() %>% 
   set_mode("classification") %>%  
   set_engine("glm")
 
-modelo_1 <- log_model %>% 
-  fit(realiza_trabajo_domestico ~ horas_mercado+menores_hogar+NIVEL_ED,
+# Estimo con fórmula 1
+log_fit <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_mercado +
+                                  menores_hogar + 
+                                  NIVEL_ED,
       data = base_train)  
 
-modelo_2 <- log_model %>% 
-  fit(realiza_trabajo_domestico ~ horas_mercado+ingreso_indiv+CH04,
+# Estimo con fórmula 2
+log_fit2 <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_mercado + 
+                                  ingreso_indiv + 
+                                  sexo, 
       data = base_train)  
+```
 
-modelo_1 %>% 
+Inspeccionamos los resultados.
+
+```{r}
+log_fit %>% 
   tidy()
 
-modelo_2 %>% 
+log_fit2 %>% 
   tidy()
 
 modelsummary::modelsummary(
-  list("modelo 1 " = modelo_1,
-       "modelo 2" = modelo_2)
+  list("modelo 1 " = log_fit,
+       "modelo 2" = log_fit2)
   )
-
 ```
 
+Si queremos ver cómo quedó codificada la variable categórica NIVEL_ED podemos usar `contrasts()`
+
 ```{r}
-ve <- data.frame(contrasts(base_train$NIVEL_ED))
 contrasts(base_train$NIVEL_ED)
 ```
 
+Armemos una sola base que tenga las predicciones que hacen los dos modelos. Comenzamos por aumentar la base original con las predicciones del modelo 1, las renombro como **"pred_m1"**. Por otro lado aplicamos el modelo 2 a la base test y renombramos las predicciones como **"pred_m2"**. Finalmente usamos `bind_cols()` para unir todo.
 
-Armemos una sola base que tenga las predicciones que hacen los dos modelos. Comienzo por aumentar la base original con las predicciones del modelo 1, las renombro como **"pred_m1"**. Luego con `bind_cols()` voy a añadire a eso las predicciones que hace el modelo 2 y las renombro como **"pred_m2"**.
 ```{r}
-base_2modelos<- augment(modelo_1,base_test) %>%
-  rename(pred_m1=.pred_class) %>%  
-  bind_cols(predict(modelo_2, base_test)) %>%
-  rename(pred_m2=.pred_class) 
+log_fit_test <- log_fit %>% 
+  augment(base_test) %>%
+  rename(pred_m1 = .pred_class) 
+
+log_fit2_test <- log_fit2 %>%
+  predict(base_test) %>% 
+  rename(pred_m2 = .pred_class)
+
+base_2modelos <- log_fit_test %>% 
+  bind_cols(log_fit2_test)
 
 base_2modelos %>% conf_mat(truth = realiza_trabajo_domestico,estimate = pred_m1)
 base_2modelos %>% conf_mat(truth = realiza_trabajo_domestico,estimate = pred_m2)
@@ -336,8 +415,10 @@ base_2modelos %>% conf_mat(truth = realiza_trabajo_domestico,estimate = pred_m2)
 
 <br>
 
-## Ejercicio simple de balanceo de clases     
-En vez de tomar toda la base de datos para dividir en train y test, voy a hacer una muestra de 15000 casos positivos y 15000 negativos.
+# Ejercicio de balanceo de clases   
+
+En vez de tomar toda la base de datos para dividir en train y test, hacemos una muestra balanceada para evitar que un clasificador trivial (como predecir que todos hacen trabajo doméstico) de buenos resultados. Vemos que en la base real hay unas 16.000 personas que no realizan trabajo doméstico, así que ese sería el máximo de nuestra muestra. Tomemos 15.000 de cada clase.
+
 ```{r}
 table(base_real$realiza_trabajo_domestico)
 
@@ -347,66 +428,94 @@ base_balanceada <- base_real %>%
   ungroup()
 ```
 
+Chequeamos que haya funcionado.
+
 ```{r}
 table(base_balanceada$realiza_trabajo_domestico)
 ```
-Fiteo el modelo...
+
+Ahora podemos hacer el split y estimar el modelo. Podemos una "b" por "balanceada".
+
 ```{r}
 
-base_b_spliteada<- initial_split(base_balanceada)
-base_b_train<- training(base_b_spliteada)
-base_b_test<- testing(base_b_spliteada)
+# Split
+set.seed(1234)
+base_b_split <- initial_split(base_balanceada)
+base_b_train <- training(base_b_split)
+base_b_test <- testing(base_b_split)
 
+# Model
 log_model <- logistic_reg() %>% #Defino el tipo de modelo
   set_mode("classification") %>%  #el modo (regresión o clasificación)
   set_engine("glm")
 
-modelo_1b <- log_model %>% 
-  fit(realiza_trabajo_domestico ~ horas_mercado+menores_hogar+NIVEL_ED,
+# Fit
+log_fit_1b <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_mercado + 
+                                  menores_hogar + 
+                                  NIVEL_ED,
       data = base_b_train)  
 
-modelo_2b <- log_model %>% 
-  fit(realiza_trabajo_domestico ~ horas_mercado+ingreso_indiv+CH04,
+log_fit_2b <- log_model %>% 
+  fit(realiza_trabajo_domestico ~ horas_mercado +
+                                  ingreso_indiv +
+                                  sexo,
       data = base_b_train)  
 
-modelo_1b %>% 
+log_fit_1b %>% 
   tidy()
 
-modelo_2b %>% 
+log_fit_2b %>% 
   tidy()
 ```
 
-Calculo metricas...
+Aplicamos los modelos a la base train.
 
 ```{r}
-base_2modelosb<- base_b_test %>% 
-  select(realiza_trabajo_domestico) %>% 
-  bind_cols(predict(modelo_1b, base_b_test)) %>%
-  rename(pred_m1=.pred_class) %>%  
-  bind_cols(predict(modelo_2b, base_b_test)) %>%
-              rename(pred_m2=.pred_class) 
 
-base_2modelosb <- base_2modelosb %>% # Necesito ordenar al reves categorias 
+log_fit_1b_test <- log_fit_1b %>% 
+  augment(base_b_test) %>% 
+  select(realiza_trabajo_domestico,.pred_class) %>% 
+  rename(pred_m1 = .pred_class)
+
+log_fit_2b_test <- log_fit_2b %>% 
+  predict(base_b_test) %>% 
+  rename(pred_m2 = .pred_class)
+
+base_2modelos_b <- log_fit_1b_test %>% 
+  bind_cols(log_fit_2b_test)
+
+```
+
+Para calcular las métricas de la matriz de confusión, primero tenemos que dar vuelta el orden de los niveles en los factores.
+
+```{r}
+base_2modelos_b <- base_2modelos_b %>%  
   mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,
                                             levels = c("Si","No")),
          pred_m1 = factor(pred_m1,levels = c("Si","No")),
-         pred_m2 = factor(pred_m2,levels = c("Si","No")),
-         ) 
+         pred_m2 = factor(pred_m2,levels = c("Si","No"))) 
 
-base_2modelosb %>% conf_mat(realiza_trabajo_domestico,pred_m1)
-base_2modelosb %>% conf_mat(realiza_trabajo_domestico,pred_m2)
+base_2modelos_b %>% conf_mat(realiza_trabajo_domestico,pred_m1)
+base_2modelos_b %>% conf_mat(realiza_trabajo_domestico,pred_m2)
 ```
 
-> ¿Qué metricas se logarn mejorar balanceando las clases?
+
+> ¿Qué metricas logramos mejorar balanceando las clases?
 > ¿Perdimos mucho en accuracy respecto al escenario anterior?
 
 ```{r}
+base_2modelos %>% sensitivity(truth = realiza_trabajo_domestico,estimate = pred_m1)
+base_2modelos %>% sensitivity(truth = realiza_trabajo_domestico,estimate = pred_m2)
 
-base_2modelosb %>% accuracy(realiza_trabajo_domestico,pred_m1)
-base_2modelosb %>% accuracy(realiza_trabajo_domestico,pred_m2)
+base_2modelos_b %>% sensitivity(truth = realiza_trabajo_domestico,estimate = pred_m1)
+base_2modelos_b %>% sensitivity(truth = realiza_trabajo_domestico,estimate = pred_m2)
 
+base_2modelos %>% accuracy(realiza_trabajo_domestico,pred_m1)
+base_2modelos %>% accuracy(realiza_trabajo_domestico,pred_m2)
 
-base_2modelosb %>% sensitivity(truth = realiza_trabajo_domestico,estimate = pred_m2)
+base_2modelos_b %>% accuracy(realiza_trabajo_domestico,pred_m1)
+base_2modelos_b %>% accuracy(realiza_trabajo_domestico,pred_m2)
 
 ```
 
