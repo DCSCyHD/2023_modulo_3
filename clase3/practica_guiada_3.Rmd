@@ -71,14 +71,16 @@ lm_vif <- lm(ingreso_individual ~ . , #Con . indicamos "todas las demas"
 
 # Calculo vif (variance inflation factor)
 vif(lm_vif)
-```
 
-Otro paquete que permite revisar los supuestos de los modelos es la función check_model(), incluida en easystats. En este caso, se utiliza para revisar el VIF:
+# Lo miro con un plot
+vif(lm_vif) %>% data.frame() %>% 
+  rownames_to_column(var="variable") %>% 
+  ggplot(aes(x=variable,y=.))+
+  geom_col(fill="#00BFC4")+
+  geom_hline(yintercept = 5, linetype = "dashed")+
+  coord_flip()+
+  theme_minimal()
 
-```{r, fig.show='hide'}
-check_model(lm_vif, check='vif') %>%
-  plot() + 
-  theme(axis.text.x = element_text(angle=90, hjust=1))
 ```
 
 En todos los casos los valores son bajos, por lo que podemos incorporar todas las variables que nos parezcan relevantes. Probemos con todas:
