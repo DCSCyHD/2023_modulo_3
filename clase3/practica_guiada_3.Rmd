@@ -197,10 +197,16 @@ lm_fit3 <- lm_wflow %>%
   fit(base_juguete)
 ```
 
-Veamos los coeficientes y la significatividad. Para extraer los resultados después de aplicar fit a un workflow usamos la función `extract_fit_engine()`, que nos devuelve el objeto `lm` subyacente.
+Veamos los coeficientes y la significatividad. Una forma fácil de hacerlo es directo con `tidy()`.
 
 ```{r}
-lm_fit3 %>% 
+lm_fit3 %>% tidy()
+```
+
+Pero para extraer los resultados completos después de aplicar fit a un workflow usamos la función `extract_fit_engine()`, que nos devuelve el objeto `lm` subyacente.
+
+```{r}
+lm_fit3 %>%
   extract_fit_engine() %>% 
   summary() #%>% tidy()
 ```
