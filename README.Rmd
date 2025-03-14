@@ -1,0 +1,147 @@
+---
+title: "Módulo III"
+author: "**Diplomatura en Cs. Sociales Computacionales y Humanidades Digitales**"
+output: html_document
+---
+##### Escuela Interdisciplinaria de Altos Estudios Sociales
+##### Universidad Nacional de San Martín
+![](img/logo-factor-data-solo.jpg)
+
+**Equipo Docente:**   
+-[Valentín Álvarez](https://www.linkedin.com/in/valentin-alvarez-850583119)  
+-[Guido Weksler](https://ar.linkedin.com/in/guido-weksler-962677bb)  
+-[Magalí Rodrígues Pires](https://ar.linkedin.com/in/santiago-nu%C3%B1ez-rimedio-902ba474?trk=public_post_feed-actor-name&original_referer=https%3A%2F%2Fes.linkedin.com%2F)  
+-[Nayla Sol Garcilazo](www.linkedin.com/in/nayla-sol-garcilazo)
+
+
+## **Introducción al modelado de datos**
+Los modelos estadísticos y de aprendizaje automático son herramientas fundamentales para analizar datos y extraer patrones significativos. En este módulo, se abordarán los modelos de regresión lineal y logística, sus fundamentos teóricos y los métodos de estimación más utilizados, como mínimos cuadrados y máxima verosimilitud. Se explorarán estrategias para la interpretación de los resultados y la validación de los modelos mediante medidas de ajuste, pruebas de hipótesis y diagnósticos.
+
+Además, se introducirán conceptos clave del aprendizaje automático, enfocándose en los problemas de clasificación y regresión dentro del aprendizaje supervisado. Se analizarán aspectos como la diferencia entre error de entrenamiento y error de testing, así como el problema del sobreajuste y su impacto en la generalización de los modelos.
+
+Para mejorar el desempeño de los modelos y evitar sobreajustes, se estudiarán técnicas de regularización como LASSO y Ridge. Finalmente, se presentará el ecosistema tidymodels, un conjunto de herramientas en R diseñado para facilitar la construcción, validación y comparación de modelos de manera estructurada y reproducible.
+
+Este módulo combina teoría y práctica, brindando a los participantes las herramientas necesarias para desarrollar modelos predictivos aplicados a datos reales.
+
+### Librerías a utilizar
+<u> En el archivo [0_packages](clase1/0_packages.R) pueden encontrar el código para descargar los paquetes que vamos usar en el módulo, también los dejamos anotados en el siguiente bloque:
+```{r eval=FALSE, include=FALSE}
+install.packages("tidyverse")
+install.packages("viridis")
+install.packages("corrplot")
+install.packages("ggridges")
+install.packages("tidymodels")
+install.packages("GGally")
+install.packages("latex2exp")
+install.packages("car")
+install.packages("gtsummary")
+install.packages("modelsummary")
+install.packages("gt")
+install.packages("discrim")
+```
+
+</u>   
+
+### Contenidos  
+
+__Clase 1 - Introducción: tipos de modelos, trade-offs:__
+
++ Temas de clase: 
+  +	¿Por qué construir modelos?
+  +	Predicción vs inferencia
+  +	Regresión vs clasificación
+  +	Paramétricos vs no paramétricos
+  +	Supervisado vs no supervisado
+  +	Trade-off precisión-interpretabilidad
+  +	Trade-off sesgo-varianza
+  +	Evaluación. Nociones de train/test, validation, matriz de confusión
+  + Flujo de trabajo: explorar, transformar, modelizar, evaluar
+  + Introducción a Tidymodels  
+  
+  
+<u> *Pueden descargarse la totalidad de los materiales de la clase para trabajar en un único archivo .zip*  </u>   
+[![](img/Download.png)](clase1.rar)
+
+
+<br>
+
+__Clase 2 - Explorando y transformando variables. Intro a regresión lineal simple:__  
+ 
+ 
++ Temas de clase:
+  +	¿Qué tipo de modelo es la regresión lineal? 
+  +	¿Qué preguntas responde la regresión lineal? 
+  +	Tipos de relaciones entre variables
+  +	Regresión lineal simple: fórmula, coeficientes y mínimos cuadrados
+  +	Tests de hipótesis e intervalo de confianza. P-valor
+  +	Predicciones 
+  +	Supuestos del modelo. Residuos y su distribución
+  +	Métricas de evaluación de un modelo: R2 
+  + Tidymodels 1  
+
+ <u> *Pueden descargarse la totalidad de los materiales de la clase para trabajar en un único archivo .zip*  </u>   
+ [![](img/Download.png)](clase2.rar)
+  
+<br>
+
+__Clase 3 - Regresión lineal simple y múltiple:__  
+
++ Temas de clase:
+  +	Regresión múltiple: ¿por qué no una simple por cada variable?
+  + Fórmula, coeficientes e interpretación
+  + Variables independientes cualitativas y términos de interacción
+  +	Tests de hipótesis 2: significatividad global
+  +	Multicolinealidad. El trade-off sesgo-varianza
+  +	Complejizamos la métrica de evaluación del modelo: R2 ajustado
+  + Tidymodels 2   
+
+
+<u> *Pueden descargarse la totalidad de los materiales de la clase para trabajar en un único archivo .zip*  </u>   
+ [![](img/Download.png)](clase3.rar)
+ 
+<br>
+
+__Clase 4 - Clasificación 1: Regresión logística:__  
+ 
++ Temas de clase:
+  +	Modelos de clasificación: para qué sirven y cuáles existen
+  + Los limites de la regresión lineal.
+  + ¿Qué tipo de modelo es la regresión Logística?
+  +	Coeficientes y lectura de outputs
+  +	Train-Test split
+  +	Medidas de evaluación del modelo  
+
+<u> *Pueden descargarse la totalidad de los materiales de la clase para trabajar en un único archivo .zip*  </u>   
+ [![](img/Download.png)](clase4.rar)
+
+<br>
+
+__Clase 5 - Clasificación 2: Intro a KNN y LDA:__
+
++ Temas de clase:
+  + Limites de la regresión logística.
+  + Clasificador de Bayes. 
+  +	K-Nearest Neighbors supervisado 
+  +	LDA   
+
+<u> *Pueden descargarse la totalidad de los materiales de la clase para trabajar en un único archivo .zip*  </u>   
+ [![](img/Download.png)](clase5.rar)
+
+<br>
+
+__Clase 6 - Cross-Validation y repaso general:__  
+
++ Temas de clase:
+  + Limitantes del enfoque Train-Test
+  + Cross-Validation.
+  + Repaso de clases 1 a 5  
+  
+  
+<u> *Pueden descargarse la totalidad de los materiales de la clase para trabajar en un único archivo .zip*  </u>   
+ [![](img/Download.png)](clase6.rar)
+
+
+<br>
+
+
+# **Agregar bibliografía**
