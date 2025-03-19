@@ -155,4 +155,13 @@ lineal simple:**
 
 <br>
 
-# **Agregar bibliografía**
+## Bibliografía complementaria
+
+-   [An Introduction to Statistical Learning with applications in R
+    (James, Witten, Hastie y Tibshirani) – 1st and 2nd
+    version](https://emilhvitfeldt.github.io/ISLR-tidymodels-labs//)
+
+-   [Tidy Modeling with R (Kuhn y Silge)](https://www.tmwr.org/)
+
+-   [Introduction to Modern Statistics (Çetinkaya-Rundel y
+    Hardin)](https://openintro-ims.netlify.app/)
