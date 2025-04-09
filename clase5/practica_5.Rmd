@@ -1,6 +1,6 @@
 ---
 title: "Práctica 5 - Módulo 3"
-subtitle: "Implementación de otros modelos de clasificación"
+subtitle: "Implementación de LASSO"
 author: 
   - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)
 output: 
@@ -15,7 +15,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-\> Material elaborado originalmente por Carolina Pradier y Guido Weksler
+\> Material elaborado originalmente por Carolina Pradier, Guido Weksler y Valentín Álvarez.
 
 ```{r setup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 knitr::opts_chunk$set(
@@ -32,9 +32,7 @@ library(tidyverse)
 library(tidymodels)
 library(gt)
 library(kableExtra)
-library(discrim)
-library(kknn)
-library(naivebayes)
+library(glmnet)
 library(patchwork) # Visualizar múltiples plots juntos
 
 
@@ -45,11 +43,11 @@ theme_set(theme_bw())
 
 # Introducción
 
-Este material está destinado a ver la implementación de otros modelos de clasificación supervisada (K-nearest neighbours y Linear Discriminant Analisis) y analizar su performance de manera comparada a la regresión logística. A su vez, se avanzará sobre ciertas propiedades particulares de estas técnicas. A lo largo del material, repasaremos el enfoque de **train-test** y el trade off existente entre sesgo-varianza a la hora de definir los parámetros de los modelos.
+Este material está destinado a ver la implementación del método de regularización LASSO y analizar su performance de manera comparada a la regresión logística. A lo largo del material, repasaremos el enfoque de **train-test** y el trade off existente entre sesgo-varianza a la hora de definir los parámetros de los modelos.
 
 ## Retomando el ejemplo previo
 
-A los fines de visualizar cómo opera el modelo de KNN, tomamos la base de juguete y vamos a continuar con el ejemplo de intentar clasificar a quienes realizan trabajo doméstico a partir de 2 predictores:
+A los fines de visualizar cómo opera el modelo, tomamos la base de juguete y vamos a continuar con el ejemplo de intentar clasificar a quienes realizan trabajo doméstico a partir de 2 predictores:
 
 -   horas_trabajo_mercado
 
@@ -58,7 +56,8 @@ A los fines de visualizar cómo opera el modelo de KNN, tomamos la base de jugue
 ```{r}
 base_juguete <- readRDS(file = "fuentes/eut_juguete_clase4.RDS") %>%
   mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,
-                                            levels = c("Si", "No")))
+                                            levels = c("Si", "No")),
+         horas_trabajo_mercado = as.numeric(horas_trabajo_mercado))
 
 base_juguete %>%
   ggplot(
@@ -71,7 +70,7 @@ base_juguete %>%
 
 ```
 
-# KNN
+# LASSO
 
 ## En base completa
 
@@ -79,33 +78,39 @@ Aunque ya sabemos que no conviene modelar con la base completa, veamos que ocurr
 
 <br>
 
-Siguiendo con el lenguaje de tidymodels, para utilizar el método KNN para un modelo de clasificación, podemos aplicar `nearest_neighbor()`, cuyo parametro central es la cantidad de vecinos que queremos considerar. Tiene otros parámetros que permiten cambiar el tipo de distancia, la ponderación que se le da a cada vecino, etc. El engine correspondiente es "kknn".
+Siguiendo con el lenguaje de tidymodels, para utilizar LASSO para un modelo de clasificación podemos aplicar `logistic_reg()`, cuyo parametro central es la penalidad que imponemos sobre los coeficientes. El parámetro `mixture = 1` es el que define que sea una regularización LASSO (cero sería _ridge_). El engine correspondiente es "glmnet".
 
-<br> **Aclaración**: Por un error de tidymodels, si queremos correr KNN con variables explicativas categóricas debemos cargar adicionalmente el paquete "kknn". <br>
 
 ```{r}
-knn_model5 <- nearest_neighbor(
-    neighbors = 5,
-    weight_func = "rectangular" #Sin asignar peso a las distancias
+lasso_model <- logistic_reg(
+    penalty = 0.1,
+    mixture = 1
   ) %>% 
-  set_engine("kknn") %>% 
+  set_engine("glmnet") %>% 
   set_mode("classification")
 ```
 
+Armamos un workflow y estimamos. En nuestra receta vamos a incluir un paso para estandarizar las variables, que es importante por estar sumando coeficientes de variables distintas. 
+
 ```{r}
-knn_fit <-  fit(
-  object = knn_model5,
-  formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado +
-                                         ingreso_familiar,
-  data = base_juguete
-)
+lasso_rec <- recipe(data = base_juguete,
+                    formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado +
+                                         ingreso_familiar) %>% 
+  step_normalize(all_predictors())
+
+lasso_wflow <- workflow() %>% 
+  add_model(lasso_model) %>% 
+  add_recipe(lasso_rec)
+
+lasso_fit <- lasso_wflow %>% 
+  fit(data = base_juguete)
 
 ```
 
 Veamos que ocurre con las predicciones (tomo 50 casos al azar)
 
 ```{r}
-base_pred <- knn_fit %>% 
+base_pred <- lasso_fit %>% 
   augment(base_juguete) 
 
 set.seed(42)
@@ -134,42 +139,52 @@ ggplot(
 ```
 
 -   **¿Pueden imaginarse una frontera de decisión viendo el gráfico?**\
--   **¿Como explican lo que pasa con el punto clasificado erróneamente arriba a la derecha?**\
--   **¿Piensan que funciona mejor KNN (respecto a otros modelos) cuando los grupos están bien separados o cuando hay mayor superposición?**
+-   **¿Piensan que la regresión logística funciona mejor (respecto a otros modelos) cuando los grupos están bien separados o cuando hay mayor superposición?**
 
-Aclaración: Al predecir sobre el propio dataset completo, cada uno de los puntos está contando como su propio vecino. En una utilización correcta del modelo, prediciendo sobre el test set, esto no ocurrirá.
 
-<br> **¿Que pasa a medida que aumentamos K?**
+<br> **¿Que pasa a medida que aumentamos lambda?**
 
-En la práctica no vamos a necesitar este paso, pero para respondernos esta pregunta podemos usar un loop para estimar el modelo para varios valores de k. 
+En la práctica no vamos a necesitar este paso, pero para respondernos esta pregunta podemos usar un loop para estimar el modelo para varios valores de lambda. 
 
 ```{r echo=FALSE}
 base_juguete_loop <- base_juguete
 
-for (k in c(1, 3, 5, 50)) {
-  knn_modelk <- nearest_neighbor(neighbors = k, weight_func = "rectangular") %>%
-    set_engine("kknn") %>%
+coefs <- list()
+lambdas <- c(0,0.01, 0.1, 0.2, 0.3, 2)
+
+for (i in 1:length(lambdas)) {
+  lasso_model_i <- logistic_reg(penalty = lambdas[i], 
+                                mixture = 1) %>%
+    set_engine("glmnet") %>%
     set_mode("classification")
   
-  knn_fitk <-  fit(
-    object = knn_modelk,
-    formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado +
-                                           ingreso_familiar,
-    data = base_juguete
-  )
+  lasso_wflow_i <- workflow() %>% 
+    add_recipe(lasso_rec) %>% 
+    add_model(lasso_model_i)
   
-  preds <- knn_fitk %>% 
+  lasso_fit_i <-  lasso_wflow_i %>% 
+    fit(data = base_juguete)
+  
+  preds <- lasso_fit_i %>% 
     predict(base_juguete_loop)
 
-  base_juguete_loop[,paste0("k_",k)] = preds
+  base_juguete_loop[,paste0("lambda_",lambdas[i])] <-  preds
+  
+  coefs[[i]] <- lasso_fit_i %>% tidy()
   
   names(base_juguete_loop)[names(base_juguete_loop) == ".pred_class"] <-
-    paste0("k_", k)
+    paste0("lambda_", lambdas[i])
   
 }
 ```
 
-Ahora armamos un dataframe cómo para graficar y mostramos los resultados para cada valor de k.
+Veamos qué pasó con los coeficientes.
+
+```{r}
+coefs
+```
+
+Ahora armamos un dataframe cómo para graficar y mostramos los resultados para cada valor del hiperparámetro.
 
 ```{r echo=FALSE}
 base_juguete_loop %>%
@@ -177,10 +192,10 @@ base_juguete_loop %>%
     horas_trabajo_mercado,
     ingreso_familiar,
     realiza_trabajo_domestico,
-    starts_with("k_")
+    starts_with("lambda_")
   ) %>%
-  pivot_longer(cols = starts_with("k_"),
-               names_to = "k_elegido",
+  pivot_longer(cols = starts_with("lambda_"),
+               names_to = "lambda_elegido",
                values_to = ".pred_class") %>%
   ggplot(
     .,
@@ -192,12 +207,14 @@ base_juguete_loop %>%
     )
   ) +
   geom_point(size = 3) +
-  facet_wrap(vars(k_elegido))+
+  facet_wrap(vars(lambda_elegido))+
   scale_shape_manual(values=shape_values)+
   scale_color_manual(values=c("red","blue"))
 ```
 
-## Aplicando split traing-test
+## Aplicando train-test split 
+
+Hacemos el tran-test split y aprovechamos nuestro workflow para estimar el modelo con la base recortada.
 
 ```{r}
 # Split
@@ -208,17 +225,20 @@ base_train <- training(base_split)
 base_test <- testing(base_split)
 
 # Estimo con train
-knn_fit_train <-  knn_model5 %>% 
-  fit(formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado + 
-                                             ingreso_familiar,
-      data = base_train)
+lasso_fit_train <-  lasso_wflow %>% 
+  fit(data = base_train)
 
+```
+
+Y ahora evaluamos la performance con datos nuevos.
+
+```{r}
 # Aplico a test
-knn_fit_test <- knn_fit_train %>% 
+lasso_fit_test <- lasso_fit_train %>% 
   augment(base_test)
 
 ggplot(
-  knn_fit_test,
+  lasso_fit_test,
   aes(
     x = horas_trabajo_mercado,
     y = ingreso_familiar,
@@ -232,66 +252,63 @@ ggplot(
 
 ```
 
+
+Repitamos para un lambda distinto. Primero armamos el nuevo modelo, luego reemplazamos el que teníamos en nuestro workflow.
+
+```{r}
+# Armo nuevo model
+lasso_model2 <- logistic_reg(penalty = 0.3,
+                             mixture = 1) %>% 
+  set_mode("classification") %>% 
+  set_engine("glmnet")
+
+# Estimo con train
+lasso_fit_train2 <-  lasso_wflow %>% 
+  remove_model() %>% 
+  add_model(lasso_model2) %>% 
+  fit(data = base_train)
+```
+
+Ahora lo aplicamos a la base de test.
+
+```{r}
+# Aplico a test
+lasso_fit_test2 <- lasso_fit_train2 %>% 
+  augment(base_test)
+
+ggplot(
+  lasso_fit_test2,
+  aes(
+    x = horas_trabajo_mercado,
+    y = ingreso_familiar,
+    shape = realiza_trabajo_domestico,
+    color = .pred_class
+  )
+) +
+  geom_point(size = 3) +
+  scale_shape_manual(values=shape_values)+
+  scale_color_manual(values=c("red","blue"))
+```
+
+
 ## Matriz de confusión y otras métricas
 
 ```{r}
-cm <- conf_mat(data = knn_fit_test,
+cm <- conf_mat(data = lasso_fit_test,
                truth = realiza_trabajo_domestico,
                estimate = .pred_class )
 
-cm %>% autoplot("heatmap")+scale_fill_viridis_b(alpha = .3)
+suppressMessages(
+  cm %>% autoplot("heatmap")+scale_fill_viridis_b(alpha = .3)
+  )
 ```
 
 ```{r}
-accuracy(data = knn_fit_test,
+accuracy(data = lasso_fit_test,
          truth = realiza_trabajo_domestico,
          estimate = .pred_class)
 ```
 
-# LDA
-
-Para correr un modelo de LDA necesitamos un paquete adicional llamado **discrim**. La función [`discrim_linear()`](https://parsnip.tidymodels.org/reference/discrim_linear.html) es la que determina que utilizaremos la variante lineal. A su vez, dentro de los lineales hay diferentes engines (motores) que se pueden elegir y varían en ciertos parametros adicionales que permiten incluir en el modelo. Usamos el engine default (MASS).
-
-```{r}
-lda_model <- discrim_linear() %>% 
-  set_engine("MASS") %>% 
-  set_mode("classification") 
-  
-
-lda_fit <-  lda_model %>% 
-  fit(formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado + 
-                                             ingreso_familiar,
-      data = base_train)
-
-lda_fit_test <- lda_fit %>% 
-  augment(base_test)
-
-conf_mat(data = lda_fit_test,
-         truth = realiza_trabajo_domestico,
-         estimate = .pred_class)
-
-accuracy(data = lda_fit_test,
-         truth = realiza_trabajo_domestico,
-         estimate = .pred_class)
-```
-
-Para estimar un QDA reemplazaríamos `discrim_linear()` por `discrim_quad()`.
-
-# Naive bayes
-
-Para estimar naive Bayes, usamos `naive_Bayes()`, con el engine correspondiente.
-
-```{r}
-nb_model <- naive_Bayes() %>%
-  set_engine('naivebayes') %>% 
-  set_mode("classification")
-
-nb_fit <-  nb_model %>%
-  fit(formula = realiza_trabajo_domestico  ~ horas_trabajo_mercado +
-                                             ingreso_familiar,
-      data = base_train)
-
-```
 
 # Regresión logística
 
@@ -319,16 +336,12 @@ Se crea una lista de todos los modelos a evaluar, puedo luego con la función `i
 ```{r}
 #Lista de modelos
 modelos <- list("logistica" = log_fit,
-                "LDA" = lda_fit,
-                "KNN-5" = knn_fit, 
-                "Naive bayes" = nb_fit
-            )
-
-names(modelos)
+                "lasso1" = lasso_fit_train,
+                "lasso2" = lasso_fit_train2)
 
 ```
 
-La función imap_dfr permite aplicar la función augment a una lista de modelos, considerando la data de evaluación (base_test).
+La función `imap_dfr` permite aplicar la función augment a una lista de modelos, considerando la data de evaluación (base_test).
 
 ```{r}
 base_test_preds <- imap_dfr(modelos,
@@ -369,22 +382,13 @@ Luego de haber revisado las métricas, se encontraron diferencias en la performa
 
 ```{r, fig.width=10, fig.height=10}
 source("plot_decision_boundary.R")
-p_knn5 <- plot_decision_boundary(
+p_lasso <- plot_decision_boundary(
   data = base_juguete,
-  model = knn_fit,
+  model = lasso_fit,
   x_names = c("horas_trabajo_mercado", "ingreso_familiar"),
   y_name = "realiza_trabajo_domestico",
   n_points = 100,
-  model_name = "KNN (k=5)"
-)
-
-p_lda <- plot_decision_boundary(
-  data = base_juguete,
-  model = lda_fit,
-  x_names = c("horas_trabajo_mercado", "ingreso_familiar"),
-  y_name = "realiza_trabajo_domestico",
-  n_points = 100,
-  model_name = "LDA"
+  model_name = "Lasso (lambda=0.1)"
 )
 
 p_log <- plot_decision_boundary(
@@ -396,31 +400,18 @@ p_log <- plot_decision_boundary(
   model_name = "Regresión logística"
 )
 
-p_nb <- plot_decision_boundary(
-  data = base_juguete,
-  model = nb_fit,
-  x_names = c("horas_trabajo_mercado", "ingreso_familiar"),
-  y_name = "realiza_trabajo_domestico",
-  n_points = 500,
-  model_name = "Naive Bayes"
-)
-
-(p_knn5 | p_lda) / (p_log | p_nb)
+wrap_elements(p_lasso) + wrap_elements(p_log)
 ```
 
-Se observa que el modelo KNN (k=5) tiene una frontera más flexible, mientras que los modelos LDA y regresión logística muestran una frontera de decisión lineal.
-
-Notar que, aunque la regresión logística y el modelo LDA son similares, no son iguales y por eso se observaban métricas diferentes en el punto anterior.
+Se observa que ambos modelos muestran una frontera de decisión lineal. Notar que, aunque son similares, no son iguales y por eso se observaban métricas diferentes en el punto anterior.
 
 # Resumen
 
-Se ajustaron 4 tipos de modelos distintos.
+- Con LASSO podemos elegir el mejor entre múltiples modelos de regresión.
 
--   KNN
+- Aplica tanto para regresión lineal como para regresión logística.
 
--   LDA
+- Es importante normalizar las variables en la receta.
 
--   Regresión logística
-
--   Naive bayes
+- Si no elegimos bien el hiperparámetro ( _lambda_ ) los resultados pueden ser decepcionantes. Para esto vamos a usar cross-validation.
 

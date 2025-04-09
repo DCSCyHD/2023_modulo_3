@@ -6,7 +6,7 @@ knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
 ## ----librerias, results='hide'-----------------------------------------------------------------------
 library(tidyverse)
 library(tidymodels)
-library(kknn)
+library(glmnet)
 library(gt)
 library(discrim)
 

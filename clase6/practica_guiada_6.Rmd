@@ -25,7 +25,7 @@ knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
 ```{r librerias, results='hide'}
 library(tidyverse)
 library(tidymodels)
-library(kknn)
+library(glmnet)
 library(gt)
 library(discrim)
 
@@ -185,13 +185,13 @@ El mejor modelo parece ser el que incluye los términos polinómicos, porque tie
 
 ## Regresión
 
-El cross-validation se usa para comparar las predicciones fuera de la base de entrenamiento, y con eso determinar cuál es el mejor modelo. Recien lo aplicamos a distintas recetas de un mismo tipo de modelo (regresión lineal), pero también podríamos usarlo para:
+El cross-validation se usa para comparar las predicciones "fuera de la muestra", y con eso determinar cuál es el mejor modelo. Recien lo aplicamos a distintas recetas de un mismo tipo de modelo (regresión lineal), pero también podríamos usarlo para:
 
 1. Distintos tipos de modelos con la misma receta.
 2. Distintos tipos de modelos con distintas recetas.
 3. Un mismo tipo de modelo, con distintos hiperparámetros.
 
-Para los primeros dos casos, alcanza con ajustar el workflowset. El último es lo que se conoce como *tuneo* ("espanglish" de tune: afinación). Consiste en evaluar cual es el mejor valor posible para un hiperparámetro en función de la capacidad de predecir fuera de la muestra.
+Para los primeros dos casos, alcanza con ajustar el workflowset. El último es lo que se conoce como *tuneo* ("espanglish" de tune: afinar). Consiste en evaluar cual es el mejor valor posible para un hiperparámetro en función de la capacidad de predecir fuera de la muestra.
 
 Hagamos otro ejercicio de predicción un poco distinto. Queremos predecir el **ingreso individual** a partir de las horas de trabajo, el sexo y la cantidad de menores en el hogar. Tenemos la intuición de que **los predictores numéricos no se relacionan linealmente con la variable objetivo**. ¿Cómo hacemos para saber hasta que grado de polinomio nos conviene avanzar? El **grado** del polinomio es un hiperparámetro.
 
@@ -261,7 +261,7 @@ Queremos elegir entre múltiples modelos de clasificación para la variable "rea
 ```{r}
 set.seed(42)
 folds <- vfold_cv(data = base_juguete, 
-                  v = 5, 
+                  v = 10, 
                   strata='realiza_trabajo_domestico')
 
 ```
@@ -292,19 +292,19 @@ receta_extendida <- receta_basica %>%
   step_nzv(all_predictors()) 
 ```
 
-Definimos también 2 modelos: un KNN cuyo K vamos a tunear, y un QDA.
+Definimos también 2 modelos: un LASSO cuyo $\lambda$ vamos a tunear, y un logit.
 
 ```{r}
-# KNN 
-knn_model <- nearest_neighbor(
-    neighbors = tune(),
-    weight_func = "rectangular") %>% 
-  set_engine("kknn") %>% 
+# LASSO 
+lasso_model <- logistic_reg(
+    penalty = tune(),
+    mixture = 1) %>% 
+  set_engine("glmnet") %>% 
   set_mode("classification")
 
-# QDA
-qda_model <- discrim_quad() %>% 
-  set_engine("MASS") %>% 
+# Logit
+log_model <- logistic_reg() %>% 
+  set_engine("glm") %>% 
   set_mode("classification")
 
 ```
@@ -315,8 +315,8 @@ Ahora armamos nuestro workflowset, que va a ser todas las combinaciones posibles
 wflowset <- workflow_set(
       preproc = list(basica = receta_basica, 
                      extendida = receta_extendida),
-      models = list(knn = knn_model,
-                    qda = qda_model),
+      models = list(lasso = lasso_model,
+                    logit = log_model),
       cross = TRUE #Todas las combinaciones posibles 
    )
 ```
@@ -324,7 +324,7 @@ wflowset <- workflow_set(
 Realizamos el ajuste de hiperparámetros. Primero definimos la grilla y luego aplicamos CV. 
 
 ```{r}
-grilla <- c(1,4,6)
+grilla <- tibble(penalty=seq(from = 0.01, by = 0.01, length.out = 4))
 
 set.seed(42)
 
@@ -336,11 +336,30 @@ wflowset_fit <- wflowset %>%
     metrics = metric_set(accuracy, roc_auc))
 ```
 
-Se visualizan las métricas (automáticamente me arma un rank según la primera métrica). Automáticamente va a calcular las métricas para cada workflow eligiendo el mejor hiper parámetro.
+Se muestra cada métrica para todos los modelos, y por default los resultados se ordenan según la primera.
 
 ```{r}
 wflowset_fit %>% autoplot()
 ```
+
+¿Como dan las métricas para cada valor del hiperparámetro de un workflow específico?
+
+```{r}
+# Se extrae el workflow
+wflowset_fit %>% 
+  extract_workflow_set_result(id = 'extendida_lasso') %>% 
+  collect_metrics()
+
+wflowset_fit %>% 
+  extract_workflow_set_result(id = 'basica_lasso') %>% 
+  collect_metrics()
+
+wflowset_fit %>% 
+  extract_workflow_set_result(id = 'extendida_logit') %>% 
+  collect_metrics()
+
+```
+
 
 Para saber qué combinación modelo-receta es la mejor puedo rankear los resultados en una tabla.
 
@@ -351,15 +370,6 @@ wflowset_fit %>% rank_results(rank_metric = "accuracy",
   pivot_wider(id_cols = wflow_id,
               names_from = .metric,
               values_from = mean) 
-```
-
-¿Cuáles fueron los hiperparámetros que mejor funcionaron para un workflow específico?
-
-```{r}
-# Se extrae el workflow
-wflowset_fit %>% 
-  extract_workflow_set_result(id = 'extendida_knn') %>% 
-  collect_metrics()
 ```
 
 
