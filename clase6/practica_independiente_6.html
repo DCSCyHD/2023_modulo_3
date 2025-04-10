@@ -1516,7 +1516,7 @@ positivos y 7000 negativos.</p>
 library(tidymodels)
 library(tidyverse)
 library(gt)
-library(kknn) #Necesito esta libraría para hacer KKNN con variables categóricas</code></pre>
+library(glmnet) </code></pre>
 <pre class="r"><code>base_real &lt;- readRDS(file = &quot;fuentes/base_EAUH_TNR.RDS&quot;)
 
 base_muestra &lt;- base_real  %&gt;%
@@ -1524,7 +1524,8 @@ base_muestra &lt;- base_real  %&gt;%
     case_when(TIEMPO_TDNR &gt; 0 ~ &quot;Si&quot;,
               TIEMPO_TDNR == 0 ~ &quot;No&quot;),
     levels = c(&quot;Si&quot;, &quot;No&quot;)
-  )) %&gt;%
+  ),
+  menores_hogar = as.numeric(menores_hogar)) %&gt;%
   group_by(realiza_trabajo_domestico) %&gt;%
   sample_n(size = 7000, replace = F) %&gt;%
   select(realiza_trabajo_domestico, horas_mercado, CH04, menores_hogar) %&gt;%
@@ -1540,18 +1541,20 @@ cross-validation</h1>
 <li><p>Establezcan como receta que van a querer predecir la realización
 de trabajo domestico a partir de <code>sexo</code> y
 <code>menores_hogar</code></p></li>
-<li><p>Evaluen la capacidad de predicción un KNN (k=7) con la métrica de
-accuracy</p></li>
+<li><p>Evaluen la capacidad de predicción un LASSO (lamnda=0.5) con la
+métrica de accuracy</p></li>
 </ul>
 </div>
 <div id="tuneando-un-hiperparámetro" class="section level1" number="3">
 <h1><span class="header-section-number">3</span> Tuneando un
 hiperparámetro</h1>
 <p>A partir de este código, intenten encontrar el mejor valor para el
-parametro K. Tengan en cuenta tanto el accuracy, specificity y
+hiperparametro. Tengan en cuenta tanto el accuracy, specificity y
 sensitivity</p>
-<pre class="r"><code>knn_a_tunear &lt;- nearest_neighbor(neighbors = tune()) %&gt;% 
-  set_mode(&quot;classification&quot;) </code></pre>
+<pre class="r"><code>lasso_a_tunear &lt;- logistic_reg(penalty = tune(),
+                               mixture = 1) %&gt;% 
+  set_mode(&quot;classification&quot;) %&gt;% 
+  set_engine(&quot;glmnet&quot;)</code></pre>
 </div>
 
 

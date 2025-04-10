@@ -39,7 +39,7 @@ set.seed(8989)
 library(tidymodels)
 library(tidyverse)
 library(gt)
-library(kknn) #Necesito esta libraría para hacer KKNN con variables categóricas
+library(glmnet) 
 ```
 
 
@@ -51,7 +51,8 @@ base_muestra <- base_real  %>%
     case_when(TIEMPO_TDNR > 0 ~ "Si",
               TIEMPO_TDNR == 0 ~ "No"),
     levels = c("Si", "No")
-  )) %>%
+  ),
+  menores_hogar = as.numeric(menores_hogar)) %>%
   group_by(realiza_trabajo_domestico) %>%
   sample_n(size = 7000, replace = F) %>%
   select(realiza_trabajo_domestico, horas_mercado, CH04, menores_hogar) %>%
@@ -67,7 +68,7 @@ Dada `base_muestra`:
 
 - Establezcan como receta que van a querer predecir la realización de trabajo domestico a partir de `sexo` y `menores_hogar`   
 
-- Evaluen la capacidad de predicción un KNN (k=7) con la métrica de accuracy
+- Evaluen la capacidad de predicción un LASSO (lamnda=0.5) con la métrica de accuracy
 
 ```{r eval=FALSE, include=FALSE}
 base_folds <- vfold_cv(data = base_muestra, v = 10)
@@ -75,8 +76,10 @@ base_folds <- vfold_cv(data = base_muestra, v = 10)
 
 
 ```{r eval=FALSE, include=FALSE}
-mi_modelo <- nearest_neighbor(neighbors = 7) %>%
-  set_mode("classification")
+mi_modelo <- logistic_reg(penalty = 0.1,
+                          mixture = 1) %>%
+  set_mode("classification") %>% 
+  set_engine("glmnet")
 ```
 
 
@@ -85,7 +88,9 @@ mi_formula_gral <- recipe(
   formula = realiza_trabajo_domestico ~ horas_mercado +
                                         sexo + 
                                         menores_hogar,
-  data =  base_muestra)
+  data =  base_muestra) %>% 
+  step_dummy(all_nominal_predictors()) %>%
+  step_normalize(all_predictors())
 ```
 
 
@@ -106,23 +111,25 @@ validacion_fit %>%
 
 # Tuneando un hiperparámetro   
 
-A partir de este código, intenten encontrar el mejor valor para el parametro K. Tengan en cuenta tanto el accuracy, specificity y sensitivity   
+A partir de este código, intenten encontrar el mejor valor para el hiperparametro. Tengan en cuenta tanto el accuracy, specificity y sensitivity   
 
 ```{r}
-knn_a_tunear <- nearest_neighbor(neighbors = tune()) %>% 
-  set_mode("classification") 
+lasso_a_tunear <- logistic_reg(penalty = tune(),
+                               mixture = 1) %>% 
+  set_mode("classification") %>% 
+  set_engine("glmnet")
 ```
 
 ```{r eval=FALSE, include=FALSE}
 #Creamos el workflow y agregamos la receta y el modelo
 workflow_tuneo <- workflow() %>%
   add_recipe(mi_formula_gral) %>% 
-  add_model(knn_a_tunear)
+  add_model(lasso_a_tunear)
 ```
 
 ```{r eval=FALSE, include=FALSE}
 #Creamos una grilla con los valores que queremos evaluar
-mi_grilla <- tibble(neighbors = 1:10)
+mi_grilla <- tibble(penalty = seq(0.01, by=0.05, length.out = 10))
 
 #Con la función tune_grid() probamos los distintos parametros
 tune_res <- tune_grid(
