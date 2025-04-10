@@ -54,7 +54,7 @@ test_data <- testing(base_split)
 lreg <- logistic_reg() %>% 
   fit(realiza_trabajo_domestico ~ ., data = train_data)
 
-#Especifico modelo KNN y fiteo
+#Especifico modelo Lasso y fiteo
 lasso_model <- logistic_reg(penalty = 0.01,
                       mixture = 1) %>% 
   set_mode("classification") %>% 
@@ -110,7 +110,7 @@ base_test_preds %>%
 
   - ¿Con cual de los modelos se quedaría?, ¿qué metrica resulta más importante para definir ello?
   
-  - Una vez tomada la decisión sobre cual modelo elegir (KNN o logistica), le muestra la matriz de confusión a su jefe y este le plantea lo siguiente: **"El nivel de personas que realiza TDNR, pero no recibirían la transferencia dado este modelo  sigue siendo muy alto"**. ¿Que puede hacer con este mismo modelo para satisfacer la inquietud de su jefe? **Pista**: Miren la variable `.pred_class`, del data frame. **base_test_preds** Luego miren `.pred_Si` y `.pred_No`  ¿Cómo se está definiendo `.pred_class`?
+  - Una vez tomada la decisión sobre cual modelo elegir, le muestra la matriz de confusión a su jefe y este le plantea lo siguiente: **"El nivel de personas que realiza TDNR, pero no recibirían la transferencia dado este modelo  sigue siendo muy alto"**. ¿Que puede hacer con este mismo modelo para satisfacer la inquietud de su jefe? **Pista**: Miren la variable `.pred_class`, del data frame. **base_test_preds** Luego miren `.pred_Si` y `.pred_No`  ¿Cómo se está definiendo `.pred_class`?
   
 ```{r echo=TRUE}
 #
