@@ -1,6 +1,6 @@
 ---
 title: "Practica independiente 5 - Módulo 3"
-subtitle: "Regresión logística"
+subtitle: "LASSO"
 author: 
   - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)
 output: 
@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
 
 # Practica Independiente    
 
-- De forma similar a lo visto en clase, en el siguiente código tomamos la base real **base_EAUH_TNR**, creamos la variable binaria "realiza_trabajo_domestico", y tomamos una muestra de 7000 casos positivos y 7000 negativos para armar luego dos modelos (un KNN y una regresión logistica) con sólo dos variables explicativas (horas mercado y menores_hogar).          
+- De forma similar a lo visto en clase, en el siguiente código tomamos la base real **base_EAUH_TNR**, creamos la variable binaria "realiza_trabajo_domestico", y tomamos una muestra de 7000 casos positivos y 7000 negativos para armar luego dos modelos (un LASSO y una regresión logistica) con sólo dos variables explicativas (horas mercado y menores_hogar).          
 
 
 ```{r}
@@ -30,6 +30,8 @@ set.seed(8989)
 library(tidymodels)
 library(tidyverse)
 library(gt)
+library(glmnet)
+
 base_real<- readRDS(file = "fuentes/base_EAUH_TNR.RDS")
 
 
@@ -53,13 +55,22 @@ lreg <- logistic_reg() %>%
   fit(realiza_trabajo_domestico ~ ., data = train_data)
 
 #Especifico modelo KNN y fiteo
-knn <- nearest_neighbor(neighbors = 5) %>% 
+lasso_model <- logistic_reg(penalty = 0.01,
+                      mixture = 1) %>% 
   set_mode("classification") %>% 
-  fit(realiza_trabajo_domestico ~ ., data = train_data)
+  set_engine("glmnet") 
+
+lasso_rec <- recipe(realiza_trabajo_domestico ~ .,data = train_data) %>%
+  step_normalize(all_predictors())
+
+lasso <- workflow() %>% 
+  add_model(lasso_model) %>% 
+  add_recipe(lasso_rec) %>% 
+  fit(data = train_data)
 
 #Creo lista de modelos fiteados
 modelos <- list("logistica" = lreg,
-                "KNN" = knn)
+                "lasso" = lasso)
 #Aumento el dataset de test con las predicciones de ambos modelos
 
 base_test_preds <- imap_dfr(modelos,
@@ -80,7 +91,7 @@ matrices_conf <- base_test_preds %>%
   group_by(model) %>% 
   conf_mat(truth = realiza_trabajo_domestico,.pred_class)
 
-names(matrices_conf$conf_mat) <- c("KNN","logistica")
+names(matrices_conf$conf_mat) <- c("LASSO","logistica")
 
 matrices_conf$conf_mat
 ```
@@ -108,9 +119,9 @@ base_test_preds %>%
 
 ```{r include=FALSE}
 base_test_preds %>% 
-  filter(model == "KNN") %>% 
-  mutate(transferir = case_when(.pred_Si >= 0.25 ~  "Si",
-                               .pred_Si < 0.25 ~  "No")) %>% 
+  filter(model == "lasso") %>% 
+  mutate(transferir = case_when(.pred_Si >= 0.45 ~  "Si",
+                               .pred_Si < 0.45 ~  "No")) %>% 
   mutate(transferir = factor(transferir, levels=c("Si", "No"))) %>% 
   select(transferir, realiza_trabajo_domestico) %>% 
   conf_mat(truth = realiza_trabajo_domestico, 
