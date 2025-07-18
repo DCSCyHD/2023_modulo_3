@@ -10,7 +10,7 @@
 -[Guido Weksler](https://ar.linkedin.com/in/guido-weksler-962677bb)  
 -[Magalí Rodrígues
 Pires](https://ar.linkedin.com/in/magali-rodrigues-pires)  
--[Nayla Sol Garcilazo](www.linkedin.com/in/nayla-sol-garcilazo)
+-[Nayla Sol Garcilazo](https://www.linkedin.com/in/nayla-sol-garcilazo)
 
 ## **Introducción al modelado de datos**
 
