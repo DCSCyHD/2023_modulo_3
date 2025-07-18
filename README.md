@@ -3,11 +3,14 @@
 ##### Universidad Nacional de San Martín
 
 <img src="img/logo-factor-data-solo.jpg" width="200" />
+**Coordinación:**  
+-[Germán Rosati](https://x.com/FactorData)
 
 **Equipo Docente:**  
 -[Valentín
 Álvarez](https://www.linkedin.com/in/valentin-alvarez-850583119)  
--[Guido Weksler](https://ar.linkedin.com/in/guido-weksler-962677bb)  
+-[Guido Weksler](https://ar.linkedin.com/in/guido-weksler-962677bb) \|
+[Github](https://github.com/Guidowe) \| [X](https://x.com/guidoweks)  
 -[Magalí Rodrígues
 Pires](https://ar.linkedin.com/in/magali-rodrigues-pires)  
 -[Nayla Sol Garcilazo](https://www.linkedin.com/in/nayla-sol-garcilazo)
