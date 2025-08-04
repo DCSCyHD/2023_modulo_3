@@ -8,7 +8,8 @@
 
 **Equipo Docente:**  
 -[Valentín
-Álvarez](https://www.linkedin.com/in/valentin-alvarez-850583119)  
+Álvarez](https://www.linkedin.com/in/valentin-alvarez-850583119)  \|
+[Github](https://github.com/valvarezmr) \| [X](https://x.com/valvarezmr)  
 -[Guido Weksler](https://ar.linkedin.com/in/guido-weksler-962677bb) \|
 [Github](https://github.com/Guidowe) \| [X](https://x.com/guidoweks)  
 -[Magalí Rodrígues
