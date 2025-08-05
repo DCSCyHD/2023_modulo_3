@@ -9,7 +9,7 @@
 **Equipo Docente:**  
 -[Valentín
 Álvarez](https://www.linkedin.com/in/valentin-alvarez-850583119) \|
-[Github](https://github.com/valvarezmr) \| [X](https://x.com/valvarezmr)  
+[Github](https://github.com/valvarezmr) \| [X](https://x.com/valvarezmr)
 -[Guido Weksler](https://ar.linkedin.com/in/guido-weksler-962677bb) \|
 [Github](https://github.com/Guidowe) \| [X](https://x.com/guidoweks)  
 -[Magalí Rodrígues
@@ -137,24 +137,25 @@ lineal simple:**
 
 <br>
 
-**Clase 5 - Clasificación 2: Intro a KNN y LDA:**
+**Clase 5 - Clasificación 2: LASSO:**
 
 -   Temas de clase:
-    -   Limites de la regresión logística.
-    -   Clasificador de Bayes.
-    -   K-Nearest Neighbors supervisado
-    -   LDA
+    -   Selección de modelos lineales
+    -   Técnicas de regularización
+    -   El método LASSO
 
 [![](img/Download.png)](clase5.rar)
 
 <br>
 
-**Clase 6 - Cross-Validation y repaso general:**
+**Clase 6 - Métricas de rendimiento y Cross-Validation:**
 
 -   Temas de clase:
-    -   Limitantes del enfoque Train-Test
-    -   Cross-Validation.
-    -   Repaso de clases 1 a 5
+    -   Métricas de rendimiento
+    -   Train-test split
+    -   K-fold Cross-Validation.
+    -   Ajuste de hiperparámetros
+    -   Caso integrador (EPH)
 
 [![](img/Download.png)](clase6.rar)
 

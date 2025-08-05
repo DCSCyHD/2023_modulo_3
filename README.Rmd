@@ -121,25 +121,26 @@ __Clase 4 - Clasificación 1: Regresión logística:__
 
 <br>
 
-__Clase 5 - Clasificación 2: Intro a KNN y LDA:__
+__Clase 5 - Clasificación 2: LASSO:__
 
 + Temas de clase:
-  + Limites de la regresión logística.
-  + Clasificador de Bayes. 
-  +	K-Nearest Neighbors supervisado 
-  +	LDA   
+  + Selección de modelos lineales
+  + Técnicas de regularización
+  +	El método LASSO   
 
 
  [![](img/Download.png)](clase5.rar)
 
 <br>
 
-__Clase 6 - Cross-Validation y repaso general:__  
+__Clase 6 - Métricas de rendimiento y Cross-Validation:__  
 
 + Temas de clase:
-  + Limitantes del enfoque Train-Test
-  + Cross-Validation.
-  + Repaso de clases 1 a 5  
+  + Métricas de rendimiento
+  + Train-test split
+  + K-fold Cross-Validation.
+  + Ajuste de hiperparámetros
+  + Caso integrador (EPH)  
   
   
 
