@@ -60,7 +60,7 @@ Antes de empezar, repasemos algunos conceptos.
 
 ## Media
 
-La **media** es un promedio no ponderado: sumamos todos los valore de la muestra y luego dividimos por la cantidad de elementos.
+La **media** es un promedio no ponderado: sumamos todos los valores de la muestra y luego dividimos por la cantidad de elementos.
 
 $$ \overline{x} = \frac{1}{n} \sum_{i=1}^{n} x_{i} $$
 
