@@ -12,10 +12,10 @@ output:
 -[Germán Rosati](https://x.com/FactorData)    
 
 **Equipo Docente:**   
--[Valentín Álvarez](https://www.linkedin.com/in/valentin-alvarez-850583119)  
+-[Valentín Álvarez](https://www.linkedin.com/in/valentin-alvarez-850583119) | [Github](https://github.com/valvarezmr)  
 -[Guido Weksler](https://ar.linkedin.com/in/guido-weksler-962677bb) | [Github](https://github.com/Guidowe) | [X](https://x.com/guidoweks)    
 -[Magalí Rodrígues Pires](https://ar.linkedin.com/in/magali-rodrigues-pires)  
--[Nayla Sol Garcilazo](https://www.linkedin.com/in/nayla-sol-garcilazo)
+-[Nayla Sol Garcilazo](https://www.linkedin.com/in/nayla-sol-garcilazo) | [Github](https://github.com/NaylaSolG)  
 
 
 ## **Introducción al modelado de datos**
