@@ -1,5 +1,5 @@
 ---
-title: "Practica independiente 6 - Módulo 3"
+title: "Práctica independiente 6 - Módulo 3"
 subtitle: ""
 author: 
   - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)
@@ -45,6 +45,7 @@ library(glmnet)
 
 ```{r}
 base_real <- readRDS(file = "fuentes/base_EAUH_TNR.RDS")
+#Ruta puede variar base_real <- readRDS(file = "clase6/fuentes/base_EAUH_TNR.RDS")
 
 base_muestra <- base_real  %>%
   mutate(realiza_trabajo_domestico = factor(
@@ -111,7 +112,7 @@ validacion_fit %>%
 
 # Tuneando un hiperparámetro   
 
-A partir de este código, intenten encontrar el mejor valor para el hiperparametro. Tengan en cuenta tanto el accuracy, specificity y sensitivity   
+A partir de este código, intenten encontrar el mejor valor para el hiperparámetro. Tengan en cuenta tanto el accuracy, specificity y sensitivity   
 
 ```{r}
 lasso_a_tunear <- logistic_reg(penalty = tune(),

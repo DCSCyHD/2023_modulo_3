@@ -55,6 +55,7 @@ A los fines de visualizar cómo opera el modelo, tomamos la base de juguete y va
 
 ```{r}
 base_juguete <- readRDS(file = "fuentes/eut_juguete_clase4.RDS") %>%
+  #Ruta puede variar si se usa project de módulo "clase5/fuentes/eut_juguete_clase4.RDS"
   mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,
                                             levels = c("Si", "No")),
          horas_trabajo_mercado = as.numeric(horas_trabajo_mercado))
@@ -382,6 +383,7 @@ Luego de haber revisado las métricas, se encontraron diferencias en la performa
 
 ```{r, fig.width=10, fig.height=10}
 source("plot_decision_boundary.R")
+#Ruta puede variar source("clase5/plot_decision_boundary.R")
 p_lasso <- plot_decision_boundary(
   data = base_juguete,
   model = lasso_fit,

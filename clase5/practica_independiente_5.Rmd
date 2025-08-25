@@ -1,5 +1,5 @@
 ---
-title: "Practica independiente 5 - Módulo 3"
+title: "Práctica independiente 5 - Módulo 3"
 subtitle: "LASSO"
 author: 
   - Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)
@@ -20,9 +20,9 @@ knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=FALSE,
                       fig.width=8)
 ```
 
-# Practica Independiente    
+# Práctica Independiente    
 
-- De forma similar a lo visto en clase, en el siguiente código tomamos la base real **base_EAUH_TNR**, creamos la variable binaria "realiza_trabajo_domestico", y tomamos una muestra de 7000 casos positivos y 7000 negativos para armar luego dos modelos (un LASSO y una regresión logistica) con sólo dos variables explicativas (horas mercado y menores_hogar).          
+- De forma similar a lo visto en clase, en el siguiente código tomamos la base real **base_EAUH_TNR**, creamos la variable binaria "realiza_trabajo_domestico", y tomamos una muestra de 7000 casos positivos y 7000 negativos para armar luego dos modelos (un LASSO y una regresión logística) con sólo dos variables explicativas (horas mercado y menores_hogar).          
 
 
 ```{r}
@@ -106,16 +106,16 @@ base_test_preds %>%
   multi_metric(truth = realiza_trabajo_domestico,estimate = .pred_class)
 ```
 
-- Suponga que el modelo en cuestión se utiliza para definir una política en la cual el Estado le otorga una transferencia de dinero a las personas que se estima que realizan trabajo doméstico no remunerado. Su jefe le aclara expresamente que **es preferible equivocarse y que la transferencia se otorge a personas que NO realizan trabajo doméstico respecto a equivocarse y que no se otorgue a quien SI realiza**.   
+- Suponga que el modelo en cuestión se utiliza para definir una política en la cual el Estado le otorga una transferencia de dinero a las personas que se estima que realizan trabajo doméstico no remunerado. Su jefe le aclara expresamente que **es preferible equivocarse y que la transferencia se otorgue a personas que NO realizan trabajo doméstico respecto a equivocarse y que no se otorgue a quien SI realiza**.   
 
-  - ¿Con cual de los modelos se quedaría?, ¿qué metrica resulta más importante para definir ello?
+  - ¿Con cuál de los modelos se quedaría?, ¿qué metrica resulta más importante para definir ello?
   
-  - Una vez tomada la decisión sobre cual modelo elegir, le muestra la matriz de confusión a su jefe y este le plantea lo siguiente: **"El nivel de personas que realiza TDNR, pero no recibirían la transferencia dado este modelo  sigue siendo muy alto"**. ¿Que puede hacer con este mismo modelo para satisfacer la inquietud de su jefe? **Pista**: Miren la variable `.pred_class`, del data frame. **base_test_preds** Luego miren `.pred_Si` y `.pred_No`  ¿Cómo se está definiendo `.pred_class`?
+  - Una vez tomada la decisión sobre cual modelo elegir, le muestra la matriz de confusión a su jefe y este le plantea lo siguiente: **"El nivel de personas que realiza TDNR, pero no recibirían la transferencia dado este modelo  sigue siendo muy alto"**. ¿Qué puede hacer con este mismo modelo para satisfacer la inquietud de su jefe? **Pista**: Miren la variable `.pred_class`, del data frame. **base_test_preds** Luego miren `.pred_Si` y `.pred_No`  ¿Cómo se está definiendo `.pred_class`?
   
 ```{r echo=TRUE}
 #
 ```
-  - Creen una nueva variable llamada "transferir" y tome los valores "Si" o "No". Traten de establecer una **regla de decisión** que satisfaga un poco mas la inquietud de su jefe. Luego recalculen la matriz de confusión y algunas de las metricas asociadas
+  - Creen una nueva variable llamada "transferir" y tome los valores "Si" o "No". Traten de establecer una **regla de decisión** que satisfaga un poco más la inquietud de su jefe. Luego recalculen la matriz de confusión y algunas de las métricas asociadas
 
 ```{r include=FALSE}
 base_test_preds %>% 

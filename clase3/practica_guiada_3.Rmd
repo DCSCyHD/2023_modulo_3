@@ -43,6 +43,7 @@ Vamos a seguir trabajando con nuestra base de juguete para construir una regresi
 
 ```{r}
 base_juguete <- readRDS("./fuentes/eut_juguete.RDS")
+#Ruta puede variar base_juguete <- readRDS("./clase3/fuentes/eut_juguete.RDS")
 ```
 
 # Regresión lineal simple
@@ -66,7 +67,7 @@ lm_fit <- lm_model %>%
 Antes de empezar, chequeamos multicolinealidad con la función vif() del paquete *car*. 
 
 ```{r}
-lm_vif <- lm(ingreso_individual ~ . , #Con . indicamos "todas las demas"
+lm_vif <- lm(ingreso_individual ~ . , #Con . indicamos "todas las demás"
                data = base_juguete)
 
 # Calculo vif (variance inflation factor)
@@ -161,13 +162,13 @@ lm_fit3 %>%
   summary()
 ```
 
-No sólo es significativo el coeficiente de la interacción, sino que además mejoraró el $R^{2}$ ajustado.
+No sólo es significativo el coeficiente de la interacción, sino que además mejoró el $R^{2}$ ajustado.
 
 # Transformar variables en workflows (feature engineering) 
 
 El herramental de tidymodels nos permite aplicar distintas transformaciones sobre nuestros datos antes de estimar los coeficientes. La lógica de tidymodels nos permite separar este paso de aquel de especificación del modelo.
 
-Una sintáxis más general para los pasos que aplicamos anteriormente es usar un *workflow.* Es decir, dentro de un workflow, especificamos primero el modelo, luego la fórmula o "receta" de las transformaciones que vamos a hacer a las variables, finalmente estimamos. La gracia de hacer estos pasos por separado es que cada uno es una etapa del proceso de modelado, que merece su propio proceso y que, como vamos a ver, podemos querer combinar de distintas maneras con los otros pasos. 
+Una sintaxis más general para los pasos que aplicamos anteriormente es usar un *workflow.* Es decir, dentro de un workflow, especificamos primero el modelo, luego la fórmula o "receta" de las transformaciones que vamos a hacer a las variables, finalmente estimamos. La gracia de hacer estos pasos por separado es que cada uno es una etapa del proceso de modelado, que merece su propio proceso y que, como vamos a ver, podemos querer combinar de distintas maneras con los otros pasos. 
 
 Podemos consultar la presentación de Tidymodels a modo de _cheatsheet_ de cómo funcionan los workflows.
 
@@ -246,7 +247,7 @@ lm_rec <- recipe(
   step_other(menores_hogar, threshold = 0.2, id="other") 
 ```
 
-Le dimos la base de datos, pero no estimamos nada. Solo necesita la abse de datos para saber qué variables hay y de qué tipo son. Podemos ver cómo quedarán los datos previo al ajuste del modelo:
+Le dimos la base de datos, pero no estimamos nada. Solo necesita la base de datos para saber qué variables hay y de qué tipo son. Podemos ver cómo quedarán los datos previo al ajuste del modelo:
 
 ```{r}
 lm_rec %>% 

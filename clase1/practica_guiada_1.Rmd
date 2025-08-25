@@ -206,7 +206,7 @@ Podemos calcular la correlación usando la siguiente fórmula:
 
 $$\rho_{xy} \equiv r_{xy} = \frac{\sum_{i=1}^n (x_{i} - \overline{x}_{i})(y_{i} - \overline{y}_{i})}{\sqrt{\sum_{i=1}^n (x_{i} - \overline{x}_{i})^2} \sqrt{\sum_{i=1}^n (y_{i} - \overline{y}_{i})^2}}=\frac{\sum_{i=1}^n (x_{i} - \overline{x}_{i})(y_{i} - \overline{y}_{i})}{(n - 1)s_x s_y} =\frac{cov(x,y)}{s_x s_y} $$
 
-La correlación es una forma "normalizada" de la _covarianza_, para que esté entre -1 y 1. Es decir que si dos variables tienen una relación lineal fuerte y positiva, podemos decir que tienen eleveda correlación o elevada covarianza. Noten que el nombre "covarianza" viene de que se calcula muy parecido a la varianza (la varianza es, de hecho, la covarianza de una variable consigo misma).
+La correlación es una forma "normalizada" de la _covarianza_, para que esté entre -1 y 1. Es decir que si dos variables tienen una relación lineal fuerte y positiva, podemos decir que tienen elevada correlación o elevada covarianza. Noten que el nombre "covarianza" viene de que se calcula muy parecido a la varianza (la varianza es, de hecho, la covarianza de una variable consigo misma).
 
 ## Matriz de correlación
 
@@ -238,7 +238,7 @@ corr %>%
   corrplot(col = mi_paleta(200), tl.col = "black", method = "square")
 ```
 
-¿Algun relación entre variables les llama la atención?
+¿Alguna relación entre variables les llama la atención?
 
 # Resumen
 

@@ -12,7 +12,7 @@
 <meta name="author" content="Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)" />
 
 
-<title>Practica independiente 5 - Módulo 3</title>
+<title>Práctica independiente 5 - Módulo 3</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1490,7 +1490,7 @@ border-radius: 0px;
 
 
 
-<h1 class="title toc-ignore">Practica independiente 5 - Módulo 3</h1>
+<h1 class="title toc-ignore">Práctica independiente 5 - Módulo 3</h1>
 <h3 class="subtitle">LASSO</h3>
 <h4 class="author">Diplomatura en Ciencias Sociales Computacionales y
 Humanidades Digitales (IDAES-UNSAM)</h4>
@@ -1502,15 +1502,15 @@ Humanidades Digitales (IDAES-UNSAM)</h4>
 <p>Material elaborado originalmente por Carolina Pradier y Guido
 Weksler</p>
 </blockquote>
-<div id="practica-independiente" class="section level1" number="1">
-<h1><span class="header-section-number">1</span> Practica
+<div id="práctica-independiente" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Práctica
 Independiente</h1>
 <ul>
 <li>De forma similar a lo visto en clase, en el siguiente código tomamos
 la base real <strong>base_EAUH_TNR</strong>, creamos la variable binaria
 “realiza_trabajo_domestico”, y tomamos una muestra de 7000 casos
 positivos y 7000 negativos para armar luego dos modelos (un LASSO y una
-regresión logistica) con sólo dos variables explicativas (horas mercado
+regresión logística) con sólo dos variables explicativas (horas mercado
 y menores_hogar).</li>
 </ul>
 <pre class="r"><code>set.seed(8989)
@@ -1541,7 +1541,7 @@ test_data &lt;- testing(base_split)
 lreg &lt;- logistic_reg() %&gt;% 
   fit(realiza_trabajo_domestico ~ ., data = train_data)
 
-#Especifico modelo KNN y fiteo
+#Especifico modelo Lasso y fiteo
 lasso_model &lt;- logistic_reg(penalty = 0.01,
                       mixture = 1) %&gt;% 
   set_mode(&quot;classification&quot;) %&gt;% 
@@ -1567,20 +1567,20 @@ base_test_preds &lt;- imap_dfr(modelos,
 #El dataset de testeo queda con esta pinta
 sample_n(base_test_preds,10) %&gt;% 
   gt()</code></pre>
-<div id="qzrxjaupnt" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#qzrxjaupnt table {
+<div id="qzlefmutta" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#qzlefmutta table {
 font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 }
-#qzrxjaupnt thead, #qzrxjaupnt tbody, #qzrxjaupnt tfoot, #qzrxjaupnt tr, #qzrxjaupnt td, #qzrxjaupnt th {
+#qzlefmutta thead, #qzlefmutta tbody, #qzlefmutta tfoot, #qzlefmutta tr, #qzlefmutta td, #qzlefmutta th {
 border-style: none;
 }
-#qzrxjaupnt p {
+#qzlefmutta p {
 margin: 0;
 padding: 0;
 }
-#qzrxjaupnt .gt_table {
+#qzlefmutta .gt_table {
 display: table;
 border-collapse: collapse;
 line-height: normal;
@@ -1605,11 +1605,11 @@ border-left-style: none;
 border-left-width: 2px;
 border-left-color: #D3D3D3;
 }
-#qzrxjaupnt .gt_caption {
+#qzlefmutta .gt_caption {
 padding-top: 4px;
 padding-bottom: 4px;
 }
-#qzrxjaupnt .gt_title {
+#qzlefmutta .gt_title {
 color: #333333;
 font-size: 125%;
 font-weight: initial;
@@ -1620,7 +1620,7 @@ padding-right: 5px;
 border-bottom-color: #FFFFFF;
 border-bottom-width: 0;
 }
-#qzrxjaupnt .gt_subtitle {
+#qzlefmutta .gt_subtitle {
 color: #333333;
 font-size: 85%;
 font-weight: initial;
@@ -1631,7 +1631,7 @@ padding-right: 5px;
 border-top-color: #FFFFFF;
 border-top-width: 0;
 }
-#qzrxjaupnt .gt_heading {
+#qzlefmutta .gt_heading {
 background-color: #FFFFFF;
 text-align: center;
 border-bottom-color: #FFFFFF;
@@ -1642,12 +1642,12 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#qzrxjaupnt .gt_bottom_border {
+#qzlefmutta .gt_bottom_border {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#qzrxjaupnt .gt_col_headings {
+#qzlefmutta .gt_col_headings {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -1661,7 +1661,7 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#qzrxjaupnt .gt_col_heading {
+#qzlefmutta .gt_col_heading {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -1680,7 +1680,7 @@ padding-left: 5px;
 padding-right: 5px;
 overflow-x: hidden;
 }
-#qzrxjaupnt .gt_column_spanner_outer {
+#qzlefmutta .gt_column_spanner_outer {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -1691,13 +1691,13 @@ padding-bottom: 0;
 padding-left: 4px;
 padding-right: 4px;
 }
-#qzrxjaupnt .gt_column_spanner_outer:first-child {
+#qzlefmutta .gt_column_spanner_outer:first-child {
 padding-left: 0;
 }
-#qzrxjaupnt .gt_column_spanner_outer:last-child {
+#qzlefmutta .gt_column_spanner_outer:last-child {
 padding-right: 0;
 }
-#qzrxjaupnt .gt_column_spanner {
+#qzlefmutta .gt_column_spanner {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
@@ -1708,10 +1708,10 @@ overflow-x: hidden;
 display: inline-block;
 width: 100%;
 }
-#qzrxjaupnt .gt_spanner_row {
+#qzlefmutta .gt_spanner_row {
 border-bottom-style: hidden;
 }
-#qzrxjaupnt .gt_group_heading {
+#qzlefmutta .gt_group_heading {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -1736,7 +1736,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 text-align: left;
 }
-#qzrxjaupnt .gt_empty_group_heading {
+#qzlefmutta .gt_empty_group_heading {
 padding: 0.5px;
 color: #333333;
 background-color: #FFFFFF;
@@ -1750,13 +1750,13 @@ border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 vertical-align: middle;
 }
-#qzrxjaupnt .gt_from_md > :first-child {
+#qzlefmutta .gt_from_md > :first-child {
 margin-top: 0;
 }
-#qzrxjaupnt .gt_from_md > :last-child {
+#qzlefmutta .gt_from_md > :last-child {
 margin-bottom: 0;
 }
-#qzrxjaupnt .gt_row {
+#qzlefmutta .gt_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -1774,7 +1774,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 overflow-x: hidden;
 }
-#qzrxjaupnt .gt_stub {
+#qzlefmutta .gt_stub {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -1786,7 +1786,7 @@ border-right-color: #D3D3D3;
 padding-left: 5px;
 padding-right: 5px;
 }
-#qzrxjaupnt .gt_stub_row_group {
+#qzlefmutta .gt_stub_row_group {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -1799,13 +1799,13 @@ padding-left: 5px;
 padding-right: 5px;
 vertical-align: top;
 }
-#qzrxjaupnt .gt_row_group_first td {
+#qzlefmutta .gt_row_group_first td {
 border-top-width: 2px;
 }
-#qzrxjaupnt .gt_row_group_first th {
+#qzlefmutta .gt_row_group_first th {
 border-top-width: 2px;
 }
-#qzrxjaupnt .gt_summary_row {
+#qzlefmutta .gt_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -1814,14 +1814,14 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#qzrxjaupnt .gt_first_summary_row {
+#qzlefmutta .gt_first_summary_row {
 border-top-style: solid;
 border-top-color: #D3D3D3;
 }
-#qzrxjaupnt .gt_first_summary_row.thick {
+#qzlefmutta .gt_first_summary_row.thick {
 border-top-width: 2px;
 }
-#qzrxjaupnt .gt_last_summary_row {
+#qzlefmutta .gt_last_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -1830,7 +1830,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#qzrxjaupnt .gt_grand_summary_row {
+#qzlefmutta .gt_grand_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -1839,7 +1839,7 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#qzrxjaupnt .gt_first_grand_summary_row {
+#qzlefmutta .gt_first_grand_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -1848,7 +1848,7 @@ border-top-style: double;
 border-top-width: 6px;
 border-top-color: #D3D3D3;
 }
-#qzrxjaupnt .gt_last_grand_summary_row_top {
+#qzlefmutta .gt_last_grand_summary_row_top {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -1857,10 +1857,10 @@ border-bottom-style: double;
 border-bottom-width: 6px;
 border-bottom-color: #D3D3D3;
 }
-#qzrxjaupnt .gt_striped {
+#qzlefmutta .gt_striped {
 background-color: rgba(128, 128, 128, 0.05);
 }
-#qzrxjaupnt .gt_table_body {
+#qzlefmutta .gt_table_body {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -1868,7 +1868,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#qzrxjaupnt .gt_footnotes {
+#qzlefmutta .gt_footnotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -1881,7 +1881,7 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#qzrxjaupnt .gt_footnote {
+#qzlefmutta .gt_footnote {
 margin: 0px;
 font-size: 90%;
 padding-top: 4px;
@@ -1889,7 +1889,7 @@ padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#qzrxjaupnt .gt_sourcenotes {
+#qzlefmutta .gt_sourcenotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -1902,136 +1902,94 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#qzrxjaupnt .gt_sourcenote {
+#qzlefmutta .gt_sourcenote {
 font-size: 90%;
 padding-top: 4px;
 padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#qzrxjaupnt .gt_left {
+#qzlefmutta .gt_left {
 text-align: left;
 }
-#qzrxjaupnt .gt_center {
+#qzlefmutta .gt_center {
 text-align: center;
 }
-#qzrxjaupnt .gt_right {
+#qzlefmutta .gt_right {
 text-align: right;
 font-variant-numeric: tabular-nums;
 }
-#qzrxjaupnt .gt_font_normal {
+#qzlefmutta .gt_font_normal {
 font-weight: normal;
 }
-#qzrxjaupnt .gt_font_bold {
+#qzlefmutta .gt_font_bold {
 font-weight: bold;
 }
-#qzrxjaupnt .gt_font_italic {
+#qzlefmutta .gt_font_italic {
 font-style: italic;
 }
-#qzrxjaupnt .gt_super {
+#qzlefmutta .gt_super {
 font-size: 65%;
 }
-#qzrxjaupnt .gt_footnote_marks {
+#qzlefmutta .gt_footnote_marks {
 font-size: 75%;
 vertical-align: 0.4em;
 position: initial;
 }
-#qzrxjaupnt .gt_asterisk {
+#qzlefmutta .gt_asterisk {
 font-size: 100%;
 vertical-align: 0;
 }
-#qzrxjaupnt .gt_indent_1 {
+#qzlefmutta .gt_indent_1 {
 text-indent: 5px;
 }
-#qzrxjaupnt .gt_indent_2 {
+#qzlefmutta .gt_indent_2 {
 text-indent: 10px;
 }
-#qzrxjaupnt .gt_indent_3 {
+#qzlefmutta .gt_indent_3 {
 text-indent: 15px;
 }
-#qzrxjaupnt .gt_indent_4 {
+#qzlefmutta .gt_indent_4 {
 text-indent: 20px;
 }
-#qzrxjaupnt .gt_indent_5 {
+#qzlefmutta .gt_indent_5 {
 text-indent: 25px;
+}
+#qzlefmutta .katex-display {
+display: inline-flex !important;
+margin-bottom: 0.75em !important;
+}
+#qzlefmutta div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+height: 0px !important;
 }
 </style>
 <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
     <tr class="gt_col_headings">
       <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="model">model</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id=".pred_class">.pred_class</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id=".pred_Si">.pred_Si</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id=".pred_No">.pred_No</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="a.pred_class">.pred_class</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="a.pred_Si">.pred_Si</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="a.pred_No">.pred_No</th>
       <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="realiza_trabajo_domestico">realiza_trabajo_domestico</th>
       <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="horas_mercado">horas_mercado</th>
       <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="menores_hogar">menores_hogar</th>
     </tr>
   </thead>
   <tbody class="gt_table_body">
-    <tr><td headers="model" class="gt_row gt_left">lasso</td>
-<td headers=".pred_class" class="gt_row gt_center">Si</td>
-<td headers=".pred_Si" class="gt_row gt_right">0.5649117</td>
-<td headers=".pred_No" class="gt_row gt_right">0.4350883</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
-<td headers="horas_mercado" class="gt_row gt_right">15</td>
+    <tr><td headers="model" class="gt_row gt_left">logistica</td>
+<td headers=".pred_class" class="gt_row gt_center">No</td>
+<td headers=".pred_Si" class="gt_row gt_right">0.4463017</td>
+<td headers=".pred_No" class="gt_row gt_right">0.5536983</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
+<td headers="horas_mercado" class="gt_row gt_right">55</td>
 <td headers="menores_hogar" class="gt_row gt_right">3</td></tr>
-    <tr><td headers="model" class="gt_row gt_left">logistica</td>
-<td headers=".pred_class" class="gt_row gt_center">No</td>
-<td headers=".pred_Si" class="gt_row gt_right">0.4850991</td>
-<td headers=".pred_No" class="gt_row gt_right">0.5149009</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
-<td headers="horas_mercado" class="gt_row gt_right">20</td>
-<td headers="menores_hogar" class="gt_row gt_right">0</td></tr>
-    <tr><td headers="model" class="gt_row gt_left">lasso</td>
-<td headers=".pred_class" class="gt_row gt_center">Si</td>
-<td headers=".pred_Si" class="gt_row gt_right">0.5723409</td>
-<td headers=".pred_No" class="gt_row gt_right">0.4276591</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
-<td headers="horas_mercado" class="gt_row gt_right">0</td>
-<td headers="menores_hogar" class="gt_row gt_right">1</td></tr>
-    <tr><td headers="model" class="gt_row gt_left">logistica</td>
-<td headers=".pred_class" class="gt_row gt_center">No</td>
-<td headers=".pred_Si" class="gt_row gt_right">0.4425431</td>
-<td headers=".pred_No" class="gt_row gt_right">0.5574569</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
-<td headers="horas_mercado" class="gt_row gt_right">32</td>
-<td headers="menores_hogar" class="gt_row gt_right">0</td></tr>
     <tr><td headers="model" class="gt_row gt_left">lasso</td>
 <td headers=".pred_class" class="gt_row gt_center">No</td>
-<td headers=".pred_Si" class="gt_row gt_right">0.4618593</td>
-<td headers=".pred_No" class="gt_row gt_right">0.5381407</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
-<td headers="horas_mercado" class="gt_row gt_right">36</td>
-<td headers="menores_hogar" class="gt_row gt_right">1</td></tr>
-    <tr><td headers="model" class="gt_row gt_left">lasso</td>
-<td headers=".pred_class" class="gt_row gt_center">Si</td>
-<td headers=".pred_Si" class="gt_row gt_right">0.5532959</td>
-<td headers=".pred_No" class="gt_row gt_right">0.4467041</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
-<td headers="horas_mercado" class="gt_row gt_right">0</td>
-<td headers="menores_hogar" class="gt_row gt_right">0</td></tr>
-    <tr><td headers="model" class="gt_row gt_left">lasso</td>
-<td headers=".pred_class" class="gt_row gt_center">No</td>
-<td headers=".pred_Si" class="gt_row gt_right">0.4635335</td>
-<td headers=".pred_No" class="gt_row gt_right">0.5364665</td>
+<td headers=".pred_Si" class="gt_row gt_right">0.4253255</td>
+<td headers=".pred_No" class="gt_row gt_right">0.5746745</td>
 <td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
 <td headers="horas_mercado" class="gt_row gt_right">48</td>
-<td headers="menores_hogar" class="gt_row gt_right">3</td></tr>
-    <tr><td headers="model" class="gt_row gt_left">logistica</td>
-<td headers=".pred_class" class="gt_row gt_center">No</td>
-<td headers=".pred_Si" class="gt_row gt_right">0.3606223</td>
-<td headers=".pred_No" class="gt_row gt_right">0.6393777</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
-<td headers="horas_mercado" class="gt_row gt_right">72</td>
-<td headers="menores_hogar" class="gt_row gt_right">2</td></tr>
-    <tr><td headers="model" class="gt_row gt_left">lasso</td>
-<td headers=".pred_class" class="gt_row gt_center">Si</td>
-<td headers=".pred_Si" class="gt_row gt_right">0.5268303</td>
-<td headers=".pred_No" class="gt_row gt_right">0.4731697</td>
-<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
-<td headers="horas_mercado" class="gt_row gt_right">40</td>
-<td headers="menores_hogar" class="gt_row gt_right">5</td></tr>
+<td headers="menores_hogar" class="gt_row gt_right">1</td></tr>
     <tr><td headers="model" class="gt_row gt_left">logistica</td>
 <td headers=".pred_class" class="gt_row gt_center">Si</td>
 <td headers=".pred_Si" class="gt_row gt_right">0.6117547</td>
@@ -2039,6 +1997,55 @@ text-indent: 25px;
 <td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
 <td headers="horas_mercado" class="gt_row gt_right">0</td>
 <td headers="menores_hogar" class="gt_row gt_right">2</td></tr>
+    <tr><td headers="model" class="gt_row gt_left">logistica</td>
+<td headers=".pred_class" class="gt_row gt_center">Si</td>
+<td headers=".pred_Si" class="gt_row gt_right">0.5562006</td>
+<td headers=".pred_No" class="gt_row gt_right">0.4437994</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
+<td headers="horas_mercado" class="gt_row gt_right">0</td>
+<td headers="menores_hogar" class="gt_row gt_right">0</td></tr>
+    <tr><td headers="model" class="gt_row gt_left">lasso</td>
+<td headers=".pred_class" class="gt_row gt_center">Si</td>
+<td headers=".pred_Si" class="gt_row gt_right">0.5532959</td>
+<td headers=".pred_No" class="gt_row gt_right">0.4467041</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
+<td headers="horas_mercado" class="gt_row gt_right">0</td>
+<td headers="menores_hogar" class="gt_row gt_right">0</td></tr>
+    <tr><td headers="model" class="gt_row gt_left">logistica</td>
+<td headers=".pred_class" class="gt_row gt_center">Si</td>
+<td headers=".pred_Si" class="gt_row gt_right">0.5562006</td>
+<td headers=".pred_No" class="gt_row gt_right">0.4437994</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
+<td headers="horas_mercado" class="gt_row gt_right">0</td>
+<td headers="menores_hogar" class="gt_row gt_right">0</td></tr>
+    <tr><td headers="model" class="gt_row gt_left">logistica</td>
+<td headers=".pred_class" class="gt_row gt_center">No</td>
+<td headers=".pred_Si" class="gt_row gt_right">0.3604757</td>
+<td headers=".pred_No" class="gt_row gt_right">0.6395243</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
+<td headers="horas_mercado" class="gt_row gt_right">56</td>
+<td headers="menores_hogar" class="gt_row gt_right">0</td></tr>
+    <tr><td headers="model" class="gt_row gt_left">lasso</td>
+<td headers=".pred_class" class="gt_row gt_center">No</td>
+<td headers=".pred_Si" class="gt_row gt_right">0.4979656</td>
+<td headers=".pred_No" class="gt_row gt_right">0.5020344</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
+<td headers="horas_mercado" class="gt_row gt_right">18</td>
+<td headers="menores_hogar" class="gt_row gt_right">0</td></tr>
+    <tr><td headers="model" class="gt_row gt_left">lasso</td>
+<td headers=".pred_class" class="gt_row gt_center">Si</td>
+<td headers=".pred_Si" class="gt_row gt_right">0.5723409</td>
+<td headers=".pred_No" class="gt_row gt_right">0.4276591</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">Si</td>
+<td headers="horas_mercado" class="gt_row gt_right">0</td>
+<td headers="menores_hogar" class="gt_row gt_right">1</td></tr>
+    <tr><td headers="model" class="gt_row gt_left">lasso</td>
+<td headers=".pred_class" class="gt_row gt_center">No</td>
+<td headers=".pred_Si" class="gt_row gt_right">0.4496158</td>
+<td headers=".pred_No" class="gt_row gt_right">0.5503842</td>
+<td headers="realiza_trabajo_domestico" class="gt_row gt_center">No</td>
+<td headers="horas_mercado" class="gt_row gt_right">40</td>
+<td headers="menores_hogar" class="gt_row gt_right">1</td></tr>
   </tbody>
   
   
@@ -2066,18 +2073,18 @@ Calculen métricas para evaluarlo</p></li>
 política en la cual el Estado le otorga una transferencia de dinero a
 las personas que se estima que realizan trabajo doméstico no remunerado.
 Su jefe le aclara expresamente que <strong>es preferible equivocarse y
-que la transferencia se otorge a personas que NO realizan trabajo
+que la transferencia se otorgue a personas que NO realizan trabajo
 doméstico respecto a equivocarse y que no se otorgue a quien SI
 realiza</strong>.</p>
 <ul>
-<li><p>¿Con cual de los modelos se quedaría?, ¿qué metrica resulta más
+<li><p>¿Con cuál de los modelos se quedaría?, ¿qué metrica resulta más
 importante para definir ello?</p></li>
-<li><p>Una vez tomada la decisión sobre cual modelo elegir (KNN o
-logistica), le muestra la matriz de confusión a su jefe y este le
-plantea lo siguiente: <strong>“El nivel de personas que realiza TDNR,
-pero no recibirían la transferencia dado este modelo sigue siendo muy
-alto”</strong>. ¿Que puede hacer con este mismo modelo para satisfacer
-la inquietud de su jefe? <strong>Pista</strong>: Miren la variable
+<li><p>Una vez tomada la decisión sobre cual modelo elegir, le muestra
+la matriz de confusión a su jefe y este le plantea lo siguiente:
+<strong>“El nivel de personas que realiza TDNR, pero no recibirían la
+transferencia dado este modelo sigue siendo muy alto”</strong>. ¿Qué
+puede hacer con este mismo modelo para satisfacer la inquietud de su
+jefe? <strong>Pista</strong>: Miren la variable
 <code>.pred_class</code>, del data frame.
 <strong>base_test_preds</strong> Luego miren <code>.pred_Si</code> y
 <code>.pred_No</code> ¿Cómo se está definiendo
@@ -2088,8 +2095,8 @@ la inquietud de su jefe? <strong>Pista</strong>: Miren la variable
 <ul>
 <li>Creen una nueva variable llamada “transferir” y tome los valores
 “Si” o “No”. Traten de establecer una <strong>regla de decisión</strong>
-que satisfaga un poco mas la inquietud de su jefe. Luego recalculen la
-matriz de confusión y algunas de las metricas asociadas</li>
+que satisfaga un poco más la inquietud de su jefe. Luego recalculen la
+matriz de confusión y algunas de las métricas asociadas</li>
 </ul>
 </div>
 

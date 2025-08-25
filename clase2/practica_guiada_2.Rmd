@@ -45,6 +45,8 @@ Vamos a usar una base de **juguete** (es decir, con datos inventados), cuyas var
 
 ```{r}
 base_juguete <- readRDS("./fuentes/eut_juguete.RDS")
+#Ruta puede variar si se usa project módulo o project clase 2
+
 ```
 
 ```{r}

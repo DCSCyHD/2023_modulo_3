@@ -45,7 +45,7 @@ Normalmente primero separaríamos una muestra de test, para hacer una evaluació
 
 ```{r}
 base_juguete <- readRDS("fuentes/eut_juguete.RDS")
-
+#Ruta puede variar "clase6/fuentes/eut_juguete.RDS"
 set.seed(42)
 base_folds <- vfold_cv(data = base_juguete, v = 10)
 
@@ -83,7 +83,7 @@ lm_val_fit <- fit_resamples(
 )
 ```
 
-¿Que contiene **lm_valfit**? Para cada fold (que se corresponde con una iteración distinta) contiene las métricas y las predicciones. 
+¿Qué contiene **lm_valfit**? Para cada fold (que se corresponde con una iteración distinta) contiene las métricas y las predicciones. 
 
 ```{r}
 head(lm_val_fit)
@@ -98,7 +98,7 @@ lm_val_fit %>%
 ```
 
 
-Con la función collect_metrics, puedo hacer un resumen de todas las métricas obtenidas en cada uno de mis folds. Es decir, promedio el MAE (mean absolute error) obtenido con cada fold y también promedio el RMSE (root mean squeared error) obtenido con cada fold.
+Con la función collect_metrics, puedo hacer un resumen de todas las métricas obtenidas en cada uno de mis folds. Es decir, promedio el MAE (Mean Absolute Error) obtenido con cada fold y también promedio el RMSE (Root Mean Squeared Error) obtenido con cada fold.
 
 ```{r}
 lm_val_fit %>% 
@@ -181,7 +181,7 @@ collect_metrics(lm_wflowset_fit) %>%
 
 El mejor modelo parece ser el que incluye los términos polinómicos, porque tiene un menor error de prediccion fuera de la muestra (ya sea si medimos el error absoluto o la raíz del error cuadrático medio).
 
-# Tuneando hiperparametros
+# Tuneando hiperparámetros
 
 ## Regresión
 

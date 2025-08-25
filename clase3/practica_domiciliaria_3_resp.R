@@ -6,7 +6,7 @@ options(scipen = 999)
 
 df <- read_delim('https://raw.githubusercontent.com/rmcelreath/rethinking/master/data/Howell1.csv', delim=";")%>% mutate(male = factor(male))
 
-#Son datos de un censo parcial de un área de Botswana y, específicamente, de la etnia !Kung San. Son datos compilados a partir de e entrevistas realizadas por Nancy Howell a fines de la década de 1960.
+#Son datos de un censo parcial de un área de Botswana y, específicamente, de la etnia !Kung San. Son datos compilados a partir de entrevistas realizadas por Nancy Howell a fines de la década de 1960.
 
 ##### Ejercicio 1 #####
 

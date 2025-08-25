@@ -46,6 +46,7 @@ Visualicemos previamente estos datos.
 
 ```{r}
 base_juguete <- readRDS(file = "fuentes/eut_juguete_clase4.RDS")
+#Ruta puede variar si se usa project módulo o project clase 4
 
 
 ggplot(base_juguete,aes(x = horas_trabajo_mercado,
@@ -70,7 +71,7 @@ log_model <- logistic_reg() %>% #Defino el tipo de modelo
 
 ## Fiteo (entreno/estimo) el modelo  
 
-Tomo la especificación anterior y excplicito que variables usaré y de que dataset.  
+Tomo la especificación anterior y explicito que variables usaré y de que dataset.  
 
 ----
 
@@ -84,7 +85,7 @@ Por otra parte, si van a utilizar funciones que calculan métricas derivadas de 
 base_para_modelar <- base_juguete %>% 
   mutate(realiza_trabajo_domestico = factor(realiza_trabajo_domestico,levels = c("No","Si")))
 
-#Lo entreo con los datos 
+#Lo entreno con los datos 
 log_fit <- log_model %>% 
   fit(realiza_trabajo_domestico ~ horas_trabajo_mercado + 
                                   ingreso_familiar,
@@ -94,7 +95,7 @@ log_fit <- log_model %>%
 
 ## Veamos resultados de los parámetros estimados
 
-Si bien podemos correr directo el objeto **log_fit** para ver los resultados, la función  `tidy()`  nos transforma  los coeficientes estimados (y también su desvío estandar, z-statistic y p.valor) a un formato data_frame. Para visualizarlo de forma más prolija usamos aquí también la función `gt()` del paquete homónimo.
+Si bien podemos correr directo el objeto **log_fit** para ver los resultados, la función  `tidy()`  nos transforma  los coeficientes estimados (y también su desvío estándar, z-statistic y p.valor) a un formato data_frame. Para visualizarlo de forma más prolija usamos aquí también la función `gt()` del paquete homónimo.
 
 ```{r}
 log_fit %>% 
@@ -126,8 +127,8 @@ modelsummary(
 
 - Su utilidad es para **comparar modelos** (la interpretación del AIC o BIC de 1 modelo en si mismo es irrelevante)        
 
-- Las formulas de AIC y BIC tienen la siguiente "pinta": $xIC= flexibilidad-ajuste$.     
-Un termino positivo que actua como penalización a la flexibilidad del modelo (asociado a la cantidad de parametros o variables que utiliza). Un termino restando asociado a la capacidad de ajuste del modelo (vinculada a la **máxima verosimilitud**, es decir, cuan cerca le paso a los valores reales con mi predicción de probabilidad)  
+- Las fórmulas de AIC y BIC tienen la siguiente "pinta": $xIC= flexibilidad-ajuste$.     
+Un término positivo que actúa como penalización a la flexibilidad del modelo (asociado a la cantidad de parametros o variables que utiliza). Un término restando asociado a la capacidad de ajuste del modelo (vinculada a la **máxima verosimilitud**, es decir, cuan cerca le paso a los valores reales con mi predicción de probabilidad)  
 
 - Al comparar dos modelos, son mejores los que tienen **menor valor de AIC o BIC**    
 
@@ -170,7 +171,7 @@ base_con_pred <- log_fit %>%
 base_con_pred
 ```
 
-# Metricas de evaluación
+# Métricas de evaluación
 
 ## Matriz de confusión
 
@@ -191,7 +192,7 @@ matriz_confusion <- conf_mat(data = base_metricas ,
 matriz_confusion
 ```
 
->¿Quien se anima a leer estos resultados?
+>¿Quién se anima a leer estos resultados?
 
 ## Métricas derivadas de la matriz
 
@@ -226,7 +227,7 @@ bind_rows(accu,sens,spec,prec)
 
 
 Veamos esto de forma gráfica para tratar de entender como está operando nuestro modelo:       
-En este gráfico utilizamos el parametro **shape** para distinguir el valor real de la variable objetivo ("No" o "Si") y el **color** para mostrar las probabildiades de pertenecer a la clase "Si" estimadas por nuestro modelo.
+En este gráfico utilizamos el parametro **shape** para distinguir el valor real de la variable objetivo ("No" o "Si") y el **color** para mostrar las probabilidades de pertenecer a la clase "Si" estimadas por nuestro modelo.
 
 ```{r}
 ggplot(base_con_pred,aes(x = horas_trabajo_mercado,
@@ -238,7 +239,7 @@ ggplot(base_con_pred,aes(x = horas_trabajo_mercado,
 ```
 <br>   
 
-En este otro utilizamos  el **color** no para mostrar las probabildiades, sino para ver la clase predicha por nuestro modelo (lo que tenia probabilidad mayor a 0,5 queda como "Si", los menores a 0,5 como "No"). Ver como la "decision boundary" parece ser líneal.
+En este otro utilizamos  el **color** no para mostrar las probabildiades, sino para ver la clase predicha por nuestro modelo (lo que tenia probabilidad mayor a 0,5 queda como "Si", los menores a 0,5 como "No"). Ver como la "decision boundary" parece ser líneal. (Podemos traducir decision boundary como frontera de decisión)
 
 ```{r}
 ggplot(base_con_pred,aes(x = horas_trabajo_mercado,
@@ -307,7 +308,7 @@ matriz_confusion_test
 
 # Espacio de práctica (en clase)  
 
-Supongan que les solicitan armar un modelo con una sola variable predictora de las disponibles. Entrenen *con un mismo training set* 2 modelos con un solo predictor y evaluen como pronostica la realización de TDNR en el *test set*. Pueden calcular solo el **accuracy**.
+Supongan que les solicitan armar un modelo con una sola variable predictora de las disponibles. Entrenen *con un mismo training set* 2 modelos con un solo predictor y evalúen cómo pronostica la realización de TDNR en el *test set*. Pueden calcular solo el **accuracy**.
 
 ```{r, include=FALSE}
 
@@ -334,6 +335,7 @@ Traemos los datos y hacemos el split.
 
 ```{r}
 # Base de datos
+#Ruta puede variar si se usa project módulo o project clase 4
 base_real <- readRDS(file = "fuentes/base_EAUH_TNR.RDS") %>% 
   mutate(realiza_trabajo_domestico = factor(ifelse(TIEMPO_TDNR != 0,
                                                    yes = "Si",
@@ -501,7 +503,7 @@ base_2modelos_b %>% conf_mat(realiza_trabajo_domestico,pred_m2)
 ```
 
 
-> ¿Qué metricas logramos mejorar balanceando las clases?
+> ¿Qué métricas logramos mejorar balanceando las clases?
 > ¿Perdimos mucho en accuracy respecto al escenario anterior?
 
 ```{r}

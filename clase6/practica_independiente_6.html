@@ -12,7 +12,7 @@
 <meta name="author" content="Diplomatura en Ciencias Sociales Computacionales y Humanidades Digitales (IDAES-UNSAM)" />
 
 
-<title>Practica independiente 6 - Módulo 3</title>
+<title>Práctica independiente 6 - Módulo 3</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1490,7 +1490,7 @@ border-radius: 0px;
 
 
 
-<h1 class="title toc-ignore">Practica independiente 6 - Módulo 3</h1>
+<h1 class="title toc-ignore">Práctica independiente 6 - Módulo 3</h1>
 <h4 class="author">Diplomatura en Ciencias Sociales Computacionales y
 Humanidades Digitales (IDAES-UNSAM)</h4>
 
@@ -1518,6 +1518,7 @@ library(tidyverse)
 library(gt)
 library(glmnet) </code></pre>
 <pre class="r"><code>base_real &lt;- readRDS(file = &quot;fuentes/base_EAUH_TNR.RDS&quot;)
+#Ruta puede variar base_real &lt;- readRDS(file = &quot;clase6/fuentes/base_EAUH_TNR.RDS&quot;)
 
 base_muestra &lt;- base_real  %&gt;%
   mutate(realiza_trabajo_domestico = factor(
@@ -1549,7 +1550,7 @@ métrica de accuracy</p></li>
 <h1><span class="header-section-number">3</span> Tuneando un
 hiperparámetro</h1>
 <p>A partir de este código, intenten encontrar el mejor valor para el
-hiperparametro. Tengan en cuenta tanto el accuracy, specificity y
+hiperparámetro. Tengan en cuenta tanto el accuracy, specificity y
 sensitivity</p>
 <pre class="r"><code>lasso_a_tunear &lt;- logistic_reg(penalty = tune(),
                                mixture = 1) %&gt;% 
