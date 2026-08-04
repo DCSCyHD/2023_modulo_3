@@ -7,13 +7,8 @@
 -[Germán Rosati](https://x.com/FactorData)
 
 **Equipo Docente:**  
--[Valentín
-Álvarez](https://www.linkedin.com/in/valentin-alvarez-850583119) \|
-[Github](https://github.com/valvarezmr) \| [X](https://x.com/valvarezmr)
--[Guido Weksler](https://ar.linkedin.com/in/guido-weksler-962677bb) \|
-[Github](https://github.com/Guidowe) \| [X](https://x.com/guidoweks)  
--[Magalí Rodrígues
-Pires](https://ar.linkedin.com/in/magali-rodrigues-pires)  
+-[Santiago Bezchinsky](https://www.linkedin.com/in/santiago-bezchinsky/)
+\| [Github](https://github.com/tizan25)  
 -[Nayla Sol Garcilazo](https://www.linkedin.com/in/nayla-sol-garcilazo)
 \| [Github](https://github.com/NaylaSolG)
 
@@ -72,18 +67,17 @@ archivo .zip* </u>
 
 **Clase 1 - Introducción: tipos de modelos, trade-offs:**
 
--   Temas de clase:
-    -   ¿Por qué construir modelos?
-    -   Predicción vs inferencia
-    -   Regresión vs clasificación
-    -   Paramétricos vs no paramétricos
-    -   Supervisado vs no supervisado
-    -   Trade-off precisión-interpretabilidad
-    -   Trade-off sesgo-varianza
-    -   Evaluación. Nociones de train/test, validation, matriz de
-        confusión
-    -   Flujo de trabajo: explorar, transformar, modelizar, evaluar
-    -   Introducción a Tidymodels
+- Temas de clase:
+  - ¿Por qué construir modelos?
+  - Predicción vs inferencia
+  - Regresión vs clasificación
+  - Paramétricos vs no paramétricos
+  - Supervisado vs no supervisado
+  - Trade-off precisión-interpretabilidad
+  - Trade-off sesgo-varianza
+  - Evaluación. Nociones de train/test, validation, matriz de confusión
+  - Flujo de trabajo: explorar, transformar, modelizar, evaluar
+  - Introducción a Tidymodels
 
 [![](img/Download.png)](clase1.rar)
 
@@ -92,17 +86,16 @@ archivo .zip* </u>
 **Clase 2 - Explorando y transformando variables. Intro a regresión
 lineal simple:**
 
--   Temas de clase:
-    -   ¿Qué tipo de modelo es la regresión lineal?
-    -   ¿Qué preguntas responde la regresión lineal?
-    -   Tipos de relaciones entre variables
-    -   Regresión lineal simple: fórmula, coeficientes y mínimos
-        cuadrados
-    -   Tests de hipótesis e intervalo de confianza. P-valor
-    -   Predicciones
-    -   Supuestos del modelo. Residuos y su distribución
-    -   Métricas de evaluación de un modelo: R2
-    -   Tidymodels 1
+- Temas de clase:
+  - ¿Qué tipo de modelo es la regresión lineal?
+  - ¿Qué preguntas responde la regresión lineal?
+  - Tipos de relaciones entre variables
+  - Regresión lineal simple: fórmula, coeficientes y mínimos cuadrados
+  - Tests de hipótesis e intervalo de confianza. P-valor
+  - Predicciones
+  - Supuestos del modelo. Residuos y su distribución
+  - Métricas de evaluación de un modelo: R2
+  - Tidymodels 1
 
 [![](img/Download.png)](clase2.rar)
 
@@ -110,14 +103,14 @@ lineal simple:**
 
 **Clase 3 - Regresión lineal simple y múltiple:**
 
--   Temas de clase:
-    -   Regresión múltiple: ¿por qué no una simple por cada variable?
-    -   Fórmula, coeficientes e interpretación
-    -   Variables independientes cualitativas y términos de interacción
-    -   Tests de hipótesis 2: significatividad global
-    -   Multicolinealidad. El trade-off sesgo-varianza
-    -   Complejizamos la métrica de evaluación del modelo: R2 ajustado
-    -   Tidymodels 2
+- Temas de clase:
+  - Regresión múltiple: ¿por qué no una simple por cada variable?
+  - Fórmula, coeficientes e interpretación
+  - Variables independientes cualitativas y términos de interacción
+  - Tests de hipótesis 2: significatividad global
+  - Multicolinealidad. El trade-off sesgo-varianza
+  - Complejizamos la métrica de evaluación del modelo: R2 ajustado
+  - Tidymodels 2
 
 [![](img/Download.png)](clase3.rar)
 
@@ -125,13 +118,13 @@ lineal simple:**
 
 **Clase 4 - Clasificación 1: Regresión logística:**
 
--   Temas de clase:
-    -   Modelos de clasificación: para qué sirven y cuáles existen
-    -   Los limites de la regresión lineal.
-    -   ¿Qué tipo de modelo es la regresión Logística?
-    -   Coeficientes y lectura de outputs
-    -   Train-Test split
-    -   Medidas de evaluación del modelo
+- Temas de clase:
+  - Modelos de clasificación: para qué sirven y cuáles existen
+  - Los limites de la regresión lineal.
+  - ¿Qué tipo de modelo es la regresión Logística?
+  - Coeficientes y lectura de outputs
+  - Train-Test split
+  - Medidas de evaluación del modelo
 
 [![](img/Download.png)](clase4.rar)
 
@@ -139,10 +132,10 @@ lineal simple:**
 
 **Clase 5 - Clasificación 2: LASSO:**
 
--   Temas de clase:
-    -   Selección de modelos lineales
-    -   Técnicas de regularización
-    -   El método LASSO
+- Temas de clase:
+  - Selección de modelos lineales
+  - Técnicas de regularización
+  - El método LASSO
 
 [![](img/Download.png)](clase5.rar)
 
@@ -150,12 +143,12 @@ lineal simple:**
 
 **Clase 6 - Métricas de rendimiento y Cross-Validation:**
 
--   Temas de clase:
-    -   Métricas de rendimiento
-    -   Train-test split
-    -   K-fold Cross-Validation.
-    -   Ajuste de hiperparámetros
-    -   Caso integrador (EPH)
+- Temas de clase:
+  - Métricas de rendimiento
+  - Train-test split
+  - K-fold Cross-Validation.
+  - Ajuste de hiperparámetros
+  - Caso integrador (EPH)
 
 [![](img/Download.png)](clase6.rar)
 
@@ -163,11 +156,11 @@ lineal simple:**
 
 ## Bibliografía complementaria
 
--   [An Introduction to Statistical Learning with applications in R
-    (James, Witten, Hastie y Tibshirani) – 1st and 2nd
-    version](https://emilhvitfeldt.github.io/ISLR-tidymodels-labs//)
+- [An Introduction to Statistical Learning with applications in R
+  (James, Witten, Hastie y Tibshirani) – 1st and 2nd
+  version](https://emilhvitfeldt.github.io/ISLR-tidymodels-labs//)
 
--   [Tidy Modeling with R (Kuhn y Silge)](https://www.tmwr.org/)
+- [Tidy Modeling with R (Kuhn y Silge)](https://www.tmwr.org/)
 
--   [Introduction to Modern Statistics (Çetinkaya-Rundel y
-    Hardin)](https://openintro-ims.netlify.app/)
+- [Introduction to Modern Statistics (Çetinkaya-Rundel y
+  Hardin)](https://openintro-ims.netlify.app/)
